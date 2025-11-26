@@ -2,8 +2,6 @@
 
 O aplicație web de tip rețea de socializare dezvoltată în **ASP.NET Core MVC**, creată pentru a facilita interacțiunea între utilizatori prin postări, grupuri și un sistem de urmărire (follow).
 
-Proiect realizat în cadrul laboratorului de **Dezvoltarea Aplicațiilor Web (DAW)**.
-
 ---
 
 ## Funcționalități Principale
