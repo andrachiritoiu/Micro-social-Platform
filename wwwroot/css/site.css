@@ -1,0 +1,153 @@
+﻿:root {
+    --navy-blue: #5D688A; /* Butoane, Navbar */
+    --soft-peach: #F7A5A5; /* Titluri carduri */
+    --soft-beige: #FFDBB6; /* Accente, linii */
+    --pastel-bg: #FFF2EF; /* Fundal pagină */
+}
+
+html {
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+    margin-bottom: 60px;
+    background-color: var(--pastel-bg);
+    font-family: 'Poppins', sans-serif;
+    color: #4a4a4a;
+}
+
+.navbar {
+    background-color: var(--navy-blue) !important;
+    box-shadow: 0 4px 10px rgba(93, 104, 138, 0.3);
+}
+
+.navbar-brand, .nav-link {
+    color: white !important;
+    font-weight: 500;
+}
+
+.nav-link:hover {
+    color: var(--soft-beige) !important; 
+}
+
+.btn-primary {
+    background-color: var(--navy-blue);
+    border-color: var(--navy-blue);
+    transition: all 0.3s ease;
+}
+
+
+.btn-primary:hover {
+    background-color: #464f6b; 
+    border-color: #464f6b;
+    transform: translateY(-2px); 
+}
+
+a {
+    color: var(--navy-blue);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+a:hover {
+    color: var(--soft-peach);
+}
+
+/*Focus (pentru scris in casute) */
+.form-control:focus {
+    border-color: var(--navy-blue);
+    box-shadow: 0 0 0 0.25rem rgba(93, 104, 138, 0.25);
+}
+
+.custom-card {
+    border: none;
+    border-radius: 20px;
+    background-color: white;
+    box-shadow: 0 10px 30px rgba(93, 104, 138, 0.15); 
+    overflow: hidden;
+}
+
+.custom-card-header {
+    background-color: var(--soft-peach); 
+    padding: 30px;
+    text-align: center;
+    color: white;
+    border-bottom: 5px solid var(--soft-beige); 
+}
+
+.custom-card-header h2 {
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.form-control {
+    border-radius: 12px;
+    background-color: #fcfcfc;
+    border: 1px solid #e0e0e0;
+    padding: 10px 15px;
+}
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+  color: var(--bs-secondary-color);
+  text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+  text-align: start;
+}
+
+
+.shadow-soft {
+    box-shadow: 0 10px 25px -5px rgba(93, 104, 138, 0.15), 0 8px 10px -6px rgba(93, 104, 138, 0.1);
+}
+
+/*pentru postari*/
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+     transform: translateY(-5px); 
+     box-shadow: 0 20px 30px -10px rgba(93, 104, 138, 0.2);
+}
+
+.avatar-circle {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--soft-peach); 
+}
+
+/* butoane cu Iconițe (Like/Comment) */
+.btn-action {
+    color: var(--navy-blue);
+    background-color: transparent;
+    border: none;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.btn-action:hover {
+    color: var(--soft-peach);
+    background-color: rgba(247, 165, 165, 0.1); 
+    border-radius: 10px;
+   }

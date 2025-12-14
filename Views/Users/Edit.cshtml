@@ -1,0 +1,84 @@
+﻿@model MicroSocialPlatform.Models.ApplicationUser
+
+@{
+    ViewData["Title"] = "Edit Profile";
+}
+
+<div class="container d-flex justify-content-center mt-5 mb-5">
+    <div class="col-md-8 col-lg-6">
+
+        <div class="text-center mb-4">
+            <h2 class="fw-bold" style="color: var(--navy-blue);">Edit Profile ✏️</h2>
+            <p class="text-muted">Update your profile details</p>
+        </div>
+
+        <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+            <div class="card-body p-4 p-md-5">
+
+                <form asp-action="Edit" enctype="multipart/form-data">
+                    <input type="hidden" asp-for="Id" />
+
+                    <div class="mb-4 text-center p-3 rounded-3" style="background-color: #f8f9fa; border: 1px dashed #ced4da;">
+                        <label class="form-label fw-bold text-dark mb-3">Profile Picture</label>
+
+                        <div class="d-flex flex-column align-items-center">
+                            @if (!string.IsNullOrEmpty(Model.ProfileImage))
+                            {
+                                <img src="@Model.ProfileImage" class="rounded-circle mb-3 shadow-sm"
+                                     style="width: 100px; height: 100px; object-fit: cover; border: 3px solid var(--navy-blue);">
+                            }
+                            else
+                            {
+                                <div class="rounded-circle mb-3 d-flex align-items-center justify-content-center text-white fw-bold shadow-sm"
+                                     style="width: 100px; height: 100px; background-color: var(--soft-peach); font-size: 2.5rem; border: 3px solid white;">
+                                    @(Model.FirstName?.Substring(0, 1).ToUpper() ?? "U")
+                                </div>
+                            }
+
+                            <div class="w-75">
+                                <input type="file" name="userImage" class="form-control" accept="image/*" />
+                                <small class="text-muted mt-1 d-block" style="font-size: 0.8rem;">
+                                    Upload a new photo (.jpg, .png)
+                                </small>
+                            </div>
+                        </div>
+                    </div> <div class="form-floating mb-3">
+                        <input asp-for="FirstName" class="form-control rounded-3" placeholder="First Name" />
+                        <label asp-for="FirstName">First Name</label>
+                        <span asp-validation-for="FirstName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input asp-for="LastName" class="form-control rounded-3" placeholder="Last Name" />
+                        <label asp-for="LastName">Last Name</label>
+                        <span asp-validation-for="LastName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label asp-for="Description" class="form-label fw-bold text-muted ms-1">Bio / Description</label>
+                        <textarea asp-for="Description" class="form-control rounded-3" rows="4"
+                                  placeholder="Write something about yourself..."></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-flex gap-3 mt-4">
+                        <button type="submit" class="btn btn-primary flex-grow-1 fw-bold rounded-pill shadow-sm py-2"
+                                style="background-color: var(--navy-blue); border: none;">
+                            💾 Save Changes
+                        </button>
+
+                        <a asp-action="Show" asp-route-id="@Model.Id"
+                           class="btn btn-light fw-bold rounded-pill border py-2 px-4 text-muted">
+                            Cancel
+                        </a>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

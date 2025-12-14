@@ -1,0 +1,65 @@
+﻿@model IEnumerable<MicroSocialPlatform.Models.Post>
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<MicroSocialPlatform.Models.ApplicationUser> UserManager
+
+@{
+    ViewData["Title"] = "All Posts";
+    var currentUserId = User.Identity.IsAuthenticated ? UserManager.GetUserId(User) : null;
+    var isAdminOrEditor = User.IsInRole("Admin") || User.IsInRole("Editor");
+}
+
+<h1>Recent Posts</h1>
+
+<p class="mb-4">
+    <a asp-action="Create" class="btn btn-primary">Add New Post</a>
+</p>
+
+@if (Model != null && Model.Any())
+{
+    <div class="row">
+        @foreach (var item in Model)
+        {
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-light">
+                        @if (!string.IsNullOrEmpty(item.Title))
+                        {
+                            <h5 class="card-title mb-0">@Html.DisplayFor(modelItem => item.Title)</h5>
+                        }
+                        else
+                        {
+                            <h5 class="card-title mb-0 text-muted">(No Title)</h5>
+                        }
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <p class="card-text flex-grow-1">
+                            @(item.Content.Length > 150 ? item.Content.Substring(0, 150) + "..." : item.Content)
+                        </p>
+
+                        <small class="text-muted mt-2">
+                            Posted by:
+                            <strong>@item.User.FullName</strong> on @item.CreatedAt.ToString("dd.MM.yyyy HH:mm")
+                        </small>
+                    </div>
+                    <div class="card-footer d-flex justify-content-between">
+                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Details</a>
+
+                        @if (currentUserId == item.UserId || isAdminOrEditor)
+                        {
+                            <div>
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning me-2">Edit</a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="alert alert-info">
+        No posts to display. Be the first to add a post!
+    </div>
+}

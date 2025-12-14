@@ -1,0 +1,139 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MicroSocialPlatform</title>
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/MicroSocialPlatform.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">MicroSocialPlatform</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
+                        @* <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                        </li> *@
+                        <li class="nav-item ms-lg-3 position-relative">
+                            <div class="input-group">
+                                <span class="input-group-text border-0 bg-white text-muted" style="border-top-left-radius: 20px; border-bottom-left-radius: 20px; padding-left: 15px;">
+                                    <i class="bi bi-search"></i>
+                                </span>
+
+                                <input type="text" id="globalSearchInput"
+                                       class="form-control border-0"
+                                       placeholder="Search people..."
+                                       style="border-top-right-radius: 20px; border-bottom-right-radius: 20px; width: 220px; background-color: white;"
+                                       autocomplete="off">
+                            </div>
+
+                            <div id="globalSearchResults" class="list-group position-absolute shadow mt-2 rounded-3 overflow-hidden"
+                                 style="z-index: 9999; display: none; width: 260px; left: 0; background: white;">
+                            </div>
+                        </li>
+                    </ul>
+                    <partial name="_LoginPartial" />
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    @* <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2025 - MicroSocialPlatform - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer> *@
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @* cautare globală utilizatori in navbar cu javascript *@
+    <script>
+        $(document).ready(function () {
+            var searchInput = $("#globalSearchInput");
+            var resultsDiv = $("#globalSearchResults");
+
+            searchInput.on("keyup", function (e) {
+                var text = $(this).val();
+
+                // asculta TASTA ENTER
+                if (e.key === "Enter" || e.keyCode === 13) {
+                    // daca s-a apăsat Enter, redirectionam catre pagina Index cu parametrul searchString
+                    // EncodeURIComponent rezolvă problemele cu spații sau caractere speciale
+                    window.location.href = "/Users/Index?searchString=" + encodeURIComponent(text);
+                    return; // oprim funcția aici ca să nu mai facă și AJAX
+                }
+
+                if (text.length === 0) {
+                    resultsDiv.hide();
+                    return;
+                }
+
+                //cautarea live
+                $.ajax({
+                    url: '/Users/SearchUsers',
+                    type: 'GET',
+                    data: { term: text },
+                    success: function (users) {
+                        resultsDiv.empty();
+
+                        if (users.length > 0) {
+                            $.each(users, function (index, user) {
+                                var initials = user.userName.charAt(0).toUpperCase();
+
+                                var htmlItem = `
+                                    <a href="/Users/Show/${user.id}" class="list-group-item list-group-item-action d-flex align-items-center p-2 border-0 border-bottom">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold me-2"
+                                             style="width: 35px; height: 35px; background-color: var(--navy-blue); font-size: 0.9rem;">
+                                            ${initials}
+                                        </div>
+                                        <div class="text-start" style="line-height: 1.2;">
+                                            <div class="fw-bold text-dark" style="font-size: 0.9rem;">${user.fullName}</div>
+                                            <small class="text-muted" style="font-size: 0.75rem;">@@${user.userName}</small>
+                                        </div>
+                                    </a>
+                                `;
+                                resultsDiv.append(htmlItem);
+                            });
+                            resultsDiv.show();
+                        } else {
+                            resultsDiv.html('<div class="p-3 text-center text-muted small">No results found...</div>');
+                            resultsDiv.show();
+                        }
+                    }
+                });
+            });
+
+            $(document).click(function(e) {
+                if (!$(e.target).closest('#globalSearchInput, #globalSearchResults').length) {
+                    resultsDiv.hide();
+                }
+            });
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>

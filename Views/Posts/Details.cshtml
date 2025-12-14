@@ -1,0 +1,117 @@
+﻿@model MicroSocialPlatform.Models.Post
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<MicroSocialPlatform.Models.ApplicationUser> UserManager
+
+@{
+    ViewData["Title"] = "Post Details: " + Model.Title;
+    var currentUserId = UserManager.GetUserId(User);
+}
+
+<div class="container mt-4">
+
+    @* DISPLAY TempData MESSAGES *@
+    @if (TempData.ContainsKey("Message"))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Message"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @* 1. POST DISPLAY & AUTHOR *@
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-light">
+            <h3 class="card-title">@Model.Title</h3>
+            <small class="text-muted">
+                Posted by:
+                <strong>@Model.User.FullName</strong>
+                on @Model.CreatedAt.ToString("dd MMM yyyy HH:mm")
+            </small>
+        </div>
+        <div class="card-body">
+            <p class="card-text">@Model.Content</p>
+            @if (!string.IsNullOrEmpty(Model.MediaUrl))
+            {
+                <p>Media: <a href="@Model.MediaUrl" target="_blank">View Media</a></p>
+            }
+
+            @* POST ACTION BUTTONS (Edit/Delete) *@
+            @if (Model.UserId == currentUserId || User.IsInRole("Admin") || User.IsInRole("Editor"))
+            {
+                <a href="/Posts/Edit/@Model.Id" class="btn btn-sm btn-warning me-2">Edit Post</a>
+
+                <form method="post" action="/Posts/Delete/@Model.Id" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-danger"
+                            onclick="return confirm('Are you sure you want to delete the post?')">
+                        Delete Post
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+
+    <hr />
+
+    @* 2. COMMENTS SECTION *@
+    <h2>Comments (@Model.Comments.Count)</h2>
+
+    @* LIST OF EXISTING COMMENTS *@
+    @if (Model.Comments.Any())
+    {
+        @foreach (var comment in Model.Comments.OrderBy(c => c.Date))
+        {
+            <div class="media mb-3 p-3 border rounded bg-white">
+                <div class="media-body">
+                    <h6 class="mt-0">
+                        <strong>@comment.User.FullName</strong>
+                        <small class="text-muted float-end">@comment.Date.ToString("dd MMM, HH:mm")</small>
+                    </h6>
+                    <p>@comment.Content</p>
+
+                    @* COMMENT ACTION BUTTONS (Edit/Delete) *@
+                    @if (comment.UserId == currentUserId || User.IsInRole("Admin") || User.IsInRole("Editor"))
+                    {
+                        <a href="/Comments/Edit/@comment.Id" class="btn btn-sm btn-outline-warning me-2">Edit</a>
+
+                        <form method="post" action="/Comments/Delete/@comment.Id" style="display:inline;">
+                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                    onclick="return confirm('Are you sure you want to delete the comment?')">
+                                Delete
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <p class="text-info">No comments. Be the first to add one!</p>
+    }
+
+    <hr />
+
+    @* 3. NEW COMMENT FORM *@
+    @if (User.Identity.IsAuthenticated)
+    {
+        <h3>Add a comment</h3>
+        <form method="post" action="/Comments/New">
+            <input type="hidden" name="PostId" value="@Model.Id" />
+
+            <div class="mb-3">
+                <textarea name="Content" class="form-control" rows="3" required placeholder="Write your comment..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Post Comment</button>
+        </form>
+    }
+    else
+    {
+        <p class="text-warning">You must be authenticated to add comments.</p>
+    }
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
