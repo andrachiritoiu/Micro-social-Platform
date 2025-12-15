@@ -10,7 +10,7 @@ namespace MicroSocialPlatform.Controllers
         //adaugare / stergere reactii
         // salvare id utilizator care a lasat reactria
         // pentru a ne asigura ca nu reactioneaza de 2 ori la aceeasi posatre
-
+        //logica
         private readonly ApplicationDbContext db;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
