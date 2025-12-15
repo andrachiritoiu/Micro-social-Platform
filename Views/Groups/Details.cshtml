@@ -1,0 +1,229 @@
+@model MicroSocialPlatform.Models.Group
+
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+@using Microsoft.AspNetCore.Identity
+@using MicroSocialPlatform.Models
+@inject SignInManager<ApplicationUser> SignInManager
+
+@{
+    var isMember = ViewData["IsMember"] as bool? ?? false;
+    var isModerator = ViewData["IsModerator"] as bool? ?? false;
+    var currentUserId = ViewData["CurrentUserId"] as string;
+    var memberCount = Model.GroupMemberships?.Count(gm => gm.IsAccepted) ?? 0;
+}
+
+<div class="feed-container">
+    <div class="custom-card mb-4">
+        <div class="custom-card-header" style="background: linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-purple) 100%); color: white; padding: 24px;">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h2 style="margin: 0 0 8px 0; color: white; font-weight: 600;">@Model.Name</h2>
+                    <p style="margin: 0; color: rgba(255,255,255,0.9);">@Model.Description</p>
+                </div>
+                @if (isModerator)
+                {
+                    <form asp-action="Delete" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Are you sure you want to delete this group? All messages will be lost.');">
+                        <button type="submit" class="btn btn-sm" style="background: rgba(255,255,255,0.2); color: white; border: none;">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                }
+            </div>
+            <div class="mt-3 d-flex gap-4" style="color: rgba(255,255,255,0.9);">
+                <small><i class="bi bi-people"></i> @memberCount member@(memberCount != 1 ? "s" : "")</small>
+                <small><i class="bi bi-person-badge"></i> Moderator: @Model.Moderator?.UserName</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Messages Section -->
+    <div class="custom-card" style="height: 600px; display: flex; flex-direction: column;">
+        <div class="custom-card-header" style="border-bottom: 1px solid var(--border-color);">
+            <h4 style="margin: 0; font-weight: 600;">Group Chat</h4>
+        </div>
+        
+        <!-- Messages Container -->
+        <div id="messages-container" style="flex: 1; overflow-y: auto; padding: 20px; background: var(--hover-bg);">
+            @if (Model.GroupPosts != null && Model.GroupPosts.Any())
+            {
+                @foreach (var message in Model.GroupPosts)
+                {
+                    var messageUser = message.User;
+                    var messageUserInitials = messageUser?.UserName?.Substring(0, 1).ToUpper() ?? "U";
+                    var messageUserFirstName = messageUser?.FirstName ?? "";
+                    var messageUserLastName = messageUser?.LastName ?? "";
+                    var messageUserFullName = $"{messageUserFirstName} {messageUserLastName}".Trim();
+                    if (string.IsNullOrEmpty(messageUserFullName)) messageUserFullName = messageUser?.UserName ?? "User";
+                    var isCurrentUser = message.UserId == currentUserId;
+                    var timeAgo = GetTimeAgo(message.CreatedAt);
+                    
+                    <div class="message-item @(isCurrentUser ? "message-own" : "")" style="margin-bottom: 16px;">
+                        <div class="d-flex gap-3 @(isCurrentUser ? "flex-row-reverse" : "")">
+                            <div class="message-avatar" style="background: linear-gradient(135deg, #7BA3E8 0%, #B5A8D8 100%); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.9rem; flex-shrink: 0;">
+                                @messageUserInitials
+                            </div>
+                            <div class="message-content @(isCurrentUser ? "message-own-content" : "")" style="max-width: 70%;">
+                                <div class="message-header" style="margin-bottom: 4px;">
+                                    <span class="message-author" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">@messageUserFullName</span>
+                                    <small class="text-muted ms-2" style="font-size: 0.75rem;">@timeAgo</small>
+                                </div>
+                                <div class="message-text" style="background: white; padding: 12px 16px; border-radius: 12px; box-shadow: var(--shadow-sm); word-wrap: break-word;">
+                                    @message.Content
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center text-muted" style="padding: 40px;">
+                    <i class="bi bi-chat-dots" style="font-size: 3rem; margin-bottom: 16px; display: block;"></i>
+                    <p>No messages yet. Start the conversation!</p>
+                </div>
+            }
+        </div>
+
+        <!-- Message Input -->
+        @if (isMember || isModerator)
+        {
+            <div style="padding: 16px; border-top: 1px solid var(--border-color); background: white;">
+                <form id="message-form" class="d-flex gap-2">
+                    <input type="hidden" name="groupId" value="@Model.Id" />
+                    <input type="text" id="message-input" class="form-control" placeholder="Type a message..." required autocomplete="off">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send"></i> Send
+                    </button>
+                </form>
+            </div>
+        }
+        else
+        {
+            <div style="padding: 16px; border-top: 1px solid var(--border-color); background: var(--hover-bg); text-align: center;">
+                <p class="text-muted mb-0">You must join the group to send messages.</p>
+                <form asp-action="Join" asp-route-id="@Model.Id" method="post" class="mt-2">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="bi bi-person-plus"></i> Join Group
+                    </button>
+                </form>
+            </div>
+        }
+    </div>
+</div>
+
+@functions {
+    private string GetTimeAgo(DateTime dateTime)
+    {
+        var timeSpan = DateTime.UtcNow - dateTime;
+
+        if (timeSpan.TotalSeconds < 60)
+            return "just now";
+        if (timeSpan.TotalMinutes < 60)
+            return $"{(int)timeSpan.TotalMinutes}m ago";
+        if (timeSpan.TotalHours < 24)
+            return $"{(int)timeSpan.TotalHours}h ago";
+        if (timeSpan.TotalDays < 7)
+            return $"{(int)timeSpan.TotalDays}d ago";
+
+        return dateTime.ToString("MMM dd, yyyy");
+    }
+}
+
+<script>
+    const messagesContainer = document.getElementById('messages-container');
+    const messageForm = document.getElementById('message-form');
+    const messageInput = document.getElementById('message-input');
+
+    // Auto-scroll to bottom on load
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    // Send message
+    if (messageForm) {
+        messageForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const content = messageInput.value.trim();
+            if (!content) return;
+
+            const groupId = @Model.Id;
+            const formData = new FormData();
+            formData.append('groupId', groupId);
+            formData.append('content', content);
+
+            try {
+                const response = await fetch('@Url.Action("SendMessage", "Groups")', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    // Add message to DOM
+                    const messageHtml = `
+                        <div class="message-item message-own" style="margin-bottom: 16px;">
+                            <div class="d-flex gap-3 flex-row-reverse">
+                                <div class="message-avatar" style="background: linear-gradient(135deg, #7BA3E8 0%, #B5A8D8 100%); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.9rem; flex-shrink: 0;">
+                                    ${data.message.userName.charAt(0).toUpperCase()}
+                                </div>
+                                <div class="message-content message-own-content" style="max-width: 70%;">
+                                    <div class="message-header" style="margin-bottom: 4px;">
+                                        <span class="message-author" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">${data.message.fullName}</span>
+                                        <small class="text-muted ms-2" style="font-size: 0.75rem;">${data.message.timeAgo}</small>
+                                    </div>
+                                    <div class="message-text" style="background: white; padding: 12px 16px; border-radius: 12px; box-shadow: var(--shadow-sm); word-wrap: break-word;">
+                                        ${data.message.content}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    messagesContainer.insertAdjacentHTML('beforeend', messageHtml);
+                    messageInput.value = '';
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                alert('Failed to send message. Please try again.');
+            }
+        });
+    }
+
+    // Auto-refresh messages every 5 seconds
+    setInterval(async function() {
+        try {
+            const response = await fetch('@Url.Action("Details", "Groups", new { id = Model.Id })');
+            const html = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newMessagesContainer = doc.getElementById('messages-container');
+            if (newMessagesContainer) {
+                const currentScroll = messagesContainer.scrollTop;
+                const wasAtBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 100;
+                
+                messagesContainer.innerHTML = newMessagesContainer.innerHTML;
+                
+                if (wasAtBottom) {
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                } else {
+                    messagesContainer.scrollTop = currentScroll;
+                }
+            }
+        } catch (error) {
+            console.error('Error refreshing messages:', error);
+        }
+    }, 5000);
+</script>
+
+<style>
+    .message-own .message-text {
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-purple) 100%) !important;
+        color: white !important;
+    }
+
+    .message-own .message-author {
+        color: var(--primary-blue) !important;
+    }
+</style>
+

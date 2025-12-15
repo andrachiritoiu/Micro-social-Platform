@@ -71,8 +71,9 @@
                 @if (User.Identity.Name == Model.UserName)
                 {
                     // daca e contul tau -> Edit Button
-                    <a asp-controller="Users" asp-action="Edit" class="btn btn-outline-primary rounded-pill px-5 py-2 fw-bold hover-lift"
-                       style="border-color: var(--navy-blue); color: var(--navy-blue); border-width: 2px;">
+                    <a asp-controller="Users" asp-action="Edit"
+                       class="btn rounded-pill px-5 py-2 fw-bold hover-lift shadow-sm"
+                       style="background-color: var(--navy-blue); color: white; border: none;">
                         <i class="bi bi-pencil-square me-2"></i> Edit Profile
                     </a>
                 }

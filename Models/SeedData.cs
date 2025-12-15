@@ -28,9 +28,11 @@ namespace MicroSocialPlatform.Models
                 new IdentityRole { Id = "2c5e174e-3b0e-446f-86af483d56fd7211", Name = "Editor", NormalizedName = "Editor".ToUpper() },
                 new IdentityRole { Id = "2c5e174e-3b0e-446f-86af483d56fd7212", Name = "User", NormalizedName = "User".ToUpper() }
                 );
-                // o noua instanta pe care o vom utiliza pentru crearea parolelor utilizatorilor
+
+                 // o noua instanta pe care o vom utiliza pentru crearea parolelor utilizatorilor
                  // parolele sunt de tip hash
                  var hasher = new PasswordHasher<ApplicationUser>();
+
                 // CREAREA USERILOR IN BD
                 // Se creeaza cate un user pentru fiecare rol
                 context.Users.AddRange(

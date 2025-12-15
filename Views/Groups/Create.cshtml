@@ -1,0 +1,40 @@
+@model MicroSocialPlatform.Models.Group
+
+@{
+    ViewData["Title"] = "Create Group";
+}
+
+<div class="feed-container">
+    <div class="custom-card" style="max-width: 600px; margin: 0 auto;">
+        <div class="custom-card-header" style="background: linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-purple) 100%); color: white;">
+            <h2 style="margin: 0; color: white;">Create New Group</h2>
+        </div>
+        <div style="padding: 24px;">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label">Group Name</label>
+                    <input asp-for="Name" class="form-control" placeholder="Enter group name">
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Description" class="form-label">Description</label>
+                    <textarea asp-for="Description" class="form-control" rows="4" placeholder="Describe your group..."></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-end">
+                    <a asp-action="Index" class="btn btn-outline-primary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Create Group</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+
