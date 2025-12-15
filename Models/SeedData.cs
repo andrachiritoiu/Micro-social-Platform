@@ -24,9 +24,9 @@ namespace MicroSocialPlatform.Models
                 // CREAREA ROLURILOR IN BD
                 // daca nu contine roluri, acestea se vor crea
                 context.Roles.AddRange(
-                new IdentityRole { Id = "2c5e174e-3b0e-446f-86af483d56fd7210", Name = "Admin", NormalizedName = "Admin".ToUpper() },
-                new IdentityRole { Id = "2c5e174e-3b0e-446f-86af483d56fd7211", Name = "Editor", NormalizedName = "Editor".ToUpper() },
-                new IdentityRole { Id = "2c5e174e-3b0e-446f-86af483d56fd7212", Name = "User", NormalizedName = "User".ToUpper() }
+                new IdentityRole { Id = "2c5e174e-3b0e-446f-86af483d56fd7210", Name = "Admin", NormalizedName = "ADMIN" },
+                new IdentityRole { Id = "2c5e174e-3b0e-446f-86af483d56fd7211", Name = "UnregisteredUser", NormalizedName = "UNREGISTEREDUSER" },
+                new IdentityRole { Id = "2c5e174e-3b0e-446f-86af483d56fd7212", Name = "User", NormalizedName = "USER" }
                 );
                 // o noua instanta pe care o vom utiliza pentru crearea parolelor utilizatorilor
                  // parolele sunt de tip hash
@@ -51,14 +51,14 @@ namespace MicroSocialPlatform.Models
                {
                    Id = "8e445865-a24d-4543-a6c6-9443d048cdb1",
                    // primary key
-                   UserName = "editor@test.com",
-                   FirstName = "Editor",
-                   LastName = "Site",
+                   UserName = "unregistered@test.com",
+                   FirstName = "Unregistered",
+                   LastName = "User",
                    EmailConfirmed = true,
-                   NormalizedEmail = "EDITOR@TEST.COM",
-                   Email = "editor@test.com",
-                   NormalizedUserName = "EDITOR@TEST.COM",
-                   PasswordHash = hasher.HashPassword(null,"Editor1!")
+                   NormalizedEmail = "UNREGISTERED@TEST.COM",
+                   Email = "unregistered@test.com",
+                   NormalizedUserName = "UNREGISTERED@TEST.COM",
+                   PasswordHash = hasher.HashPassword(null,"Unregistered1!")
                },
                 new ApplicationUser
                 {

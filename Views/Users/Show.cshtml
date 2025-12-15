@@ -68,17 +68,17 @@
             </div>
 
             <div class="mb-4">
-                @if (User.Identity.Name == Model.UserName)
+                @if (User.Identity.IsAuthenticated && User.Identity.Name == Model.UserName)
                 {
-                    // daca e contul tau -> Edit Button
+                    @* daca e contul tau -> Edit Button *@
                     <a asp-controller="Users" asp-action="Edit" class="btn btn-outline-primary rounded-pill px-5 py-2 fw-bold hover-lift"
                        style="border-color: var(--navy-blue); color: var(--navy-blue); border-width: 2px;">
                         <i class="bi bi-pencil-square me-2"></i> Edit Profile
                     </a>
                 }
-                else
+                else if (User.Identity.IsAuthenticated)
                 {
-                    // daca e contul altcuiva -> Follow Button
+                    @* daca esti logat si vezi alt cont -> Follow / Message *@
                     <button class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-sm hover-lift"
                             style="background-color: var(--navy-blue); border: none;">
                         <i class="bi bi-person-plus-fill me-2"></i> Follow
@@ -88,7 +88,86 @@
                         <i class="bi bi-chat-dots-fill" style="color: var(--navy-blue); font-size: 1.2rem;"></i>
                     </button>
                 }
+                @* utilizator neinregistrat: nu afisam Follow / Message *@
             </div>
         </div>
     </div>
+</div>
+
+@* Instagram-style grids: separate sections for media posts and text-only posts *@
+@{
+    var allPosts = Model.Posts ?? Enumerable.Empty<MicroSocialPlatform.Models.Post>();
+    var mediaPosts = allPosts.Where(p => !string.IsNullOrWhiteSpace(p.MediaUrl))
+                             .OrderByDescending(p => p.CreatedAt)
+                             .ToList();
+    var textPosts = allPosts.Where(p => string.IsNullOrWhiteSpace(p.MediaUrl))
+                            .OrderByDescending(p => p.CreatedAt)
+                            .ToList();
+}
+
+<div class="container mb-5">
+    @if (mediaPosts.Any())
+    {
+        <h3 class="fw-bold mb-3" style="color: var(--navy-blue);">Photo &amp; video posts</h3>
+
+        <div class="insta-profile-grid mb-4">
+            @foreach (var post in mediaPosts)
+            {
+                <a asp-controller="Posts"
+                   asp-action="Details"
+                   asp-route-id="@post.Id"
+                   class="insta-profile-grid-item">
+
+                    <div class="insta-profile-grid-media">
+                        @if (post.MediaUrl.Contains(".mp4") || post.MediaUrl.Contains(".mov"))
+                        {
+                            <div class="insta-profile-grid-video-icon">
+                                <i class="bi bi-play-fill"></i>
+                            </div>
+                        }
+
+                        <img src="@post.MediaUrl" alt="Post media" />
+                    </div>
+                </a>
+            }
+        </div>
+    }
+
+    @if (textPosts.Any())
+    {
+        <h3 class="fw-bold mb-3" style="color: var(--navy-blue);">Text posts</h3>
+
+        <div class="insta-profile-text-list">
+            @foreach (var post in textPosts)
+            {
+                <a asp-controller="Posts"
+                   asp-action="Details"
+                   asp-route-id="@post.Id"
+                   class="insta-profile-text-item shadow-soft hover-lift">
+
+                    <div class="fw-semibold mb-1">
+                        @(string.IsNullOrEmpty(post.Title)
+                            ? "Post"
+                            : (post.Title.Length > 50 ? post.Title.Substring(0, 50) + "..." : post.Title))
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(post.Content))
+                    {
+                        <p class="mb-1 text-muted small">
+                            @(post.Content.Length > 140 ? post.Content.Substring(0, 140) + "..." : post.Content)
+                        </p>
+                    }
+
+                    <small class="text-muted">
+                        @post.CreatedAt.ToLocalTime().ToString("dd MMM yyyy • HH:mm")
+                    </small>
+                </a>
+            }
+        </div>
+    }
+
+    @if (!mediaPosts.Any() && !textPosts.Any())
+    {
+        <p class="text-muted">No posts yet.</p>
+    }
 </div>

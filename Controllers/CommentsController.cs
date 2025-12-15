@@ -31,7 +31,7 @@ namespace MicroSocialPlatform.Controllers
 
 
         [HttpPost]
-        [Authorize(Roles = "User, Editor, Admin")]
+        [Authorize(Roles = "User, Admin")]
         public IActionResult New(Comment comment)
         {
             comment.Date = DateTime.Now;
@@ -54,15 +54,14 @@ namespace MicroSocialPlatform.Controllers
 
 
 
-        [Authorize(Roles = "User, Editor, Admin")]
+        [Authorize(Roles = "User, Admin")]
         public IActionResult Edit(int id)
         {
             Comment comment = db.Comments.Find(id);
 
  
             if (comment.UserId == _userManager.GetUserId(User) ||
-                User.IsInRole("Admin") ||
-                User.IsInRole("Editor"))
+                User.IsInRole("Admin"))
             {
                 return View(comment);
             }
@@ -74,7 +73,7 @@ namespace MicroSocialPlatform.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "User, Editor, Admin")]
+        [Authorize(Roles = "User, Admin")]
         public IActionResult Edit(int id, Comment comment) 
         {
             Comment commentToUpdate = db.Comments.Find(id); 
@@ -85,8 +84,7 @@ namespace MicroSocialPlatform.Controllers
             {
         
                 if (commentToUpdate.UserId == _userManager.GetUserId(User) ||
-                    User.IsInRole("Admin") ||
-                    User.IsInRole("Editor"))
+                    User.IsInRole("Admin"))
                 {
                     comment.PostId = commentToUpdate.PostId;
                     comment.UserId = commentToUpdate.UserId;
@@ -110,7 +108,7 @@ namespace MicroSocialPlatform.Controllers
 
 
         [HttpPost]
-        [Authorize(Roles = "User, Editor, Admin")]
+        [Authorize(Roles = "User, Admin")]
         public IActionResult Delete(int id)
         {
             Comment comment = db.Comments.Find(id);
@@ -119,8 +117,7 @@ namespace MicroSocialPlatform.Controllers
             int postId = comment.PostId;
 
             if (comment.UserId == _userManager.GetUserId(User) ||
-                User.IsInRole("Admin") ||
-                User.IsInRole("Editor"))
+                User.IsInRole("Admin"))
             {
                 db.Comments.Remove(comment);
                 db.SaveChanges();

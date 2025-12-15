@@ -7,7 +7,6 @@ using MicroSocialPlatform.Models;
 
 namespace MicroSocialPlatform.Controllers
 {
-    [Authorize]
     public class UsersController : Controller
     {
         //afisare profil
@@ -96,6 +95,7 @@ namespace MicroSocialPlatform.Controllers
 
         //afiseaza formularul de editare a profilului
         [HttpGet]
+        [Authorize(Roles = "User, Admin")]
         public async Task<IActionResult> Edit()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -108,6 +108,7 @@ namespace MicroSocialPlatform.Controllers
 
         //preia datele din formular si le salveaza in bd
         [HttpPost]
+        [Authorize(Roles = "User, Admin")]
         public async Task<IActionResult> Edit(ApplicationUser requestUser, IFormFile? userImage)
         {
             var currentUser = await _userManager.GetUserAsync(User);

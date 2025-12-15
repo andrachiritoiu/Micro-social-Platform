@@ -1,7 +1,7 @@
 ﻿@model MicroSocialPlatform.Models.Post
 
 @{
-    ViewData["Title"] = "Create New Post";
+    ViewData["Title"] = "Create New Post (Insta Style)";
 }
 
 <h1>Create New Post</h1>
@@ -9,8 +9,9 @@
 <hr />
 <div class="row">
     <div class="col-md-6">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+  
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="All" class="text-danger"></div>
 
             <div class="form-group mb-3">
                 <label asp-for="Title" class="control-label"></label>
@@ -24,9 +25,10 @@
                 <span asp-validation-for="Content" class="text-danger"></span>
             </div>
 
+ 
             <div class="form-group mb-3">
-                <label asp-for="MediaUrl" class="control-label">Media URL (Image/Video)</label>
-                <input asp-for="MediaUrl" class="form-control" />
+                <label for="UploadedMedia" class="control-label">Upload Media (Image/Video)</label>
+                <input name="UploadedMedia" id="UploadedMedia" type="file" class="form-control" />
                 <span asp-validation-for="MediaUrl" class="text-danger"></span>
             </div>
 
