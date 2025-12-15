@@ -44,7 +44,7 @@ namespace MicroSocialPlatform.Controllers
         }
 
         ///CREATE
-        [Authorize(Roles = "User, Admin")]
+        [Authorize] // orice utilizator autentificat poate crea postari
         public IActionResult Create()
         {
             return View();
@@ -52,7 +52,7 @@ namespace MicroSocialPlatform.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken] // Adăugat pentru securitate
-        [Authorize(Roles = "User, Admin")]
+        [Authorize] // orice utilizator autentificat poate crea postari
         public async Task<IActionResult> Create([Bind("Title,Content")] Post post, IFormFile? UploadedMedia)
         {
             post.UserId = _userManager.GetUserId(User);
@@ -114,8 +114,7 @@ namespace MicroSocialPlatform.Controllers
         }
 
         ///EDIT
-
-        [Authorize(Roles = "User, Admin")]
+        [Authorize] // doar utilizatori autentificati (autorul sau adminul) pot accesa
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -135,8 +134,8 @@ namespace MicroSocialPlatform.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "User, Admin")]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Content,MediaUrl")] Post post, IFormFile? UploadedMedia)
+        [Authorize] // doar utilizatori autentificati (autorul sau adminul) pot salva
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Content")] Post post, IFormFile? UploadedMedia)
         {
             if (id != post.Id) return NotFound();
 
@@ -177,29 +176,42 @@ namespace MicroSocialPlatform.Controllers
                     await UploadedMedia.CopyToAsync(stream);
                 }
 
-                ModelState.Remove(nameof(postToUpdate.MediaUrl));
                 postToUpdate.MediaUrl = databaseFileName;
             }
 
+            // Remove fields from ModelState that we don't want to validate
+            ModelState.Remove("UserId");
+            ModelState.Remove("User");
+            ModelState.Remove("MediaUrl");
+            ModelState.Remove("CreatedAt");
+            ModelState.Remove("UpdatedAt");
+
+            // Update only Title and Content
             if (ModelState.IsValid)
             {
-                postToUpdate.UpdatedAt = DateTime.Now;
                 postToUpdate.Title = post.Title;
                 postToUpdate.Content = post.Content;
+                postToUpdate.UpdatedAt = DateTime.Now;
 
-                // If no new file was uploaded, keep the existing MediaUrl (already on postToUpdate)
-
-                await _context.SaveChangesAsync();
-                TempData["Message"] = "Post successfully modified!";
-                // după editare mergem înapoi în feed (Index)
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    await _context.SaveChangesAsync();
+                    TempData["Message"] = "Post successfully modified!";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception)
+                {
+                    ModelState.AddModelError("", "An error occurred while saving. Please try again.");
+                    return View(postToUpdate);
+                }
             }
 
+            // If ModelState is not valid, return the view with errors
             return View(postToUpdate);
         }
 
         /// DELETE
-        [Authorize(Roles = "User, Admin")]
+        [Authorize] // doar utilizatori autentificati (autorul sau adminul) pot cere stergerea
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -221,7 +233,7 @@ namespace MicroSocialPlatform.Controllers
         }
 
         [HttpPost, ActionName("Delete")]
-        [Authorize(Roles = "User, Admin")]
+        [Authorize] // doar utilizatori autentificati (autorul sau adminul) pot confirma stergerea
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var post = await _context.Posts.FindAsync(id);

@@ -31,7 +31,7 @@ namespace MicroSocialPlatform.Controllers
 
 
         [HttpPost]
-        [Authorize(Roles = "User, Admin")]
+        [Authorize] // orice utilizator autentificat poate adauga comentarii
         public IActionResult New(Comment comment)
         {
             comment.Date = DateTime.Now;
@@ -54,7 +54,7 @@ namespace MicroSocialPlatform.Controllers
 
 
 
-        [Authorize(Roles = "User, Admin")]
+        [Authorize] // doar utilizatori autentificati (autorul sau adminul)
         public IActionResult Edit(int id)
         {
             Comment comment = db.Comments.Find(id);
@@ -73,7 +73,7 @@ namespace MicroSocialPlatform.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "User, Admin")]
+        [Authorize] // doar utilizatori autentificati (autorul sau adminul)
         public IActionResult Edit(int id, Comment comment) 
         {
             Comment commentToUpdate = db.Comments.Find(id); 
@@ -108,7 +108,7 @@ namespace MicroSocialPlatform.Controllers
 
 
         [HttpPost]
-        [Authorize(Roles = "User, Admin")]
+        [Authorize] // doar utilizatori autentificati (autorul sau adminul)
         public IActionResult Delete(int id)
         {
             Comment comment = db.Comments.Find(id);
