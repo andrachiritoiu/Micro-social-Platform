@@ -19,6 +19,9 @@ namespace MicroSocialPlatform.Data
         public DbSet<GroupMembership> GroupMemberships { get; set; }
         public DbSet<GroupMessage> GroupMessages { get; set; }
         public DbSet<Follow> Follows { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<Message> Messages { get; set; }  //pt chat privat
+
 
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -88,6 +91,19 @@ namespace MicroSocialPlatform.Data
                 .WithMany(p => p.Comments)
                 .HasForeignKey(c => c.PostId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            //pt msaje private intre useri
+            builder.Entity<Message>()
+                .HasOne(m => m.Sender)
+                .WithMany()
+                .HasForeignKey(m => m.SenderId)
+                .OnDelete(DeleteBehavior.Restrict); // nu sterge mesajele automat cand sterg userul
+
+            builder.Entity<Message>()
+                .HasOne(m => m.Receiver)
+                .WithMany()
+                .HasForeignKey(m => m.ReceiverId)
+                .OnDelete(DeleteBehavior.Restrict); // nu sterge mesajele automat cand sterg userul
 
         }
     }
