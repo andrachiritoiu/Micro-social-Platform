@@ -72,10 +72,8 @@
                 {
                     @* daca e contul tau -> Edit Profile + New Post buttons *@
                     <div class="d-flex gap-2 justify-content-center flex-wrap">
-                        <a asp-controller="Users" asp-action="Edit"
-                           class="btn btn-outline-primary rounded-pill px-5 py-2 fw-bold hover-lift"
-                           style="border-color: var(--navy-blue); color: var(--navy-blue); border-width: 2px;">
-                            <i class="bi bi-pencil-square me-2"></i> Edit Profile
+                        <a asp-controller="Users" asp-action="Edit" asp-route-id="@Model.Id" class="btn-profile-edit">
+                            <i class="bi bi-pencil-square"></i> Edit Profile
                         </a>
                         <a asp-controller="Posts" asp-action="Create"
                            class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-sm hover-lift"

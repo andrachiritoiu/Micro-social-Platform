@@ -4,8 +4,8 @@ using MicroSocialPlatform.Data;
 using MicroSocialPlatform.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting; // Necesar pentru IWebHostEnvironment
-using System.IO;                   // Necesar pentru Path.Combine și FileStream
+using Microsoft.AspNetCore.Hosting;
+using System.IO;                   
 
 namespace MicroSocialPlatform.Controllers
 {
@@ -19,12 +19,18 @@ namespace MicroSocialPlatform.Controllers
         {
             _context = context;
             _userManager = userManager;
-            _env = env; // 🛑 Setarea _env
+            _env = env; 
         }
 
         public async Task<IActionResult> Index()
         {
-            var posts = await _context.Posts.Include(p => p.User).ToListAsync();
+            var posts = await _context.Posts
+                 .Include(p => p.User)       
+                 .Include(p => p.Comments)   
+                 .Include(p => p.Reactions) 
+                 .OrderByDescending(p => p.CreatedAt) 
+                 .ToListAsync();
+
             return View(posts);
         }
 
@@ -51,8 +57,8 @@ namespace MicroSocialPlatform.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken] // Adăugat pentru securitate
-        [Authorize] // orice utilizator autentificat poate crea postari
+        [ValidateAntiForgeryToken] 
+        [Authorize] 
         public async Task<IActionResult> Create([Bind("Title,Content")] Post post, IFormFile? UploadedMedia)
         {
             post.UserId = _userManager.GetUserId(User);
@@ -114,7 +120,7 @@ namespace MicroSocialPlatform.Controllers
         }
 
         ///EDIT
-        [Authorize] // doar utilizatori autentificati (autorul sau adminul) pot accesa
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -134,7 +140,7 @@ namespace MicroSocialPlatform.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize] // doar utilizatori autentificati (autorul sau adminul) pot salva
+        [Authorize]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Content")] Post post, IFormFile? UploadedMedia)
         {
             if (id != post.Id) return NotFound();
@@ -206,12 +212,11 @@ namespace MicroSocialPlatform.Controllers
                 }
             }
 
-            // If ModelState is not valid, return the view with errors
             return View(postToUpdate);
         }
 
         /// DELETE
-        [Authorize] // doar utilizatori autentificati (autorul sau adminul) pot cere stergerea
+        [Authorize] 
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -233,7 +238,7 @@ namespace MicroSocialPlatform.Controllers
         }
 
         [HttpPost, ActionName("Delete")]
-        [Authorize] // doar utilizatori autentificati (autorul sau adminul) pot confirma stergerea
+        [Authorize] 
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var post = await _context.Posts.FindAsync(id);
@@ -258,5 +263,33 @@ namespace MicroSocialPlatform.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+
+
+
+        [HttpPost]
+        [Authorize] 
+        public async Task<IActionResult> AddComment([FromForm] int postId, [FromForm] string content)
+        {
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                return RedirectToAction("Details", new { id = postId });
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+
+            var comment = new Comment
+            {
+                PostId = postId,
+                UserId = user.Id,
+                Content = content,
+                CreatedAt = DateTime.Now
+            };
+
+            _context.Comments.Add(comment);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Details", new { id = postId });
+        }
+
     }
 }

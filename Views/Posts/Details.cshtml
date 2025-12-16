@@ -3,7 +3,6 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
 
-
 @{
     ViewData["Title"] = "Post details";
     var currentUserId = UserManager.GetUserId(User);
@@ -11,19 +10,18 @@
 
 <div class="insta-feed-container mt-4">
     <article class="insta-post-card shadow-soft mb-4">
-        <!-- HEADER: avatar + username + time -->
         <div class="insta-post-header d-flex align-items-center justify-content-between px-3 pt-3">
             <div class="d-flex align-items-center">
                 @if (!string.IsNullOrEmpty(Model.User.ProfileImage))
                 {
                     <img src="@Model.User.ProfileImage"
-                         alt="@Model.User.FullName"
+                         alt="@Model.User.UserName"
                          class="avatar-circle me-2" />
                 }
                 else
                 {
                     var initials = (Model.User.FirstName?.FirstOrDefault().ToString() ?? "") +
-                                   (Model.User.LastName?.FirstOrDefault().ToString() ?? "");
+                    (Model.User.LastName?.FirstOrDefault().ToString() ?? "");
                     <div class="avatar-placeholder me-2 d-flex align-items-center justify-content-center">
                         <span>@initials</span>
                     </div>
@@ -63,25 +61,23 @@
             }
         </div>
 
-        <!-- MEDIA -->
         @if (!string.IsNullOrWhiteSpace(Model.MediaUrl))
         {
             <div class="insta-post-media mt-2">
                 @if (Model.MediaUrl.Contains(".mp4") || Model.MediaUrl.Contains(".mov"))
                 {
-                    <video controls>
+                    <video controls class="w-100">
                         <source src="@Model.MediaUrl" type="video/mp4" />
                         Your browser does not support the video tag.
                     </video>
                 }
                 else
                 {
-                    <img src="@Model.MediaUrl" alt="Post media" />
+                    <img src="@Model.MediaUrl" alt="Post media" class="w-100" />
                 }
             </div>
         }
 
-        <!-- CAPTION -->
         <div class="insta-post-body px-3 pt-3 pb-3">
             @if (!string.IsNullOrEmpty(Model.Title))
             {
@@ -94,18 +90,21 @@
             }
         </div>
     </article>
+
     <div class="card shadow-soft border-0 mb-4">
         <div class="card-body">
-            <h4 class="mb-3">Comments (@Model.Comments.Count)</h4>
+            <h4 class="mb-3">Comments (@(Model.Comments?.Count ?? 0))</h4>
 
             @if (SignInManager.IsSignedIn(User))
             {
-                <form asp-controller="Comments" asp-action="New" method="post" class="mb-4">
-                    <input type="hidden" name="PostId" value="@Model.Id" />
+                <form asp-controller="Posts" asp-action="AddComment" method="post" class="mb-4">
+
+                    <input type="hidden" name="postId" value="@Model.Id" />
+
                     <div class="mb-2">
-                        <label for="Content" class="form-label">Add a comment</label>
-                        <textarea name="Content" class="form-control" rows="2" required
-                                  placeholder="Write something nice..."></textarea>
+                        <label for="content" class="form-label">Add a comment</label>
+                        <textarea name="content" class="form-control" rows="2" required
+                              placeholder="Write something nice..."></textarea>
                     </div>
                     <button type="submit" class="btn btn-primary btn-sm">
                         <i class="bi bi-chat-dots me-1"></i> Post comment
@@ -119,39 +118,39 @@
                 </p>
             }
 
-            @if (Model.Comments.Any())
+            @if (Model.Comments != null && Model.Comments.Any())
             {
                 <div class="list-group list-group-flush">
-                    @foreach (var comment in Model.Comments.OrderByDescending(c => c.Date))
+                    @foreach (var comment in Model.Comments.OrderByDescending(c => c.CreatedAt))
                     {
-                        <div class="list-group-item px-0 d-flex justify-content-between align-items-start">
-                            <div>
-                                <div class="fw-semibold">@comment.User.UserName</div>
-                                <div>@comment.Content</div>
-                                <small class="text-muted">@comment.Date.ToString("g")</small>
+                        <div class="list-group-item px-0 d-flex justify-content-between align-items-start border-bottom py-3">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0 me-3">
+                                    @if (!string.IsNullOrEmpty(comment.User?.ProfileImage))
+                                    {
+                                        <img src="@comment.User.ProfileImage" class="rounded-circle" width="40" height="40" alt="user">
+                                    }
+                                    else
+                                    {
+                                        <img src="https://dummyimage.com/40x40/ced4da/6c757d.jpg" class="rounded-circle" width="40" height="40" alt="user">
+                                    }
+                                </div>
+
+                                <div>
+                                    <div class="fw-bold">
+                                        @(comment.User?.UserName ?? "Unknown")
+                                        <small class="text-muted fw-normal ms-2">@comment.CreatedAt.ToString("g")</small>
+                                    </div>
+                                    <div class="mt-1">@comment.Content</div>
+                                </div>
                             </div>
 
-                            @if (comment.UserId == currentUserId || User.IsInRole("Admin"))
+                            @* Deocamdată le lăsăm comentate sau le legi de un controller viitor 
+                               Dacă vrei să le folosești, trebuie să ai metodele în Controller *@
+                            @* @if (comment.UserId == currentUserId || User.IsInRole("Admin"))
                             {
-                                <div class="ms-3 text-nowrap">
-                                    <a asp-controller="Comments"
-                                       asp-action="Edit"
-                                       asp-route-id="@comment.Id"
-                                       class="btn btn-sm btn-outline-warning me-1">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <form asp-controller="Comments"
-                                          asp-action="Delete"
-                                          asp-route-id="@comment.Id"
-                                          method="post"
-                                          class="d-inline"
-                                          onsubmit="return confirm('Are you sure you want to delete this comment?');">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            }
+                                } 
+                            *@
                         </div>
                     }
                 </div>
@@ -163,9 +162,12 @@
         </div>
     </div>
 
-    <a asp-action="Index" class="btn btn-link px-0">
-        <i class="bi bi-arrow-left"></i> Back to feed
-    </a>
+    <div class="mt-4 mb-5">
+        <a asp-controller="Posts" asp-action="Index" class="btn-back-simple">
+            <i class="bi bi-arrow-left"></i>
+            Back to feed
+        </a>
+    </div>
 </div>
 
 @section Scripts {

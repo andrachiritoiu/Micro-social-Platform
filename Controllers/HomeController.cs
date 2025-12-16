@@ -1,21 +1,30 @@
 using System.Diagnostics;
 using MicroSocialPlatform.Models;
+using MicroSocialPlatform.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace MicroSocialPlatform.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly ApplicationDbContext _context;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, ApplicationDbContext context)
         {
             _logger = logger;
+            _context = context;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var posts = await _context.Posts
+                .Include(p => p.User)
+                .Include(p => p.Reactions)
+                .Include(p => p.Comments)
+                .ToListAsync();
+            return View(posts);
         }
 
         public IActionResult Privacy()

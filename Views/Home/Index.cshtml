@@ -1,8 +1,143 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model IEnumerable<MicroSocialPlatform.Models.Post>
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<MicroSocialPlatform.Models.ApplicationUser> UserManager
+
+@{
+    ViewData["Title"] = "Home";
+    var currentUserId = User.Identity.IsAuthenticated ? UserManager.GetUserId(User) : null;
+    var isAdmin = User.IsInRole("Admin");
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="insta-feed-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 fw-bold">Latest posts</h2>
+        @if (User.Identity.IsAuthenticated)
+        {
+            <a asp-controller="Posts" asp-action="Create" class="btn btn-primary rounded-pill px-4">
+                <i class="bi bi-plus-square me-2"></i> New post
+            </a>
+        }
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        @foreach (var item in Model.OrderByDescending(p => p.CreatedAt))
+        {
+            <article class="insta-post-card shadow-soft hover-lift mb-4">
+                <div class="insta-post-header d-flex align-items-center justify-content-between px-3 pt-3">
+                    <div class="d-flex align-items-center">
+                        @if (!string.IsNullOrEmpty(item.User.ProfileImage))
+                        {
+                            <img src="@item.User.ProfileImage"
+                                 alt="@item.User.FullName"
+                                 class="avatar-circle me-2" />
+                        }
+                        else
+                        {
+                            var initials = (item.User.FirstName?.FirstOrDefault().ToString() ?? "") +
+                                           (item.User.LastName?.FirstOrDefault().ToString() ?? "");
+                            <div class="avatar-placeholder me-2 d-flex align-items-center justify-content-center">
+                                <span>@initials</span>
+                            </div>
+                        }
+
+                        <div>
+                            <div class="insta-username">
+                                @item.User.UserName
+                            </div>
+                            <small class="text-muted d-block">
+                                @item.CreatedAt.ToLocalTime().ToString("dd MMM yyyy • HH:mm")
+                            </small>
+                        </div>
+                    </div>
+
+                    @if (currentUserId == item.UserId || isAdmin)
+                    {
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-light border-0" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Posts" asp-action="Edit" asp-route-id="@item.Id">
+                                        <i class="bi bi-pencil-square me-2"></i>Edit
+                                    </a>
+                                </li>
+                                <li>
+                                    <form asp-controller="Posts" asp-action="Delete"
+                                          asp-route-id="@item.Id"
+                                          method="post"
+                                          onsubmit="return confirm('Are you sure you want to delete this post?');">
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="bi bi-trash me-2"></i>Delete
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    }
+                </div>
+
+                <!-- media -->
+                @if (!string.IsNullOrWhiteSpace(item.MediaUrl))
+                {
+                    <div class="insta-post-media mt-2">
+                        @if (item.MediaUrl.Contains(".mp4") || item.MediaUrl.Contains(".mov"))
+                        {
+                            <video controls>
+                                <source src="@item.MediaUrl" type="video/mp4" />
+                                Your browser does not support the video tag.
+                            </video>
+                        }
+                        else
+                        {
+                            <img src="@item.MediaUrl" alt="Post media" />
+                        }
+                    </div>
+                }
+
+                <!-- caption -->
+                <div class="insta-post-body px-3 pt-3 pb-2">
+                    @if (!string.IsNullOrEmpty(item.Title))
+                    {
+                        <div class="fw-semibold mb-1">@item.Title</div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(item.Content))
+                    {
+                        var text = item.Content.Length > 220
+                            ? item.Content.Substring(0, 220) + "..."
+                            : item.Content;
+
+                        <p class="insta-post-caption mb-0">@text</p>
+                    }
+                </div>
+
+                <!-- actions -->
+                <div class="insta-post-actions d-flex justify-content-between align-items-center px-3 pb-3 pt-2">
+                    <div>
+                        <button type="button" class="btn-action me-3">
+                            <i class="bi bi-heart me-1"></i>
+                            Like (@item.Reactions.Count)
+                        </button>
+                        <button type="button" class="btn-action">
+                            <i class="bi bi-chat me-1"></i>
+                            Comments (@item.Comments.Count)
+                        </button>
+                    </div>
+
+                    <a asp-controller="Posts" asp-action="Details" asp-route-id="@item.Id" class="text-muted small">
+                        View details <i class="bi bi-arrow-right-short"></i>
+                    </a>
+                </div>
+            </article>
+        }
+    }
+    else
+    {
+        <div class="text-center text-muted py-5">
+            <p class="mb-2">No posts yet.</p>
+            <p>Be the first to share something with your friends!</p>
+        </div>
+    }
 </div>
