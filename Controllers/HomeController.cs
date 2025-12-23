@@ -23,6 +23,7 @@ namespace MicroSocialPlatform.Controllers
                 .Include(p => p.User)
                 .Include(p => p.Reactions)
                 .Include(p => p.Comments)
+                    .ThenInclude(c => c.User)
                 .ToListAsync();
             return View(posts);
         }

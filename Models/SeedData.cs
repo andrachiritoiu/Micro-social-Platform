@@ -16,7 +16,7 @@ namespace MicroSocialPlatform.Models
                 // Verificam daca in baza de date exista cel putin un rol
                 // insemnand ca a fost rulat codul
                 // De aceea facem return pentru a nu insera rolurile inca o data
-            // Acesta metoda trebuie sa se execute o singura data
+                // Acesta metoda trebuie sa se execute o singura data
  if (context.Roles.Any())
                 {
                     return; // baza de date contine deja roluri

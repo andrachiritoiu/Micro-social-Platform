@@ -26,7 +26,8 @@ namespace MicroSocialPlatform.Controllers
         {
             var posts = await _context.Posts
                  .Include(p => p.User)       
-                 .Include(p => p.Comments)   
+                 .Include(p => p.Comments)
+                     .ThenInclude(c => c.User)
                  .Include(p => p.Reactions) 
                  .OrderByDescending(p => p.CreatedAt) 
                  .ToListAsync();

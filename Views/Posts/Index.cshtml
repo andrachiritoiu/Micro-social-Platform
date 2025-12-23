@@ -82,11 +82,16 @@
                 <!-- MEDIA -->
                 @if (!string.IsNullOrWhiteSpace(item.MediaUrl))
                 {
-                    <div class="insta-post-media mt-2">
+                    <div class="insta-post-media mt-2 position-relative">
                         @if (item.MediaUrl.Contains(".mp4") || item.MediaUrl.Contains(".mov"))
                         {
-                            <video controls>
-                                <source src="@item.MediaUrl" type="video/mp4" />
+                            <video controls
+                                   playsinline
+                                   preload="metadata"
+                                   class="w-100"
+                                   style="max-height: 500px; background-color: #000;">
+
+                                <source src="@item.MediaUrl#t=0.1" type="video/mp4" />
                                 Your browser does not support the video tag.
                             </video>
                         }
@@ -121,15 +126,52 @@
                             <i class="bi bi-heart me-1"></i>
                             Like (@item.Reactions.Count)
                         </button>
-                        <button type="button" class="btn-action">
+                        <button type="button" class="btn-action btn-comments-toggle" onclick="toggleComments(@item.Id)">
                             <i class="bi bi-chat me-1"></i>
                             Comments (@item.Comments.Count)
                         </button>
                     </div>
 
                     <a asp-action="Details" asp-route-id="@item.Id" class="text-muted small">
-                        View details <i class="bi bi-arrow-right-short"></i>
+                        View details
                     </a>
+                </div>
+
+                <!-- Comments section -->
+                <div id="comments-@item.Id" class="comments-section px-3 pb-3" style="display: none;">
+                    @if (item.Comments != null && item.Comments.Any())
+                    {
+                        <div class="list-group list-group-flush border-top pt-3 mt-2">
+                            @foreach (var comment in item.Comments.OrderByDescending(c => c.CreatedAt))
+                            {
+                                <div class="list-group-item px-0 border-bottom py-2">
+                                    <div class="d-flex w-100">
+                                        <div class="flex-shrink-0 me-2">
+                                            @if (!string.IsNullOrEmpty(comment.User?.ProfileImage))
+                                            {
+                                                <img src="@comment.User.ProfileImage" class="rounded-circle" width="32" height="32" />
+                                            }
+                                            else
+                                            {
+                                                <img src="https://dummyimage.com/32x32/ced4da/6c757d.jpg" class="rounded-circle" width="32" height="32" />
+                                            }
+                                        </div>
+                                        <div class="w-100">
+                                            <div class="fw-bold small">
+                                                @(comment.User?.UserName ?? "Unknown")
+                                                <small class="text-muted fw-normal ms-2">@comment.CreatedAt.ToString("g")</small>
+                                            </div>
+                                            <div class="small mt-1">@comment.Content</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-muted small pt-3 border-top mt-2">No comments yet.</div>
+                    }
                 </div>
             </article>
         }
@@ -142,3 +184,16 @@
         </div>
     }
 </div>
+
+@section Scripts {
+    <script>
+        function toggleComments(postId) {
+            var commentsDiv = document.getElementById('comments-' + postId);
+            if (commentsDiv.style.display === 'none') {
+                commentsDiv.style.display = 'block';
+            } else {
+                commentsDiv.style.display = 'none';
+            }
+        }
+    </script>
+}

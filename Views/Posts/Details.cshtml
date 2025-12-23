@@ -14,9 +14,7 @@
             <div class="d-flex align-items-center">
                 @if (!string.IsNullOrEmpty(Model.User.ProfileImage))
                 {
-                    <img src="@Model.User.ProfileImage"
-                         alt="@Model.User.UserName"
-                         class="avatar-circle me-2" />
+                    <img src="@Model.User.ProfileImage" alt="@Model.User.UserName" class="avatar-circle me-2" />
                 }
                 else
                 {
@@ -35,7 +33,6 @@
                 </div>
             </div>
 
-            @* Edit / Delete pentru autor sau doar Admin *@
             @if (Model.UserId == currentUserId || User.IsInRole("Admin"))
             {
                 <div class="dropdown">
@@ -97,13 +94,13 @@
 
             @if (SignInManager.IsSignedIn(User))
             {
-                <form asp-controller="Posts" asp-action="AddComment" method="post" class="mb-4">
+                <form asp-controller="Comments" asp-action="New" method="post" class="mb-4">
 
-                    <input type="hidden" name="postId" value="@Model.Id" />
+                    <input type="hidden" name="PostId" value="@Model.Id" />
 
                     <div class="mb-2">
                         <label for="content" class="form-label">Add a comment</label>
-                        <textarea name="content" class="form-control" rows="2" required
+                        <textarea name="Content" class="form-control" rows="2" required
                               placeholder="Write something nice..."></textarea>
                     </div>
                     <button type="submit" class="btn btn-primary btn-sm">
@@ -123,34 +120,68 @@
                 <div class="list-group list-group-flush">
                     @foreach (var comment in Model.Comments.OrderByDescending(c => c.CreatedAt))
                     {
-                        <div class="list-group-item px-0 d-flex justify-content-between align-items-start border-bottom py-3">
-                            <div class="d-flex">
+                        <div class="list-group-item px-0 border-bottom py-3" id="comment-container-@comment.Id">
+                            <div class="d-flex w-100">
                                 <div class="flex-shrink-0 me-3">
                                     @if (!string.IsNullOrEmpty(comment.User?.ProfileImage))
                                     {
-                                        <img src="@comment.User.ProfileImage" class="rounded-circle" width="40" height="40" alt="user">
+                                        <img src="@comment.User.ProfileImage" class="rounded-circle" width="40" height="40" />
                                     }
                                     else
                                     {
-                                        <img src="https://dummyimage.com/40x40/ced4da/6c757d.jpg" class="rounded-circle" width="40" height="40" alt="user">
+
+                                        <img src="https://dummyimage.com/40x40/ced4da/6c757d.jpg" class="rounded-circle" width="40" height="40" />
                                     }
                                 </div>
 
-                                <div>
-                                    <div class="fw-bold">
-                                        @(comment.User?.UserName ?? "Unknown")
-                                        <small class="text-muted fw-normal ms-2">@comment.CreatedAt.ToString("g")</small>
+                                <div class="w-100">
+                                    <div class="d-flex justify-content-between">
+                                        <div class="fw-bold">
+                                            @(comment.User?.UserName ?? "Unknown")
+                                            <small class="text-muted fw-normal ms-2">@comment.CreatedAt.ToString("g")</small>
+                                        </div>
+
+                                        @if (comment.UserId == currentUserId || User.IsInRole("Admin"))
+                                        {
+                                            <div class="d-flex gap-2">
+                                                <button onclick="toggleEdit('@comment.Id')" class="btn btn-link text-primary p-0 border-0" title="Edit">
+                                                    <i class="bi bi-pencil-square"></i>
+                                                </button>
+
+                                                <form asp-controller="Comments" asp-action="Delete" asp-route-id="@comment.Id" method="post"
+                                                      onsubmit="return confirm('Delete this post?');">
+                                                    <button type="submit" class="btn btn-link text-danger p-0 border-0" title="Delete">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        }
                                     </div>
-                                    <div class="mt-1">@comment.Content</div>
+
+                                    <div id="comment-view-@comment.Id" class="mt-1">
+                                        @comment.Content
+                                    </div>
+
+                                    @if (comment.UserId == currentUserId || User.IsInRole("Admin"))
+                                    {
+                                        <div id="comment-edit-@comment.Id" style="display:none;" class="mt-2">
+                                            <form onsubmit="saveCommentAjax(event, '@comment.Id')">
+
+                                                <input type="hidden" name="Id" value="@comment.Id" />
+                                                <div class="form-group mb-2">
+                                                    <textarea id="textarea-@comment.Id" name="Content" class="form-control" rows="2">@comment.Content</textarea>
+                                                </div>
+
+                                                <div class="d-flex gap-2">
+                                                    <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                                                    <button type="button" onclick="toggleEdit('@comment.Id')" class="btn btn-secondary btn-sm">Cancel</button>
+                                                </div>
+                                                <div id="error-msg-@comment.Id" class="text-danger small mt-1"></div>
+                                            </form>
+                                        </div>
+                                    }
                                 </div>
                             </div>
-
-                            @* Deocamdată le lăsăm comentate sau le legi de un controller viitor 
-                               Dacă vrei să le folosești, trebuie să ai metodele în Controller *@
-                            @* @if (comment.UserId == currentUserId || User.IsInRole("Admin"))
-                            {
-                                } 
-                            *@
                         </div>
                     }
                 </div>
@@ -162,9 +193,8 @@
         </div>
     </div>
 
-    <div class="mt-4 mb-5">
+    <div class="mt-4 mb-5 text-center">
         <a asp-controller="Posts" asp-action="Index" class="btn-back-simple">
-            <i class="bi bi-arrow-left"></i>
             Back to feed
         </a>
     </div>
@@ -174,4 +204,61 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        function toggleEdit(id) {
+            var viewDiv = document.getElementById('comment-view-' + id);
+            var editDiv = document.getElementById('comment-edit-' + id);
+
+            if (editDiv.style.display === 'none') {
+                editDiv.style.display = 'block';
+                viewDiv.style.display = 'none';
+            } else {
+                editDiv.style.display = 'none';
+                viewDiv.style.display = 'block';
+            }
+        }
+
+            // trimite datele la server fără refresh (AJAX)
+                async function saveCommentAjax(event, id) {
+            event.preventDefault();
+
+            var textArea = document.getElementById('textarea-' + id);
+            var content = textArea.value;
+            var errorDiv = document.getElementById('error-msg-' + id);
+
+            if (!content || content.trim() === "") {
+                errorDiv.innerText = "The comment text cannot be empty.";
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append('id', id);
+            formData.append('Content', content);
+
+            try {
+                const response = await fetch('/Comments/Edit/' + id, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+
+                    if (result.success) {
+                        document.getElementById('comment-view-' + id).innerText = result.newContent;
+                        toggleEdit(id);
+                        errorDiv.innerText = ""; 
+                    } else {
+                        errorDiv.innerText = result.message;
+                    }
+                } else {
+                    errorDiv.innerText = "Server communication error.";
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                errorDiv.innerText = "An unexpected error occurred.";
+            }
+        }
+    </script>
 }

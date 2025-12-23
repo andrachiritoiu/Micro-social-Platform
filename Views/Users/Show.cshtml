@@ -127,12 +127,21 @@
                     <div class="insta-profile-grid-media">
                         @if (post.MediaUrl.Contains(".mp4") || post.MediaUrl.Contains(".mov"))
                         {
+                            <video class="profile-video-thumbnail" preload="metadata" style="display: none;" id="profile-video-@post.Id">
+                                <source src="@post.MediaUrl" type="video/mp4" />
+                            </video>
+                            <img class="profile-video-thumb-img" id="profile-thumb-@post.Id" src="" alt="Video thumbnail" style="display: none;" />
                             <div class="insta-profile-grid-video-icon">
                                 <i class="bi bi-play-fill"></i>
                             </div>
+                            <div class="video-loading-placeholder" id="profile-placeholder-@post.Id" style="background-color: #000; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white;">
+                                <i class="bi bi-play-circle" style="font-size: 2rem;"></i>
+                            </div>
                         }
-
-                        <img src="@post.MediaUrl" alt="Post media" />
+                        else
+                        {
+                            <img src="@post.MediaUrl" alt="Post media" />
+                        }
                     </div>
                 </a>
             }
@@ -177,3 +186,50 @@
         <p class="text-muted">No posts yet.</p>
     }
 </div>
+
+@section Scripts {
+    <script>
+        // Generate video thumbnails for profile grid
+        document.addEventListener('DOMContentLoaded', function() {
+            var profileVideos = document.querySelectorAll('.profile-video-thumbnail');
+            
+            profileVideos.forEach(function(video) {
+                var videoId = video.id;
+                var postId = videoId.replace('profile-video-', '');
+                var thumbnailImg = document.getElementById('profile-thumb-' + postId);
+                var placeholder = document.getElementById('profile-placeholder-' + postId);
+                
+                if (!thumbnailImg || !placeholder) return;
+                
+                video.addEventListener('loadedmetadata', function() {
+                    video.currentTime = 0.1;
+                });
+                
+                video.addEventListener('seeked', function() {
+                    if (video.readyState >= 2) {
+                        try {
+                            var canvas = document.createElement('canvas');
+                            canvas.width = video.videoWidth;
+                            canvas.height = video.videoHeight;
+                            var ctx = canvas.getContext('2d');
+                            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                            
+                            thumbnailImg.src = canvas.toDataURL();
+                            thumbnailImg.style.display = 'block';
+                            placeholder.style.display = 'none';
+                            video.style.display = 'none';
+                        } catch (e) {
+                            console.error('Error generating thumbnail:', e);
+                            // Dacă nu se poate genera thumbnail, lasă placeholder-ul
+                        }
+                    }
+                });
+                
+                // Dacă video-ul nu se poate încărca, lasă placeholder-ul
+                video.addEventListener('error', function() {
+                    placeholder.style.display = 'flex';
+                });
+            });
+        });
+    </script>
+}

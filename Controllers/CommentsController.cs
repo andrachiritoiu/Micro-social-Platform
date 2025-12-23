@@ -8,104 +8,91 @@ namespace MicroSocialPlatform.Controllers
 {
     public class CommentsController : Controller
     {
-        // adaugare, editare sj stergere comentarii
-        // pentru a salva userid care a postat comentariul
-        // pentru a permitte doar utilizatorului care a postat comentariul sa il editeze sau stearga
-        // pentru a permite adminului sa editeze sau stearga orice comentariu
+        // adaugare, editare si stergere comentarii
         private readonly ApplicationDbContext db;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+
         public CommentsController(
         ApplicationDbContext context,
         UserManager<ApplicationUser> userManager,
         RoleManager<IdentityRole> roleManager)
         {
             db = context;
-            _userManager = userManager; 
-            _roleManager = roleManager; 
+            _userManager = userManager;
+            _roleManager = roleManager;
         }
+
         public IActionResult Index()
         {
             return View();
         }
-
 
         [HttpPost]
         [Authorize] // orice utilizator autentificat poate adauga comentarii
         public IActionResult New(Comment comment)
         {
             comment.Date = DateTime.Now;
+            comment.UserId = _userManager.GetUserId(User); 
 
-            if (ModelState.IsValid)
+            if (!string.IsNullOrWhiteSpace(comment.Content))
             {
-                comment.UserId = _userManager.GetUserId(User);
-
                 db.Comments.Add(comment);
                 db.SaveChanges();
-                TempData["Message"] = "Comentariul a fost adăugat!";
+                TempData["Message"] = "The comment has been added!";
 
                 return Redirect("/Posts/Details/" + comment.PostId);
             }
 
-            //logica de validare
-
+            TempData["Message"] = "The comment cannot be empty.";
             return Redirect("/Posts/Details/" + comment.PostId);
         }
 
-
-
-        [Authorize] // doar utilizatori autentificati (autorul sau adminul)
+        [Authorize] 
         public IActionResult Edit(int id)
         {
             Comment comment = db.Comments.Find(id);
 
- 
-            if (comment.UserId == _userManager.GetUserId(User) ||
-                User.IsInRole("Admin"))
+            if (comment.UserId == _userManager.GetUserId(User) || User.IsInRole("Admin"))
             {
-                return View(comment);
+                TempData["EditingCommentId"] = id;
+                return Redirect("/Posts/Details/" + comment.PostId);
             }
             else
             {
-                TempData["Message"] = "Nu ai dreptul să editezi acest comentariu.";
+                TempData["Message"] = "You do not have permission to edit this comment.";
                 return Redirect("/Posts/Details/" + comment.PostId);
             }
         }
 
+
+
         [HttpPost]
-        [Authorize] // doar utilizatori autentificati (autorul sau adminul)
-        public IActionResult Edit(int id, Comment comment) 
+        [Authorize]
+        public IActionResult Edit(int id, Comment commentRequest)
         {
-            Comment commentToUpdate = db.Comments.Find(id); 
+            var comm = db.Comments.Find(id);
 
-            comment.Date = DateTime.Now;
-
-            if (ModelState.IsValid)
+            if (comm == null) return NotFound();
+            if (comm.UserId != _userManager.GetUserId(User) && !User.IsInRole("Admin"))
             {
-        
-                if (commentToUpdate.UserId == _userManager.GetUserId(User) ||
-                    User.IsInRole("Admin"))
-                {
-                    comment.PostId = commentToUpdate.PostId;
-                    comment.UserId = commentToUpdate.UserId;
-
-                    db.Comments.Update(comment);
-                    db.SaveChanges();
-
-                    TempData["Message"] = "Comentariul a fost modificat cu succes!";
-                    return Redirect("/Posts/Details/" + comment.PostId);
-                }
-                else
-                {
-                    TempData["Message"] = "Nu ai dreptul să editezi acest comentariu.";
-                    return Redirect("/Posts/Details/" + comment.PostId);
-                }
+                return Json(new { success = false, message = "You do not have permission to edit this comment." });
             }
 
-            return View(comment);
+          
+            if (!string.IsNullOrWhiteSpace(commentRequest.Content))
+            {
+                comm.Content = commentRequest.Content;
+                comm.Date = DateTime.Now;
+
+                db.Comments.Update(comm); 
+                db.SaveChanges();
+
+                return Json(new { success = true, newContent = comm.Content });
+            }
+
+            return Json(new { success = false, message = "The comment text cannot be empty." });
         }
-
-
 
         [HttpPost]
         [Authorize] // doar utilizatori autentificati (autorul sau adminul)
@@ -113,7 +100,7 @@ namespace MicroSocialPlatform.Controllers
         {
             Comment comment = db.Comments.Find(id);
 
-            // Salvam postId inainte de stergere pentru redirectionare
+            // salvam postId inainte de stergere pentru redirectionare
             int postId = comment.PostId;
 
             if (comment.UserId == _userManager.GetUserId(User) ||
@@ -121,21 +108,15 @@ namespace MicroSocialPlatform.Controllers
             {
                 db.Comments.Remove(comment);
                 db.SaveChanges();
-                TempData["Message"] = "Comentariul a fost șters!";
-                // redirectionare la postarea de unde am sters comentariul
+                TempData["Message"] = "The comment has been deleted!";
 
-                return Redirect("/Posts/Details/" + postId); 
+                return Redirect("/Posts/Details/" + postId);
             }
             else
             {
-                TempData["Message"] = "Nu ai dreptul să ștergi acest comentariu.";
+                TempData["Message"] = "You do not have permission to delete this comment.";
                 return Redirect("/Posts/Details/" + postId);
             }
         }
-
-
-
-
-
     }
 }
