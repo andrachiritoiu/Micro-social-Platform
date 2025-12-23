@@ -12,7 +12,7 @@ namespace MicroSocialPlatform.Controllers
         //afisare profil
         //editare profil
         // management utilizatori de catre admin
-      
+
         private readonly UserManager<ApplicationUser> _userManager;  //pt gestionarea utilizatorilor
         private readonly ApplicationDbContext _context; //pt conexiunea cu baza de date
         private readonly IWebHostEnvironment _env; //pt lucrul cu fisierele
@@ -95,67 +95,132 @@ namespace MicroSocialPlatform.Controllers
 
         //afiseaza formularul de editare a profilului
         [HttpGet]
-        [Authorize] // orice utilizator autentificat isi poate edita propriul profil
-        public async Task<IActionResult> Edit()
+        [Authorize] // orice utilizator autentificat isi poate edita propriul profil si adminul
+        public async Task<IActionResult> Edit(string id)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
+            var currentUser = await _userManager.GetUserAsync(User);
+
+            //daca id-ul este null, insemna ca editam propriul profil
+            ApplicationUser userToEdit;
+
+            if (string.IsNullOrEmpty(id))
+            {
+                userToEdit = currentUser;
+            }
+            else
+            {
+                userToEdit = await _userManager.FindByIdAsync(id);
+            }
+
+            if (userToEdit == null)
             {
                 return NotFound();
             }
-            return View(user);
+
+            if (currentUser.Id != userToEdit.Id && !User.IsInRole("Admin"))
+            {
+                TempData["Message"] = "You do not have permission to edit this profile.";
+                return RedirectToAction("Show", new { id = userToEdit.Id });
+            }
+
+            return View(userToEdit);
         }
 
         //preia datele din formular si le salveaza in bd
         [HttpPost]
-        [Authorize] // orice utilizator autentificat isi poate edita propriul profil
-        public async Task<IActionResult> Edit(ApplicationUser requestUser, IFormFile? userImage)
+        [Authorize]
+        public async Task<IActionResult> Edit(string id, string FirstName, string LastName, string? Description, IFormFile? userImage)
         {
             var currentUser = await _userManager.GetUserAsync(User);
+            var userToEdit = await _userManager.FindByIdAsync(id);
 
-            if (currentUser == null)
+            if (userToEdit == null) return NotFound();
+
+            if (currentUser.Id != userToEdit.Id && !User.IsInRole("Admin"))
             {
-                return NotFound();
+                TempData["Message"] = "You do not have permission to edit this profile.";
+                return RedirectToAction("Show", new { id = id });
             }
 
-            //actualizeaza campurile
-            currentUser.FirstName = requestUser.FirstName;
-            currentUser.LastName = requestUser.LastName;
-            currentUser.Description = requestUser.Description;
+            userToEdit.FirstName = FirstName;
+            userToEdit.LastName = LastName;
+            userToEdit.Description = Description;
 
-            //upload imagine profil
+            // upload imagine profil
             if (userImage != null && userImage.Length > 0)
             {
-                //folderul de stocare
                 var storagePath = Path.Combine(_env.WebRootPath, "images", "profiles");
-                if(!Directory.Exists(storagePath))
-                {
-                    Directory.CreateDirectory(storagePath);
-                }
+                if (!Directory.Exists(storagePath)) Directory.CreateDirectory(storagePath);
 
-                //generam un nume unic pentru fisier
                 var fileName = Guid.NewGuid().ToString() + Path.GetExtension(userImage.FileName);
                 var filePath = Path.Combine(storagePath, fileName);
 
-                //copiem fisierul in folderul de stocare
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await userImage.CopyToAsync(stream);
                 }
 
-                //salvam calea imaginii in bd
-                currentUser.ProfileImage = "/images/profiles/" + fileName;
+                userToEdit.ProfileImage = "/images/profiles/" + fileName;
             }
 
-            //salvam modificarile in bd
-            var result = await _userManager.UpdateAsync(currentUser);
+            await _userManager.UpdateSecurityStampAsync(userToEdit);
+
+            var result = await _userManager.UpdateAsync(userToEdit);
+
             if (result.Succeeded)
             {
-                return RedirectToAction("Show", new { id = currentUser.Id });
+                TempData["Message"] = "Profile updated successfully!";
+                return RedirectToAction("Show", new { id = userToEdit.Id });
             }
 
-            return View(currentUser);
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
 
+            return View(userToEdit);
+        }
+
+
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> Delete(string id)
+        {
+            var userToDelete = await _userManager.FindByIdAsync(id);
+            var currentUser = await _userManager.GetUserAsync(User);
+
+            if (userToDelete == null)
+            {
+                return NotFound();
+            }
+
+            if (currentUser.Id != userToDelete.Id && !User.IsInRole("Admin"))
+            {
+                TempData["Message"] = "You do not have permission to delete this account.";
+                return RedirectToAction("Show", new { id = id });
+            }
+
+            var result = await _userManager.DeleteAsync(userToDelete);
+
+            if (result.Succeeded)
+            {
+                //daca mi-am sters propriul cont, ma si deloghez
+                if (currentUser.Id == userToDelete.Id)
+                {
+                    await Microsoft.AspNetCore.Authentication.AuthenticationHttpContextExtensions.SignOutAsync(HttpContext, IdentityConstants.ApplicationScheme);
+                    return RedirectToAction("Index", "Home");
+                }
+                else
+                {
+                    // daca Adminul a sters pe altcineva
+                    TempData["Message"] = "The user has been deleted.";
+                    return RedirectToAction("Index"); 
+                }
+            }
+
+            TempData["Message"] = "Error deleting the user.";
+            return RedirectToAction("Show", new { id = id });
         }
     }
 }

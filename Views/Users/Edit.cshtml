@@ -15,8 +15,11 @@
         <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
             <div class="card-body p-4 p-md-5">
 
-                <form asp-action="Edit" enctype="multipart/form-data">
-                    <input type="hidden" asp-for="Id" />
+                <form asp-action="Edit" asp-route-id="@Model.Id" enctype="multipart/form-data" method="post">
+
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+                    
+                    <input type="hidden" name="id" value="@Model.Id" />
 
                     <div class="mb-4 text-center p-3 rounded-3" style="background-color: #f8f9fa; border: 1px dashed #ced4da;">
                         <label class="form-label fw-bold text-dark mb-3">Profile Picture</label>
