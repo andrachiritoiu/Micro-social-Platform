@@ -129,7 +129,7 @@ namespace MicroSocialPlatform.Controllers
         //preia datele din formular si le salveaza in bd
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> Edit(string id, string FirstName, string LastName, string? Description, IFormFile? userImage)
+        public async Task<IActionResult> Edit(string id, string FirstName, string LastName, string? Description, bool IsPrivate, IFormFile? userImage)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var userToEdit = await _userManager.FindByIdAsync(id);
@@ -145,6 +145,7 @@ namespace MicroSocialPlatform.Controllers
             userToEdit.FirstName = FirstName;
             userToEdit.LastName = LastName;
             userToEdit.Description = Description;
+            userToEdit.IsPrivate = IsPrivate;
 
             // upload imagine profil
             if (userImage != null && userImage.Length > 0)
@@ -171,11 +172,6 @@ namespace MicroSocialPlatform.Controllers
             {
                 TempData["Message"] = "Profile updated successfully!";
                 return RedirectToAction("Show", new { id = userToEdit.Id });
-            }
-
-            foreach (var error in result.Errors)
-            {
-                ModelState.AddModelError(string.Empty, error.Description);
             }
 
             return View(userToEdit);
