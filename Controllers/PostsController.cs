@@ -28,7 +28,8 @@ namespace MicroSocialPlatform.Controllers
                  .Include(p => p.User)       
                  .Include(p => p.Comments)
                      .ThenInclude(c => c.User)
-                 .Include(p => p.Reactions) 
+                 .Include(p => p.Reactions)
+                    .ThenInclude(r => r.User)
                  .OrderByDescending(p => p.CreatedAt) 
                  .ToListAsync();
 
@@ -43,6 +44,8 @@ namespace MicroSocialPlatform.Controllers
                 .Include(p => p.User)
                 .Include(p => p.Comments)
                     .ThenInclude(c => c.User)
+                .Include(p => p.Reactions)
+                    .ThenInclude(r => r.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (post == null) return NotFound();

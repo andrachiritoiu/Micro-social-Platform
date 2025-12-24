@@ -454,3 +454,113 @@ a:hover {
     width: 20px;
     text-align: center;
 }
+
+.alert-login-required {
+    background-color: var(--navy-blue, #0a1f3d);
+    color: #ffffff; 
+    border: none;
+    border-radius: 12px; 
+    padding: 1.5rem;
+    text-align: center;
+    font-weight: 500;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+}
+
+    .alert-login-required a {
+        color: #F7DFE7;
+        text-decoration: underline;
+        font-weight: 700;
+        transition: color 0.2s;
+    }
+
+.alert-login-required a:hover {
+     color: #ffffff;
+}
+
+/*reactii*/
+.reaction-wrapper {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.reactions-box {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    bottom: 100%; 
+    left: 0;
+    margin-bottom: 10px; 
+    background: white;
+    padding: 5px 10px;
+    border-radius: 50px; 
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    display: flex;
+    gap: 8px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform: translateY(10px) scale(0.8);
+    z-index: 1000;
+    border: 1px solid #f0f2f5;
+}
+
+.reaction-wrapper:hover .reactions-box {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.reaction-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: transform 0.2s;
+}
+
+.reaction-circle:hover {
+    transform: scale(1.2) translateY(-3px);
+}
+
+.btn-trigger {
+    background: none;
+    border: none;
+    padding: 0;
+    font-weight: 600;
+    color: #65676b; 
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: color 0.2s;
+}
+
+.btn-trigger:hover {
+    color: #444; 
+}
+
+
+.text-pastel-blue {
+    color: #89CFF0 !important;
+}
+.text-pastel-red {
+    color: #ff6b6b !important;
+}
+.text-pastel-yellow {
+    color: #feca57 !important;
+}
+.active-reaction i {
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
+}
+
+.text-decoration-underline-hover:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.btn-comments-toggle:hover {
+    text-decoration: underline !important;
+    cursor: pointer;
+    color: #262626 !important;
+}

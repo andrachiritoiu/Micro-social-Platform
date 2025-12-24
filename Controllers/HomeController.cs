@@ -22,6 +22,7 @@ namespace MicroSocialPlatform.Controllers
             var posts = await _context.Posts
                 .Include(p => p.User)
                 .Include(p => p.Reactions)
+                    .ThenInclude(r => r.User)
                 .Include(p => p.Comments)
                     .ThenInclude(c => c.User)
                 .ToListAsync();

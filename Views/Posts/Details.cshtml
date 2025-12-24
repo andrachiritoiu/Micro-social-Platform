@@ -86,6 +86,68 @@
                 <p class="insta-post-caption mb-0">@Model.Content</p>
             }
         </div>
+
+        <div class="insta-post-actions d-flex align-items-center px-3 pb-3 pt-2 border-top">
+            @{
+                var myReaction = Model.Reactions?.FirstOrDefault(r => r.UserId == currentUserId);
+                string myType = myReaction?.Type;
+
+                string triggerText = "Like";
+                string triggerColor = "";
+                string triggerIcon = "bi-heart";
+
+                if (myType != null)
+                {
+                    triggerText = myType;
+                    triggerIcon = myType switch
+                    {
+                        "Like" => "bi-hand-thumbs-up-fill",
+                        "Love" => "bi-heart-fill",
+                        "Haha" => "bi-emoji-laughing-fill",
+                        "Wow" => "bi-star-fill",
+                        _ => "bi-hand-thumbs-up-fill"
+                    };
+                    triggerColor = myType switch
+                    {
+                        "Like" => "text-pastel-blue",
+                        "Love" => "text-pastel-red",
+                        "Haha" => "text-pastel-yellow",
+                        "Wow" => "text-pastel-yellow",
+                        _ => "text-primary"
+                    };
+                }
+            }
+
+            <div class="reaction-wrapper me-3">
+                <div class="reactions-box">
+                    @foreach (var type in new[] { "Like", "Love", "Haha", "Wow" })
+                    {
+                        string iconClass = type switch
+                        {
+                            "Like" => "bi-hand-thumbs-up-fill text-pastel-blue",
+                            "Love" => "bi-heart-fill text-pastel-red",
+                            "Haha" => "bi-emoji-laughing-fill text-pastel-yellow",
+                            "Wow" => "bi-star-fill text-pastel-yellow",
+                            _ => ""
+                        };
+                        <button class="btn btn-link p-0 text-decoration-none reaction-btn"
+                                data-post-id="@Model.Id"
+                                data-type="@type">
+                            <div class="reaction-circle"><i class="bi @iconClass"></i></div>
+                        </button>
+                    }
+                </div>
+
+                <button type="button"
+                        class="btn-trigger btn-main-reaction-@Model.Id @triggerColor"
+                        onclick="showReactionList(@Model.Id)">
+                    <i class="bi @triggerIcon me-1 fs-5"></i>
+                    <span class="fw-bold text-decoration-underline-hover">
+                        @triggerText (@(Model.Reactions?.Count ?? 0))
+                    </span>
+                </button>
+            </div>
+        </div>
     </article>
 
     <div class="card shadow-soft border-0 mb-4">
@@ -110,9 +172,13 @@
             }
             else
             {
-                <p class="alert alert-info mb-4">
-                    Please <a asp-area="Identity" asp-page="/Account/Login">log in</a> to post comments.
-                </p>
+                <div class="alert alert-login-required mb-4 shadow-sm" role="alert">
+                    <div class="d-flex align-items-center justify-content-center">
+                        <span>
+                            Please <a asp-area="Identity" asp-page="/Account/Login">log in</a> to post comments.
+                        </span>
+                    </div>
+                </div>
             }
 
             @if (Model.Comments != null && Model.Comments.Any())
@@ -200,6 +266,22 @@
     </div>
 </div>
 
+
+<div class="modal fade" id="reactionsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content rounded-4 shadow">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold">Reactions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <div id="reactionsListContainer" class="d-flex flex-column gap-3">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
@@ -220,7 +302,7 @@
         }
 
             // trimite datele la server fără refresh (AJAX)
-                async function saveCommentAjax(event, id) {
+        async function saveCommentAjax(event, id) {
             event.preventDefault();
 
             var textArea = document.getElementById('textarea-' + id);
@@ -259,6 +341,93 @@
                 console.error('Error:', error);
                 errorDiv.innerText = "An unexpected error occurred.";
             }
+        }
+
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const reactionBtns = document.querySelectorAll('.reaction-btn');
+
+            reactionBtns.forEach(btn => {
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const postId = this.getAttribute('data-post-id');
+                    const type = this.getAttribute('data-type');
+
+                    // Trimitem cererea la server
+                    fetch(`/Reactions/ToggleReaction?postId=${postId}&type=${type}`, { method: 'POST' })
+                    .then(r => r.status === 401 ? window.location.href = '/Identity/Account/Login' : r.json())
+                    .then(data => {
+                        if (data && data.success) {
+                            // Găsim butonul principal pentru a-l actualiza vizual
+                            const mainBtn = document.querySelector(`.btn-main-reaction-${postId}`);
+                            const icon = mainBtn.querySelector('i');
+                            const span = mainBtn.querySelector('span');
+
+                            // Resetăm clasele de culoare
+                            mainBtn.classList.remove('text-pastel-blue', 'text-pastel-red', 'text-pastel-yellow', 'text-primary');
+                            mainBtn.style.color = '';
+
+                            if (data.status === 'removed') {
+                                // Dacă s-a scos like-ul
+                                icon.className = 'bi bi-heart me-1 fs-5';
+                                span.innerText = `Like (${data.count})`;
+                                mainBtn.style.color = '#65676b';
+                            } else if (data.currentType) {
+                                // Dacă s-a adăugat/schimbat reacția
+                                span.innerText = `${data.currentType} (${data.count})`;
+
+                                if (data.currentType === 'Like') { icon.className = 'bi bi-hand-thumbs-up-fill me-1 fs-5'; mainBtn.classList.add('text-pastel-blue'); }
+                                else if (data.currentType === 'Love') { icon.className = 'bi bi-heart-fill me-1 fs-5'; mainBtn.classList.add('text-pastel-red'); }
+                                else if (data.currentType === 'Haha') { icon.className = 'bi bi-emoji-laughing-fill me-1 fs-5'; mainBtn.classList.add('text-pastel-yellow'); }
+                                else if (data.currentType === 'Wow') { icon.className = 'bi bi-star-fill me-1 fs-5'; mainBtn.classList.add('text-pastel-yellow'); }
+                            }
+                        }
+                    })
+                    .catch(err => console.error(err));
+                });
+            });
+        });
+
+        function showReactionList(postId) {
+            var myModal = new bootstrap.Modal(document.getElementById('reactionsModal'));
+            var listContainer = document.getElementById('reactionsListContainer');
+
+            listContainer.innerHTML = `<div class="text-center py-3"><div class="spinner-border text-primary spinner-sm"></div></div>`;
+            myModal.show();
+
+            fetch(`/Reactions/GetReactionsList?postId=${postId}`)
+                .then(response => response.json())
+                .then(data => {
+                    listContainer.innerHTML = ""; 
+
+                    if (!data || data.length === 0) {
+                        listContainer.innerHTML = '<div class="text-center text-muted small py-2">No reactions yet.</div>';
+                        return;
+                    }
+
+                    data.forEach(user => {
+                        let iconHtml = '';
+                        if(user.type === 'Like') iconHtml = '<i class="bi bi-hand-thumbs-up-fill text-pastel-blue"></i>';
+                        else if(user.type === 'Love') iconHtml = '<i class="bi bi-heart-fill text-pastel-red"></i>';
+                        else if(user.type === 'Haha') iconHtml = '<i class="bi bi-emoji-laughing-fill text-pastel-yellow"></i>';
+                        else if(user.type === 'Wow') iconHtml = '<i class="bi bi-star-fill text-pastel-yellow"></i>';
+
+                        let imgUrl = user.profileImage ? user.profileImage : "https://dummyimage.com/32x32/ced4da/6c757d.jpg";
+
+                        listContainer.innerHTML += `
+                            <div class="d-flex align-items-center justify-content-between border-bottom py-2">
+                                <div class="d-flex align-items-center">
+                                    <img src="${imgUrl}" class="rounded-circle me-2" width="32" height="32" style="object-fit:cover;">
+                                    <span class="fw-bold small text-dark">${user.userName}</span>
+                                </div>
+                                <div class="fs-5">${iconHtml}</div>
+                            </div>`;
+                    });
+                })
+                .catch(err => {
+                    console.error(err);
+                    listContainer.innerHTML = '<div class="text-danger small text-center">Error loading reactions.</div>';
+                });
         }
     </script>
 }
