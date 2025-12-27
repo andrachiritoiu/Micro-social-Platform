@@ -212,6 +212,29 @@ namespace MicroSocialPlatform.Controllers
 
 
         [HttpPost]
+        public async Task<IActionResult> EditMessage(int messageId, int groupId, string newContent)
+        {
+            var message = await _context.GroupMessages.FindAsync(messageId);
+            var currentUserId = _userManager.GetUserId(User);
+
+            if (message == null || message.UserId != currentUserId)
+            {
+                return Forbid(); 
+            }
+
+            if (!string.IsNullOrWhiteSpace(newContent))
+            {
+                message.Content = newContent;
+                
+                _context.Update(message);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction("Details", new { id = groupId });
+        }
+
+
+        [HttpPost]
         public async Task<IActionResult> DeleteMessage(int messageId)
         {
             var msg = await _context.GroupMessages.Include(m => m.Group).FirstOrDefaultAsync(m => m.Id == messageId);
@@ -227,6 +250,7 @@ namespace MicroSocialPlatform.Controllers
         }
 
 
+        //Editare grup
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
