@@ -1,9 +1,11 @@
-@model MicroSocialPlatform.Models.Group
+ï»¿@model MicroSocialPlatform.Models.Group
 
 @{
-    ViewData["Title"] = "Create Group";
-    // Definim culoarea exactã a butoanelor pentru a o folosi ?i sus
-    string darkBlueColor = "#5c6b8e";
+    ViewData["Title"] = "Edit Group";
+
+    string headerBackground = "#34495e";
+
+    string accentColor = "#7952b3";
 }
 
 <div class="container mt-5 mb-5">
@@ -11,14 +13,16 @@
         <div class="col-md-8 col-lg-6">
             <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
 
-                <div class="card-header text-white p-4 text-center border-0" style="background-color: @darkBlueColor;">
-                    <h3 class="fw-bold mb-0">Create a Community</h3>
-                    <p class="mb-0 opacity-75">Start a new group for people to join.</p>
+                <div class="card-header p-4 text-center border-0"
+                     style="background-color: @headerBackground; color: white;">
+                    <h3 class="fw-bold mb-0">Edit Group</h3>
+                    <p class="mb-0 text-white-50">Update your community details.</p>
                 </div>
 
                 <div class="card-body p-4 p-md-5">
-                    <form asp-action="Create">
+                    <form asp-action="Edit">
                         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        <input type="hidden" asp-for="Id" />
 
                         <div class="form-floating mb-3">
                             <input asp-for="Name" class="form-control" placeholder="Group Name" />
@@ -28,15 +32,16 @@
 
                         <div class="form-floating mb-4">
                             <textarea asp-for="Description" class="form-control" placeholder="Description" style="height: 120px"></textarea>
-                            <label asp-for="Description">Description (Topic, Rules, etc.)</label>
+                            <label asp-for="Description">Description</label>
                             <span asp-validation-for="Description" class="text-danger small"></span>
                         </div>
 
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-lg rounded-pill fw-bold text-white" style="background-color: @darkBlueColor; border-color: @darkBlueColor;">
-                                Create Group
+                            <button type="submit" class="btn btn-lg rounded-pill fw-bold text-white shadow-sm hover-scale"
+                                    style="background-color: @accentColor; border: none;">
+                                Save Changes
                             </button>
-                            <a asp-action="Index" class="btn btn-light btn-lg rounded-pill text-muted">
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-light btn-lg rounded-pill text-muted hover-bg">
                                 Cancel
                             </a>
                         </div>
@@ -46,6 +51,20 @@
         </div>
     </div>
 </div>
+
+<style>
+    .hover-scale {
+        transition: transform 0.2s;
+    }
+
+        .hover-scale:hover {
+            transform: scale(1.02);
+        }
+
+    .hover-bg:hover {
+        background-color: #f1f3f5;
+    }
+</style>
 
 @section Scripts {
     @{

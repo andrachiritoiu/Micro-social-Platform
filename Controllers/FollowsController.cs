@@ -9,7 +9,7 @@ namespace MicroSocialPlatform.Controllers
     {
         // urmarire / dezurmarrire utilizatori
      
-        private readonly ApplicationDbContext db;
+        private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         public FollowsController(
@@ -17,7 +17,7 @@ namespace MicroSocialPlatform.Controllers
         UserManager<ApplicationUser> userManager,
         RoleManager<IdentityRole> roleManager)
         {
-            db = context;
+            _context = context;
             _userManager = userManager; // Initializează UserManager
             _roleManager = roleManager; // Initializează RoleManager
         }

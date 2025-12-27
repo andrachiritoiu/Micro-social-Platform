@@ -9,7 +9,7 @@ namespace MicroSocialPlatform.Controllers
     public class CommentsController : Controller
     {
         // adaugare, editare si stergere comentarii
-        private readonly ApplicationDbContext db;
+        private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
 
@@ -18,7 +18,7 @@ namespace MicroSocialPlatform.Controllers
         UserManager<ApplicationUser> userManager,
         RoleManager<IdentityRole> roleManager)
         {
-            db = context;
+            _context = context;
             _userManager = userManager;
             _roleManager = roleManager;
         }
@@ -37,8 +37,8 @@ namespace MicroSocialPlatform.Controllers
 
             if (!string.IsNullOrWhiteSpace(comment.Content))
             {
-                db.Comments.Add(comment);
-                db.SaveChanges();
+                _context.Comments.Add(comment);
+                _context.SaveChanges();
                 TempData["Message"] = "The comment has been added!";
 
                 return Redirect("/Posts/Details/" + comment.PostId);
@@ -51,7 +51,7 @@ namespace MicroSocialPlatform.Controllers
         [Authorize] 
         public IActionResult Edit(int id)
         {
-            Comment comment = db.Comments.Find(id);
+            Comment comment = _context.Comments.Find(id);
 
             if (comment.UserId == _userManager.GetUserId(User) || User.IsInRole("Admin"))
             {
@@ -71,7 +71,7 @@ namespace MicroSocialPlatform.Controllers
         [Authorize]
         public IActionResult Edit(int id, Comment commentRequest)
         {
-            var comm = db.Comments.Find(id);
+            var comm = _context.Comments.Find(id);
 
             if (comm == null) return NotFound();
             if (comm.UserId != _userManager.GetUserId(User) && !User.IsInRole("Admin"))
@@ -85,8 +85,8 @@ namespace MicroSocialPlatform.Controllers
                 comm.Content = commentRequest.Content;
                 comm.Date = DateTime.Now;
 
-                db.Comments.Update(comm); 
-                db.SaveChanges();
+                _context.Comments.Update(comm);
+                _context.SaveChanges();
 
                 return Json(new { success = true, newContent = comm.Content });
             }
@@ -98,7 +98,7 @@ namespace MicroSocialPlatform.Controllers
         [Authorize] // doar utilizatori autentificati (autorul sau adminul)
         public IActionResult Delete(int id)
         {
-            Comment comment = db.Comments.Find(id);
+            Comment comment = _context.Comments.Find(id);
 
             // salvam postId inainte de stergere pentru redirectionare
             int postId = comment.PostId;
@@ -106,8 +106,8 @@ namespace MicroSocialPlatform.Controllers
             if (comment.UserId == _userManager.GetUserId(User) ||
                 User.IsInRole("Admin"))
             {
-                db.Comments.Remove(comment);
-                db.SaveChanges();
+                _context.Comments.Remove(comment);
+                _context.SaveChanges();
                 TempData["Message"] = "The comment has been deleted!";
 
                 return Redirect("/Posts/Details/" + postId);

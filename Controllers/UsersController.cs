@@ -197,6 +197,24 @@ namespace MicroSocialPlatform.Controllers
                 return RedirectToAction("Show", new { id = id });
             }
 
+            //Stergem manual datele care au DeleteBehavior.Restrict
+            //Comentariile 
+            var comments = _context.Comments.Where(c => c.UserId == userToDelete.Id);
+            _context.Comments.RemoveRange(comments);
+
+            //Reactiile 
+            var reactions = _context.Reactions.Where(r => r.UserId == userToDelete.Id);
+            _context.Reactions.RemoveRange(reactions);
+
+            // Grupurile unde userul este Moderator 
+            // Celelalte date (Postări, Mesaje, Membri, Notificări) se vor sterge singure 
+            // datorită setării CASCADE din DbContext
+            var moderatedGroups = _context.Groups.Where(g => g.ModeratorId == userToDelete.Id);
+            _context.Groups.RemoveRange(moderatedGroups);
+
+            await _context.SaveChangesAsync();
+
+
             var result = await _userManager.DeleteAsync(userToDelete);
 
             if (result.Succeeded)

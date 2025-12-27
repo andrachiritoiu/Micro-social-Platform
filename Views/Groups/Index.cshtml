@@ -1,91 +1,90 @@
 @model IEnumerable<MicroSocialPlatform.Models.Group>
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
 
 @{
     ViewData["Title"] = "Groups";
+
+    string darkBlueColor = "#5c6b8e"; 
 }
 
-@using Microsoft.AspNetCore.Identity
-@using MicroSocialPlatform.Models
-@inject SignInManager<ApplicationUser> SignInManager
-
-@{
-    var userMemberships = ViewData["UserMemberships"] as List<int> ?? new List<int>();
-    var currentUserId = ViewData["CurrentUserId"] as string;
-}
-
-<div class="feed-container">
+<div class="feed-container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 style="color: var(--text-primary); font-weight: 600;">Groups</h2>
-        <a asp-action="Create" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Create Group
-        </a>
+        <div>
+            <h2 class="fw-bold mb-0" style="color: #2c3e50;">Explore Groups</h2>
+            <p class="text-muted">Find communities that share your interests.</p>
+        </div>
+        @if (User.Identity.IsAuthenticated)
+        {
+            <a asp-action="Create" class="btn rounded-pill px-4 shadow-sm text-white"
+               style="background-color: @darkBlueColor; border-color: @darkBlueColor;">
+                <i class="bi bi-plus-lg me-2"></i> Create Group
+            </a>
+        }
     </div>
 
-    @if (Model.Any())
-    {
-        <div class="row g-4">
+    <div class="row">
+        @if (Model != null && Model.Any())
+        {
             @foreach (var group in Model)
             {
-                var isMember = userMemberships.Contains(group.Id);
-                var isModerator = group.ModeratorId == currentUserId;
-                var memberCount = group.GroupMemberships?.Count(gm => gm.IsAccepted) ?? 0;
-                
-                <div class="col-md-6 col-lg-4">
-                    <div class="custom-card h-100" style="transition: all 0.3s ease;">
-                        <div class="custom-card-header" style="background: linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-purple) 100%); color: white; padding: 20px;">
-                            <h4 style="margin: 0; font-weight: 600; color: white;">@group.Name</h4>
-                        </div>
-                        <div style="padding: 20px;">
-                            <p class="text-muted mb-3" style="min-height: 60px;">@group.Description</p>
-                            
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <small class="text-muted">
-                                    <i class="bi bi-people"></i> @memberCount member@(memberCount != 1 ? "s" : "")
-                                </small>
-                                <small class="text-muted">
-                                    <i class="bi bi-person-badge"></i> @group.Moderator?.UserName
-                                </small>
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 border-0 shadow-sm hover-lift">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title fw-bold" style="color: #2c3e50;">@group.Name</h5>
+                                @if (group.CreatedAt > DateTime.UtcNow.AddDays(-2))
+                                {
+                                    <span class="badge rounded-pill" style="background-color: #d1fae5; color: #065f46;">New</span>
+                                }
                             </div>
 
-                            <div class="d-flex gap-2">
-                                <a asp-action="Details" asp-route-id="@group.Id" class="btn btn-outline-primary btn-sm flex-grow-1">
-                                    <i class="bi bi-chat-dots"></i> @(isMember ? "Open" : "View")
+                            <p class="card-text text-muted small mb-3" style="min-height: 40px;">
+                                @(group.Description.Length > 100 ? group.Description.Substring(0, 100) + "..." : group.Description)
+                            </p>
+
+                            <div class="d-flex align-items-center justify-content-between mt-auto">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center me-2 border"
+                                         style="width: 30px; height: 30px; font-size: 12px; font-weight: bold; background-color: #f8f9fa; color: #6c757d;">
+                                        @group.Moderator?.UserName.Substring(0, 1).ToUpper()
+                                    </div>
+                                    <small class="text-muted">Mod: @group.Moderator?.UserName</small>
+                                </div>
+
+                                <a asp-action="Details" asp-route-id="@group.Id" class="btn btn-sm rounded-pill px-3"
+                                   style="border: 1px solid @darkBlueColor; color: @darkBlueColor;"
+                                   onmouseover="this.style.backgroundColor='@darkBlueColor'; this.style.color='white';"
+                                   onmouseout="this.style.backgroundColor='transparent'; this.style.color='@darkBlueColor';">
+                                    View Group
                                 </a>
-                                @if (!isMember && !isModerator)
-                                {
-                                    <form asp-action="Join" asp-route-id="@group.Id" method="post" class="d-inline">
-                                        <button type="submit" class="btn btn-primary btn-sm">
-                                            <i class="bi bi-person-plus"></i> Join
-                                        </button>
-                                    </form>
-                                }
-                                @if (isMember && !isModerator)
-                                {
-                                    <form asp-action="Leave" asp-route-id="@group.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to leave this group?');">
-                                        <button type="submit" class="btn btn-outline-danger btn-sm">
-                                            <i class="bi bi-box-arrow-right"></i> Leave
-                                        </button>
-                                    </form>
-                                }
                             </div>
                         </div>
                     </div>
                 </div>
             }
-        </div>
-    }
-    else
-    {
-        <div class="custom-card text-center" style="padding: 60px 20px;">
-            <div style="font-size: 3rem; margin-bottom: 20px; color: var(--primary-blue);">
-                <i class="bi bi-people"></i>
+        }
+        else
+        {
+            <div class="col-12 text-center py-5">
+                <div class="mb-3">
+                    <i class="bi bi-people display-4 text-muted opacity-25"></i>
+                </div>
+                <h5 class="text-muted">No groups found at the moment.</h5>
+                <p class="text-muted small">Be the first to create a community!</p>
+                <a asp-action="Create" class="btn btn-sm mt-2 text-white" style="background-color: @darkBlueColor;">Create Group</a>
             </div>
-            <h3 style="color: var(--text-primary); margin-bottom: 10px;">No groups yet</h3>
-            <p class="text-muted mb-4">Be the first to create a group!</p>
-            <a asp-action="Create" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> Create Group
-            </a>
-        </div>
-    }
+        }
+    </div>
 </div>
 
+<style>
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .hover-lift:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+        }
+</style>

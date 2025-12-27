@@ -11,7 +11,7 @@ namespace MicroSocialPlatform.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
+           /* migrationBuilder.CreateTable(
                 name: "AspNetRoles",
                 columns: table => new
                 {
@@ -507,7 +507,7 @@ namespace MicroSocialPlatform.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Reactions_PostId",
                 table: "Reactions",
-                column: "PostId");
+                column: "PostId");*/
         }
 
         /// <inheritdoc />
