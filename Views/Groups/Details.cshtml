@@ -1,0 +1,407 @@
+@model MicroSocialPlatform.Models.Group
+
+@{
+    ViewData["Title"] = Model.Name;
+    var currentUserId = ViewBag.CurrentUserId as string;
+    var userStatus = ViewBag.UserStatus as string; // "Guest", "Pending", "Member"
+    var isModerator = (bool)ViewBag.IsModerator;
+    var memberCount = Model.GroupMemberships?.Count(gm => gm.IsAccepted) ?? 0;
+    
+    string mainGradient = "linear-gradient(135deg, #34495e 0%, #5d80a6 100%)";
+    
+    string accentColor = "#7952b3"; 
+}
+
+<div class="feed-container mt-4">
+
+    <div class="card mb-4 border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header border-0 p-5 position-relative" style="background: @mainGradient; color: white;">
+            
+            <div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: rgba(255,255,255,0.05); border-radius: 50%;"></div>
+
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center position-relative" style="z-index: 1;">
+                <div class="mb-3 mb-md-0">
+                    <h1 class="fw-bold mb-2 text-white display-5">@Model.Name</h1>
+                    <p class="mb-0 text-white-50 fs-5 fw-light">@Model.Description</p>
+                    
+                    <div class="mt-3 d-flex align-items-center gap-3 text-white-50 small">
+                      <span class="d-flex align-items-center px-3 py-1 rounded-pill text-white fw-bold shadow-sm" 
+      style="background-color: rgba(255, 255, 255, 0.25); border: 1px solid rgba(255,255,255,0.1);">
+    <i class="bi bi-people-fill me-2"></i> @memberCount members
+</span>
+                        <span class="d-flex align-items-center">Mod: <strong>@Model.Moderator?.UserName</strong>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    @if (isModerator)
+                    {
+                        <a asp-action="Edit" asp-route-id="@Model.Id"
+                           class="btn btn-sm rounded-pill px-4 py-2 shadow-sm fw-bold text-white hover-scale"
+                           style="background-color: rgba(255, 255, 255, 0.25);
+                                border: 1px solid rgba(255,255,255,0.1);
+                                backdrop-filter: blur(6px);">
+                            <i class="bi bi-pencil-square me-2"></i> Edit
+                        </a>
+
+                        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('WARNING: Deleting this group is permanent! Continue?');">
+                            <button type="submit" class="btn btn-danger btn-sm rounded-pill px-4 shadow-sm fw-bold">
+                                <i class="bi bi-trash-fill me-2"></i> Delete Group
+                            </button>
+                        </form>
+                    }
+                    else if (userStatus == "Member")
+                    {
+                        <form asp-action="RemoveMember" method="post" onsubmit="return confirm('Are you sure you want to leave this group?');">
+                            <input type="hidden" name="groupId" value="@Model.Id" />
+                            <input type="hidden" name="userId" value="@currentUserId" />
+                            <button type="submit" class="btn btn-outline-light btn-sm rounded-pill px-4 backdrop-blur">
+                                <i class="bi bi-box-arrow-right me-2"></i> Leave
+                            </button>
+                        </form>
+                    }
+                    else if (userStatus == "Pending")
+                    {
+                        <button class="btn btn-sm rounded-pill px-4 fw-bold shadow-sm disabled text-white"
+                                style="background-color: rgba(255, 255, 255, 0.25);
+                                border: 1px solid rgba(255,255,255,0.1);
+                                backdrop-filter: blur(6px);">
+                            <i class="bi bi-hourglass-split me-2"></i> Pending
+                        </button>
+                    }
+                    else // Guest
+                    {
+                        <form asp-action="Join" method="post">
+                            <input type="hidden" name="groupId" value="@Model.Id" />
+                            <button type="submit"
+                                    class="btn btn-sm rounded-pill px-5 py-2 fw-bold shadow-sm hover-scale text-white"
+                                    style="background-color: rgba(255, 255, 255, 0.25);
+                           border: 1px solid rgba(255,255,255,0.1);
+                           backdrop-filter: blur(6px);">
+                                <i class="bi bi-person-plus-fill me-2"></i> Join Group
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (isModerator)
+    {
+        var pendingUsers = Model.GroupMemberships.Where(m => !m.IsAccepted).ToList();
+        if (pendingUsers.Any())
+        {
+            <div class="card mb-4 border-0 shadow-sm rounded-4" style="background-color: #fff9e6;">
+                <div class="card-header bg-transparent border-0 p-3 fw-bold text-warning-emphasis"> Join Requests (@pendingUsers.Count)
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush bg-transparent">
+                        @foreach (var req in pendingUsers)
+                        {
+                            <li class="list-group-item bg-transparent border-0 d-flex justify-content-between align-items-center px-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        @if (!string.IsNullOrEmpty(req.User.ProfileImage))
+                                        {
+                                            <img src="@req.User.ProfileImage"
+                                                 alt="@req.User.UserName"
+                                                 class="rounded-circle shadow-sm"
+                                                 style="width: 40px; height: 40px; object-fit: cover;" />
+                                        }
+                                        else
+                                        {
+                                            <div class="avatar-circle small bg-warning text-white shadow-sm">
+                                                @req.User.UserName.Substring(0, 1).ToUpper()
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <span class="fw-bold text-dark">@req.User.UserName</span>
+                                </div>
+                                <div>
+                                    <form asp-action="AcceptMember" method="post" class="d-inline">
+                                        <input type="hidden" name="groupId" value="@Model.Id" />
+                                        <input type="hidden" name="userId" value="@req.UserId" />
+                                        <button class="btn btn-success btn-sm rounded-circle shadow-sm me-1" style="width: 32px; height: 32px;"><i class="bi bi-check-lg"></i></button>
+                                    </form>
+                                    <form asp-action="RemoveMember" method="post" class="d-inline">
+                                        <input type="hidden" name="groupId" value="@Model.Id" />
+                                        <input type="hidden" name="userId" value="@req.UserId" />
+                                        <button class="btn btn-danger btn-sm rounded-circle shadow-sm" style="width: 32px; height: 32px;"><i class="bi bi-x-lg"></i></button>
+                                    </form>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
+    }
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg rounded-4 h-100 overflow-hidden">
+                <div class="card-header bg-white border-bottom p-3">
+                    <h5 class="mb-0 fw-bold text-dark d-flex align-items-center">
+                        <i class="bi bi-chat-dots-fill me-2" style="color: @accentColor;"></i> Chat
+                    </h5>
+                </div>
+
+                @if (userStatus == "Member")
+                {
+                    <div id="messages-container" class="card-body overflow-auto p-4" style="height: 500px; background-color: #f8f9fa;">
+                        @if (!Model.GroupPosts.Any())
+                        {
+                            <div class="h-100 d-flex flex-column align-items-center justify-content-center text-muted opacity-50">
+                                <i class="bi bi-chat-square-heart fs-1 mb-2"></i>
+                                <p>No messages yet. Be the first to say hello!</p>
+                            </div>
+                        }
+
+                        @foreach (var message in Model.GroupPosts.OrderBy(m => m.CreatedAt))
+                        {
+                            var isMe = message.UserId == currentUserId;
+                            <div class="d-flex mb-3 @(isMe ? "justify-content-end" : "justify-content-start")">
+                                <div class="d-flex align-items-end gap-2" style="max-width: 75%;">
+
+                                    @if (!isMe)
+                                    {
+                                        if (!string.IsNullOrEmpty(message.User.ProfileImage))
+                                        {
+                                            <img src="@message.User.ProfileImage"
+                                                 alt="@message.User.UserName"
+                                                 class="avatar-circle shadow-sm"
+                                                 style="object-fit: cover; background-color: #e9ecef;" />
+                                        }
+                                        else
+                                        {
+                                            <div class="avatar-circle shadow-sm" style="background-color: #e9ecef; color: #6c757d;">
+                                                @(message.User.UserName?.FirstOrDefault().ToString().ToUpper() ?? "?")
+                                            </div>
+                                        }
+                                    }
+
+                                    <div class="d-flex flex-column @(isMe ? "align-items-end" : "align-items-start")">
+                                        @if (!isMe)
+                                        {
+                                            <span class="small fw-bold ms-1 mb-1 text-muted" style="font-size: 0.75rem;">@message.User.UserName</span>
+                                        }
+
+                                        <div class="p-3 shadow-sm position-relative @(isMe ? "text-white" : "bg-white text-dark")"
+                                             style="border-radius: 20px;
+                                                            border-bottom-@(isMe ? "right" : "left")-radius: 4px;
+                                                            background-color: @(isMe? accentColor : "#ffffff");
+                                                            min-width: 60px;">
+
+                                            <div style="word-wrap: break-word; font-weight: 400;">@message.Content</div>
+
+                                            <div class="d-flex justify-content-end align-items-center gap-2 mt-1" style="opacity: 0.7;">
+                                                <small style="font-size: 0.65rem;">@message.CreatedAt.ToLocalTime().ToString("HH:mm")</small>
+
+                                                @if (isMe)
+                                                {
+                                                    <button type="button"
+                                                            class="btn p-0 border-0 text-inherit me-1"
+                                                            title="Edit"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#editMessageModal"
+                                                            data-msg-id="@message.Id"
+                                                            data-msg-content="@message.Content">
+                                                        <i class="bi bi-pencil-fill" style="font-size: 0.7rem; color: inherit;"></i>
+                                                    </button>
+                                                }
+
+                                                @if (isMe || isModerator)
+                                                {
+                                                    <form asp-action="DeleteMessage" method="post" class="lh-1">
+                                                        <input type="hidden" name="messageId" value="@message.Id" />
+                                                        <button type="submit" class="btn p-0 border-0 text-inherit" title="Delete">
+                                                            <i class="bi bi-trash-fill" style="font-size: 0.7rem; color: inherit;"></i>
+                                                        </button>
+                                                    </form>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="card-footer bg-white p-3 border-top-0">
+                        <form asp-action="SendMessage" method="post" class="d-flex gap-2 align-items-center">
+                            <input type="hidden" name="groupId" value="@Model.Id" />
+                            <input type="text" name="content" class="form-control rounded-pill bg-light border-0 px-4 py-2 shadow-sm"
+                                   placeholder="Type a message..." required autocomplete="off" style="height: 50px;" />
+                            <button type="submit" class="btn rounded-circle text-white shadow-sm hover-scale d-flex align-items-center justify-content-center"
+                                    style="background-color: @accentColor; width: 50px; height: 50px; border: none;">
+                                <i class="bi bi-send-fill fs-5"></i>
+                            </button>
+                        </form>
+                    </div>
+                }
+                else
+                {
+                    <div class="card-body d-flex flex-column align-items-center justify-content-center bg-light p-5">
+                        <div class="bg-white rounded-circle p-4 mb-3 shadow-sm text-secondary">
+                            <i class="bi bi-lock-fill display-4" style="color: @accentColor;"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark">Members Only</h5>
+                        <p class="text-muted mb-4">Join to participate in the chat.</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="card-header bg-white border-bottom p-3">
+                    <h6 class="mb-0 fw-bold text-dark">Members <span class="badge rounded-pill bg-light text-dark border ms-1">@memberCount</span></h6>
+                </div>
+                <div class="card-body p-0" style="max-height: 600px; overflow-y: auto;">
+                    <ul class="list-group list-group-flush">
+                        @foreach (var member in Model.GroupMemberships.Where(m => m.IsAccepted))
+                        {
+                            <li class="list-group-item border-0 d-flex justify-content-between align-items-center py-3 px-4 hover-bg">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        @if (!string.IsNullOrEmpty(member.User.ProfileImage))
+                                        {
+                                            <img src="@member.User.ProfileImage"
+                                                 alt="@member.User.UserName"
+                                                 class="rounded-circle shadow-sm"
+                                                 style="width: 40px; height: 40px; object-fit: cover;" />
+                                        }
+                                        else
+                                        {
+                                            <div class="avatar-circle fw-bold shadow-sm"
+                                                 style="width: 40px; height: 40px;
+                                                background-color: @(member.UserId == Model.ModeratorId ? accentColor : "#f8f9fa");
+                                                color: @(member.UserId == Model.ModeratorId ? "white" : "#6c757d");">
+                                                @member.User.UserName.Substring(0, 1).ToUpper()
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <div>
+                                        <div class="fw-bold text-dark">@member.User.UserName</div>
+                                        @if (member.UserId == Model.ModeratorId)
+                                        {
+                                            <span class="badge rounded-pill border" style="background-color: #f3e5f5; color: #7b1fa2; font-size: 0.65rem;">ADMIN</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">Member</span>
+                                        }
+                                    </div>
+                                </div>
+
+                                @if (isModerator && member.UserId != currentUserId)
+                                {
+                                    <form asp-action="RemoveMember" method="post" onsubmit="return confirm('Remove user?');">
+                                        <input type="hidden" name="groupId" value="@Model.Id" />
+                                        <input type="hidden" name="userId" value="@member.UserId" />
+                                        <button class="btn btn-link text-danger p-0 opacity-50 hover-opacity-100" title="Kick">
+                                            <i class="bi bi-person-x-fill fs-5"></i>
+                                        </button>
+                                    </form>
+                                }
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editMessageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold">Edit Message</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form asp-action="EditMessage" method="post">
+                    <input type="hidden" name="groupId" value="@Model.Id" />
+                    <input type="hidden" name="messageId" id="modalMessageId" />
+
+                    <div class="form-group">
+                        <textarea name="newContent" id="modalMessageContent" class="form-control bg-light border-0 rounded-3 p-3" rows="3" required></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-3">
+                        <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn text-white rounded-pill px-4" style="background-color: #7952b3;">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<style>
+    .avatar-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-weight: 600;
+    }
+
+    .hover-scale {
+        transition: transform 0.2s;
+    }
+
+    .hover-scale:hover {
+         transform: scale(1.05);
+    }
+
+    .hover-bg:hover {
+        background-color: #f8f9fa;
+    }
+
+    .hover-opacity-100:hover {
+        opacity: 1 !important;
+    }
+
+    .backdrop-blur {
+        backdrop-filter: blur(5px);
+        background: rgba(255,255,255,0.2);
+    }
+
+    .text-inherit {
+        color: inherit;
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var container = document.getElementById("messages-container");
+        if(container) container.scrollTop = container.scrollHeight;
+
+        //editare
+        var editModal = document.getElementById('editMessageModal');
+        if (editModal) {
+            editModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+
+                var messageId = button.getAttribute('data-msg-id');
+                var messageContent = button.getAttribute('data-msg-content');
+
+                var modalIdInput = editModal.querySelector('#modalMessageId');
+                var modalContentInput = editModal.querySelector('#modalMessageContent');
+
+                modalIdInput.value = messageId;
+                modalContentInput.value = messageContent;
+            });
+        }
+    });
+</script>

@@ -1,0 +1,90 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using MicroSocialPlatform.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<ul class="navbar-nav d-flex align-items-center">
+@if (SignInManager.IsSignedIn(User))
+{
+    var user = await UserManager.GetUserAsync(User);
+    var userId = user?.Id;
+    
+    <!-- Notificări -->
+    <li class="nav-item me-2">
+        <a class="nav-link position-relative text-dark" asp-controller="Notifications" asp-action="Index" title="Notifications">
+            <i class="bi bi-bell fs-5"></i>
+            <span id="notification-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none; font-size: 0.65rem;">
+                0
+            </span>
+        </a>
+    </li>
+
+    <!-- Cereri de Follow -->
+    <li class="nav-item me-2">
+        <a class="nav-link position-relative text-dark" asp-controller="Follows" asp-action="Requests" title="Follow Requests">
+            <i class="bi bi-person-plus fs-5"></i>
+            <span id="follow-request-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none; font-size: 0.65rem;">
+                0
+            </span>
+        </a>
+    </li>
+
+    <!-- Mesaje -->
+    <li class="nav-item me-2">
+        <a class="nav-link position-relative text-dark" asp-controller="Messages" asp-action="Index" title="Messages">
+            <i class="bi bi-chat-dots fs-5"></i>
+            <span id="message-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none; font-size: 0.65rem;">
+                0
+            </span>
+        </a>
+    </li>
+
+     <!-- Grupuri -->
+     <li class="nav-item">
+         <a class="nav-link" asp-controller="Groups" asp-action="Index" title="Groups">
+                <i class="bi bi-people-fill" style="font-size: 1.2rem;"></i>
+         </a>
+     </li>
+
+    <!-- Profil Dropdown -->
+    <li class="nav-item dropdown me-2">
+        <a class="nav-link dropdown-toggle text-dark fw-bold d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            @if (!string.IsNullOrEmpty(user?.ProfileImage))
+            {
+                <img src="@user.ProfileImage" alt="@user.UserName" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;" />
+            }
+            else
+            {
+                <div class="rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background-color: var(--navy-blue); color: white; font-size: 0.75rem; font-weight: bold;">
+                    @((user?.FirstName?.FirstOrDefault().ToString() ?? "") + (user?.LastName?.FirstOrDefault().ToString() ?? ""))
+                </div>
+            }
+            <span>@User.Identity?.Name</span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+            <li>
+                <a class="dropdown-item" asp-controller="Users" asp-action="Show" asp-route-id="@userId">
+                    <i class="bi bi-person me-2"></i>My Profile
+                </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                    <button type="submit" class="dropdown-item text-danger">
+                        <i class="bi bi-box-arrow-right me-2"></i>Logout
+                    </button>
+                </form>
+            </li>
+        </ul>
+    </li>
+}
+else
+{//daca  nu esti logat
+    <li class="nav-item">
+        <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register">Register</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">Login</a>
+    </li>
+}
+</ul>

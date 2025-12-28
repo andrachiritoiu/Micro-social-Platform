@@ -1,0 +1,38 @@
+﻿@model MicroSocialPlatform.Models.Message
+
+@{
+    ViewData["Title"] = "Edit Message";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="custom-card p-4 shadow-sm" style="border-radius: 15px;">
+                <h3 class="mb-4" style="color: var(--navy-blue);">
+                    <i class="bi bi-pencil-square me-2"></i>Edit Message
+                </h3>
+
+                <form asp-action="EditMessage" method="post">
+                    <input type="hidden" asp-for="Id" />
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Message Content</label>
+                        <textarea name="newContent" class="form-control" rows="4"
+                                  style="border-radius: 10px; border: 2px solid #f0f0f0;">@Model.Content</textarea>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary rounded-pill px-4"
+                                style="background-color: var(--navy-blue); border: none;">
+                            Save Changes
+                        </button>
+                        <a asp-action="Conversation" asp-route-id="@(Model.ReceiverId == ViewData["CurrentUserId"]?.ToString() ? Model.SenderId : Model.ReceiverId)"
+                           class="btn btn-light rounded-pill px-4">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,54 @@
+@model MicroSocialPlatform.Models.Group
+
+@{
+    ViewData["Title"] = "Create Group";
+    // Definim culoarea exactã a butoanelor pentru a o folosi ?i sus
+    string darkBlueColor = "#5c6b8e";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+
+                <div class="card-header text-white p-4 text-center border-0" style="background-color: @darkBlueColor;">
+                    <h3 class="fw-bold mb-0">Create a Community</h3>
+                    <p class="mb-0 opacity-75">Start a new group for people to join.</p>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <form asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="form-floating mb-3">
+                            <input asp-for="Name" class="form-control" placeholder="Group Name" />
+                            <label asp-for="Name">Group Name</label>
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-floating mb-4">
+                            <textarea asp-for="Description" class="form-control" placeholder="Description" style="height: 120px"></textarea>
+                            <label asp-for="Description">Description (Topic, Rules, etc.)</label>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-lg rounded-pill fw-bold text-white" style="background-color: @darkBlueColor; border-color: @darkBlueColor;">
+                                Create Group
+                            </button>
+                            <a asp-action="Index" class="btn btn-light btn-lg rounded-pill text-muted">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
