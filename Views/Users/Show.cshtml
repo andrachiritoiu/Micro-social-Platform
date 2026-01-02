@@ -57,14 +57,39 @@
                     </h5>
                     <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem; letter-spacing: 1px;">Posts</small>
                 </div>
-                <div class="text-center">
-                    <h5 class="fw-bold mb-0" style="color: var(--navy-blue); font-size: 1.5rem;">0</h5>
-                    <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem; letter-spacing: 1px;">Followers</small>
-                </div>
-                <div class="text-center">
-                    <h5 class="fw-bold mb-0" style="color: var(--navy-blue); font-size: 1.5rem;">0</h5>
-                    <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem; letter-spacing: 1px;">Following</small>
-                </div>
+
+ 
+
+                <a asp-controller="Users"
+                   asp-action="Followers"
+                   asp-route-id="@Model.Id"
+                   class="text-decoration-none">
+                    <div class="text-center">
+                        <h5 class="fw-bold mb-0" style="color: var(--navy-blue); font-size: 1.5rem;">
+                            @ViewBag.FollowersCount
+                        </h5>
+                        <small class="text-muted text-uppercase fw-bold"
+                               style="font-size: 0.75rem; letter-spacing: 1px;">
+                            Followers
+                        </small>
+                    </div>
+                </a>
+
+                <a asp-controller="Users"
+                   asp-action="Following"
+                   asp-route-id="@Model.Id"
+                   class="text-decoration-none">
+                    <div class="text-center">
+                        <h5 class="fw-bold mb-0" style="color: var(--navy-blue); font-size: 1.5rem;">
+                            @ViewBag.FollowingCount
+                        </h5>
+                        <small class="text-muted text-uppercase fw-bold"
+                               style="font-size: 0.75rem; letter-spacing: 1px;">
+                            Following
+                        </small>
+                    </div>
+                </a>
+
             </div>
             <div class="mb-4">
                 @if (User.Identity.IsAuthenticated)
@@ -99,10 +124,53 @@
                     {
                         // profilul altcuiva -> Follow / Message
                         <div class="d-flex gap-2 justify-content-center align-items-center">
-                            <button class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-sm hover-lift"
-                                    style="background-color: var(--navy-blue); border: none;">
-                                <i class="bi bi-person-plus-fill me-2"></i> Follow
-                            </button>
+                            @{
+                                string? followStatus = ViewBag.FollowStatus as string;
+                            }
+
+                            @if (followStatus == null || followStatus == "Rejected")
+                            {
+                                <form asp-controller="Follows"
+                                      asp-action="SendFollowRequest"
+                                      method="post"
+                                      class="m-0">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@Model.Id" />
+
+                                    <button type="submit"
+                                            class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-sm hover-lift"
+                                            style="background-color: var(--navy-blue); border: none;">
+                                        <i class="bi bi-person-plus-fill me-2"></i> Follow
+                                    </button>
+                                </form>
+                            }
+                            else if (followStatus == "Pending")
+                            {
+                                <button class="btn rounded-pill px-5 py-2 fw-bold shadow-sm"
+                                        style="background-color: #adb5bd; border: none; color: white; cursor: default;"
+                                        disabled>
+                                    <i class="bi bi-hourglass-split me-2"></i> Requested
+                                </button>
+                            }
+                            else if (followStatus == "Accepted")
+                            {
+                                <form asp-controller="Follows"
+                                      asp-action="Unfollow"
+                                      method="post"
+                                      class="m-0">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@Model.Id" />
+
+                                    <button type="submit"
+                                            class="btn rounded-pill px-5 py-2 fw-bold shadow-sm hover-lift"
+                                            style="background-color: #20c997; border: none; color: white;">
+                                        <i class="bi bi-check-circle-fill me-2"></i> Following
+                                    </button>
+                                </form>
+                            }
+
+
+
 
                             <a asp-controller="Messages" asp-action="Conversation" asp-route-id="@Model.Id"
                                class="btn btn-light rounded-circle shadow-sm border hover-lift d-flex align-items-center justify-content-center"
