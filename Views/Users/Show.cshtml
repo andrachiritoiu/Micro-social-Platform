@@ -123,11 +123,13 @@
                     else
                     {
                         // profilul altcuiva -> Follow / Message
-                        <div class="d-flex gap-2 justify-content-center align-items-center">
-                            @{
-                                string? followStatus = ViewBag.FollowStatus as string;
-                            }
 
+                        
+                          string? followStatus = ViewBag.FollowStatus as string;
+                        
+
+
+                        <div class="d-flex gap-2 justify-content-center align-items-center">
                             @if (followStatus == null || followStatus == "Rejected")
                             {
                                 <form asp-controller="Follows"
@@ -146,11 +148,19 @@
                             }
                             else if (followStatus == "Pending")
                             {
-                                <button class="btn rounded-pill px-5 py-2 fw-bold shadow-sm"
-                                        style="background-color: #adb5bd; border: none; color: white; cursor: default;"
-                                        disabled>
-                                    <i class="bi bi-hourglass-split me-2"></i> Requested
-                                </button>
+                                <form asp-controller="Follows"
+                                      asp-action="CancelRequest"
+                                      method="post"
+                                      class="m-0">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@Model.Id" />
+
+                                    <button type="submit"
+                                            class="btn rounded-pill px-5 py-2 fw-bold shadow-sm"
+                                            style="background-color: #adb5bd; border: none; color: white;">
+                                        <i class="bi bi-x-circle me-2"></i> Cancel request
+                                    </button>
+                                </form>
                             }
                             else if (followStatus == "Accepted")
                             {
@@ -162,14 +172,12 @@
                                     <input type="hidden" name="id" value="@Model.Id" />
 
                                     <button type="submit"
-                                            class="btn rounded-pill px-5 py-2 fw-bold shadow-sm hover-lift"
+                                            class="btn rounded-pill px-5 py-2 fw-bold shadow-sm"
                                             style="background-color: #20c997; border: none; color: white;">
                                         <i class="bi bi-check-circle-fill me-2"></i> Following
                                     </button>
                                 </form>
                             }
-
-
 
 
                             <a asp-controller="Messages" asp-action="Conversation" asp-route-id="@Model.Id"

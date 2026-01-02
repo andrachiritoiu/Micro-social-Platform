@@ -207,5 +207,32 @@ namespace MicroSocialPlatform.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction("Show", "Users", new { id = userToUnfollow.Id });
         }
+
+        [HttpPost]
+        public async Task<IActionResult> cancelRequest(string id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
+            if (string.IsNullOrWhiteSpace(id) || id == user.Id)
+            {
+                return BadRequest("ID invalid");
+            }
+
+            var userToUnfollow = await _userManager.FindByIdAsync(id);
+            if (userToUnfollow == null)
+            {
+                return NotFound();
+            }
+            var existingFollow = await _context.Follows.FirstOrDefaultAsync(f => f.FollowerId == user.Id && f.FollowedId == userToUnfollow.Id);
+
+            if (existingFollow == null || existingFollow.Status != "Pending")
+            {
+                return RedirectToAction("Show", "Users", new { id = userToUnfollow.Id });
+            }
+            _context.Follows.Remove(existingFollow);
+            await _context.SaveChangesAsync();
+            return RedirectToAction("Show", "Users", new { id = userToUnfollow.Id });
+        }
     }
 }
