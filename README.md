@@ -55,10 +55,9 @@ Micro-social-Platform/
 
 Urmează pașii de mai jos pentru a rula proiectul pe mașina locală.
 
-### 1. Clonează repository-ul
-Deschide terminalul (Command Prompt, PowerShell sau Git Bash) și rulează comanda:
+### 1️. Clonează repository-ul
 ```bash
-git clone [https://github.com/andrachiritoiu/Micro-social-Platform.git](https://github.com/andrachiritoiu/Micro-social-Platform.git)
+git clone https://github.com/andrachiritoiu/Micro-social-Platform.git
 ```
 
 ### 2. Navighează în folderul proiectului
@@ -66,29 +65,16 @@ git clone [https://github.com/andrachiritoiu/Micro-social-Platform.git](https://
 cd Micro-social-Platform
 ```
 
-### 3. Configurează Baza de Date și AI
-Înainte de a rula migrațiile, deschide fișierul `appsettings.json` și fă următoarele setări:
+### 3. Aplică migrațiile bazei de date
 
-1.  Verifică dacă **Connection String-ul** este corect pentru SQL Server-ul tău.
-2.  Adaugă cheia API pentru serviciul de moderare AI (necesară pentru validarea postărilor):
-    ```json
-    "AISettings": {
-      "ApiKey": "CHEIA_TA"
-    }
-    ```
-
-După ce ai salvat fișierul, rulează următoarele comenzi în terminal (sau Package Manager Console) pentru a crea baza de date și a popula tabelele cu **Seed Data**:
+Asigură-te că SQL Server este pornit și connection string-ul este configurat corect.
 
 ```bash
 dotnet tool install --global dotnet-ef
 dotnet ef database update
 ```
 
-
-
-### 4. Rulează Aplicația
-Pornește serverul local cu următoarea comandă:
-
+### 4. Rulează aplicația
 ```bash
 dotnet run
 ```
@@ -106,29 +92,45 @@ După rularea migrațiilor, baza de date este populată automat cu următorii ut
 * **Utilizator 2:** `user2@test.com` / Parola: `User2!`
   
 
-## 🐳 Rulare cu Docker (Alternativ)
+Baza de date include următoarele entități principale:
+- **Users**
+- **Posts**
+- **Comments**
+- **Reactions**
+- **Follows**
+- **Groups**
+- **GroupMembers**
+- **Messages**
+- **Notifications**
 
-Dacă preferi să nu instalezi SQL Server local, poți rula aplicația folosind Docker.
-
-### Cerințe preliminare
-* [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalat și pornit.
-
-### Pași pentru rulare
-
-1.  **Deschide terminalul** în rădăcina proiectului (unde se află fișierul `docker-compose.yml`).
-2.  **Construiește și pornește containerele:**
-    ```bash
-    docker-compose up --build
-    ```
-3.  **Accesarea aplicației:**
-    După ce log-urile indică faptul că aplicația a pornit, deschide browserul la:
-    * **http://localhost:8080**
-
-4.  **Oprirea aplicației:**
-    Pentru a opri serviciile, apasă `Ctrl+C` sau rulează:
-    ```bash
-    docker-compose down
-    ```
+Relațiile sunt gestionate prin **Entity Framework Core**, folosind convenții și configurări explicite unde a fost necesar.
 
 ---
+
+## Roadmap / Task-uri
+
+### Done (MVP)
+- [x] Autentificare & roluri (ASP.NET Identity)
+- [x] Profil public/privat + editare profil
+- [x] Postare (text + media) + feed
+- [x] Like-uri și comentarii
+- [ ] Follow + feed filtrat după following
+- [x] Grupuri + join request + moderare de bază
+- [X] Notificări UI complete (follow, like, comment, join accept)
+- [X] Mesagerie: inbox + status citit + paginare
+- [X] Search îmbunătățit (filtre)
+
+### In progress / Next
+- [ ] Moderare AI înainte de salvarea postărilor
+- [ ] UI : empty states, skeleton loading, toast messages
+
+### Nice to have
+- [ ] Refresh feed fără reload (AJAX)
+- [ ] Pagini publice pentru grupuri + reguli și descriere extinsă
+- [ ] Admin dashboard (rapoarte, moderare content, user management)
+- [ ] Teste unitare și de integrare (Controllers & Services)
+- [ ] CI pipeline (GitHub Actions) + badge în README
+
+
+
 
