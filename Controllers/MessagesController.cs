@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 using Microsoft.AspNetCore.Authorization;
+=======
+﻿using Microsoft.AspNetCore.Authorization;
+>>>>>>> otilia/main
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -23,12 +27,17 @@ namespace MicroSocialPlatform.Controllers
         public async Task<IActionResult> Index()
         {
             var user = await _userManager.GetUserAsync(User);
+<<<<<<< HEAD
             if (user == null)
             {
                 return Unauthorized();
             }
 
             // Get all conversations (users you've messaged or who messaged you)
+=======
+            if (user == null) return Unauthorized();
+
+>>>>>>> otilia/main
             var conversations = await _context.Messages
                 .Where(m => m.SenderId == user.Id || m.ReceiverId == user.Id)
                 .Include(m => m.Sender)
@@ -36,7 +45,10 @@ namespace MicroSocialPlatform.Controllers
                 .OrderByDescending(m => m.CreatedAt)
                 .ToListAsync();
 
+<<<<<<< HEAD
             // Group by conversation partner
+=======
+>>>>>>> otilia/main
             var conversationPartners = conversations
                 .Select(m => m.SenderId == user.Id ? m.Receiver : m.Sender)
                 .Distinct()
@@ -49,6 +61,7 @@ namespace MicroSocialPlatform.Controllers
         // GET: Messages/Conversation/{userId}
         public async Task<IActionResult> Conversation(string? id)
         {
+<<<<<<< HEAD
             if (id == null)
             {
                 return NotFound();
@@ -67,6 +80,16 @@ namespace MicroSocialPlatform.Controllers
             }
 
             // Get all messages between current user and other user
+=======
+            if (id == null) return NotFound();
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
+            var otherUser = await _userManager.FindByIdAsync(id);
+            if (otherUser == null) return NotFound();
+
+>>>>>>> otilia/main
             var messages = await _context.Messages
                 .Include(m => m.Sender)
                 .Include(m => m.Receiver)
@@ -75,12 +98,17 @@ namespace MicroSocialPlatform.Controllers
                 .OrderBy(m => m.CreatedAt)
                 .ToListAsync();
 
+<<<<<<< HEAD
             // Mark messages as read
             var unreadMessages = messages.Where(m => m.ReceiverId == user.Id && !m.IsRead).ToList();
             foreach (var message in unreadMessages)
             {
                 message.IsRead = true;
             }
+=======
+            var unreadMessages = messages.Where(m => m.ReceiverId == user.Id && !m.IsRead).ToList();
+            foreach (var message in unreadMessages) { message.IsRead = true; }
+>>>>>>> otilia/main
             await _context.SaveChangesAsync();
 
             ViewData["OtherUser"] = otherUser;
@@ -88,11 +116,73 @@ namespace MicroSocialPlatform.Controllers
             return View(messages);
         }
 
+<<<<<<< HEAD
         // POST: Messages/Send
+=======
+        // --- CRUD MESAJ INDIVIDUAL (PAGINI SEPARATE CA LA GRUPURI) ---
+
+        // GET: Messages/Edit/5
+        public async Task<IActionResult> Edit(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var message = await _context.Messages.FindAsync(id);
+
+            if (message == null || message.SenderId != user.Id) return NotFound();
+
+            return View(message); // Deschide Views/Messages/Edit.cshtml
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditMessage(int id, string newContent)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var message = await _context.Messages.FindAsync(id);
+
+            if (message == null || message.SenderId != user.Id) return NotFound();
+            if (string.IsNullOrWhiteSpace(newContent)) return RedirectToAction(nameof(Edit), new { id });
+
+            message.Content = newContent;
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Conversation), new { id = message.ReceiverId });
+        }
+
+        // GET: Messages/Delete/5
+        public async Task<IActionResult> Delete(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var message = await _context.Messages.FindAsync(id);
+
+            if (message == null || message.SenderId != user.Id) return NotFound();
+
+            return View(message); // Deschide Views/Messages/Delete.cshtml
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteMessage(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var message = await _context.Messages.FindAsync(id);
+
+            if (message == null || message.SenderId != user.Id) return NotFound();
+
+            var otherUserId = message.ReceiverId;
+            _context.Messages.Remove(message);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Conversation), new { id = otherUserId });
+        }
+
+        // --- ALTE OPERATII ---
+
+>>>>>>> otilia/main
         [HttpPost]
         [IgnoreAntiforgeryToken]
         public async Task<IActionResult> Send(string receiverId, string content)
         {
+<<<<<<< HEAD
             if (string.IsNullOrWhiteSpace(content))
             {
                 return Json(new { success = false, message = "Message cannot be empty" });
@@ -109,6 +199,10 @@ namespace MicroSocialPlatform.Controllers
             {
                 return Json(new { success = false, message = "Receiver not found" });
             }
+=======
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || string.IsNullOrWhiteSpace(content)) return Json(new { success = false });
+>>>>>>> otilia/main
 
             var message = new Message
             {
@@ -122,6 +216,7 @@ namespace MicroSocialPlatform.Controllers
             _context.Messages.Add(message);
             await _context.SaveChangesAsync();
 
+<<<<<<< HEAD
             // Create notification for receiver
             var receiverFirstName = receiver.FirstName ?? "";
             var receiverLastName = receiver.LastName ?? "";
@@ -178,3 +273,19 @@ namespace MicroSocialPlatform.Controllers
     }
 }
 
+=======
+            return Json(new { success = true, message = new { id = message.Id, content = message.Content } });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteConversation(string id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var messages = _context.Messages.Where(m => (m.SenderId == user.Id && m.ReceiverId == id) || (m.SenderId == id && m.ReceiverId == user.Id));
+            _context.Messages.RemoveRange(messages);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+    }
+}
+>>>>>>> otilia/main

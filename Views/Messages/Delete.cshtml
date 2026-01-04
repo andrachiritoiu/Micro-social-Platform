@@ -1,0 +1,37 @@
+﻿@model MicroSocialPlatform.Models.Message
+
+@{
+    ViewData["Title"] = "Delete Message";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="custom-card p-4 border-danger shadow-sm" style="border-radius: 15px; border-top: 5px solid red;">
+                <h3 class="text-danger mb-4">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Delete Message?
+                </h3>
+
+                <p class="text-muted">Are you sure you want to delete this message? This action cannot be undone.</p>
+
+                <div class="bg-light p-3 rounded mb-4 italic">
+                    "@Model.Content"
+                </div>
+
+                <form asp-action="DeleteMessage" method="post">
+                    <input type="hidden" asp-for="Id" />
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-danger rounded-pill px-4">
+                            Yes, Delete
+                        </button>
+
+                        <a asp-action="Conversation" asp-route-id="@(Model.ReceiverId == ViewData["CurrentUserId"]?.ToString() ? Model.SenderId : Model.ReceiverId)"
+                           class="btn btn-light rounded-pill px-4">
+                            No, Keep it
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

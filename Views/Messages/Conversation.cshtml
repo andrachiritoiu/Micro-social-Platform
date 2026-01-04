@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 @model IEnumerable<MicroSocialPlatform.Models.Message>
 
 @{
@@ -8,19 +9,27 @@
 @using MicroSocialPlatform.Models
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
+=======
+﻿@model IEnumerable<MicroSocialPlatform.Models.Message>
+>>>>>>> otilia/main
 
 @{
     var otherUser = ViewData["OtherUser"] as ApplicationUser;
     var currentUserId = ViewData["CurrentUserId"] as string;
     var otherUserInitials = otherUser?.UserName?.Substring(0, 1).ToUpper() ?? "U";
+<<<<<<< HEAD
     var otherUserFirstName = otherUser?.FirstName ?? "";
     var otherUserLastName = otherUser?.LastName ?? "";
     var otherUserFullName = $"{otherUserFirstName} {otherUserLastName}".Trim();
     if (string.IsNullOrEmpty(otherUserFullName)) otherUserFullName = otherUser?.UserName ?? "User";
+=======
+    ViewData["Title"] = "Chat with " + otherUser?.UserName;
+>>>>>>> otilia/main
 }
 
 <div class="feed-container">
     <div class="custom-card mb-3">
+<<<<<<< HEAD
         <div class="d-flex align-items-center gap-3 p-3">
             <a asp-action="Index" class="btn btn-link p-0" style="color: var(--text-primary);">
                 <i class="bi bi-arrow-left" style="font-size: 1.2rem;"></i>
@@ -43,10 +52,48 @@
         <!-- Messages Container -->
         <div id="messages-container" style="flex: 1; overflow-y: auto; padding: 20px; background: var(--hover-bg);">
             @if (Model.Any())
+=======
+        <div class="d-flex align-items-center justify-content-between p-3">
+            <div class="d-flex align-items-center gap-3">
+                <a asp-action="Index" class="btn btn-link p-0" style="color: var(--text-primary);">
+                    <i class="bi bi-arrow-left" style="font-size: 1.2rem;"></i>
+                </a>
+                <div class="header-avatar">
+                    @if (!string.IsNullOrEmpty(otherUser?.ProfileImage))
+                    {
+                        <img src="@otherUser.ProfileImage" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" />
+                    }
+                    else
+                    {
+                        <div style="width: 100%; height: 100%; background: #eee; display: flex; align-items: center; justify-content: center;">
+                            @otherUserInitials
+                        </div>
+                    }
+                </div>
+                <div>
+                    <div style="font-weight: 600;">@@@otherUser?.UserName</div>
+                    <small class="text-muted">Online</small>
+                </div>
+            </div>
+
+            <form asp-action="DeleteConversation" asp-route-id="@otherUser?.Id" method="post"
+                  onsubmit="return confirm('Ești sigur că vrei să ștergi TOATĂ conversația?');">
+                <button type="submit" class="btn btn-link text-muted p-0">
+                    <i class="bi bi-trash3" style="font-size: 1.1rem;"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="custom-card chat-main-wrapper">
+        <div id="messages-container">
+            @if (Model != null && Model.Any())
+>>>>>>> otilia/main
             {
                 @foreach (var message in Model)
                 {
                     var isCurrentUser = message.SenderId == currentUserId;
+<<<<<<< HEAD
                     var messageUser = isCurrentUser ? message.Sender : message.Receiver;
                     var messageUserInitials = messageUser?.UserName?.Substring(0, 1).ToUpper() ?? "U";
                     var messageUserFirstName = messageUser?.FirstName ?? "";
@@ -68,6 +115,52 @@
                                 <div class="message-text" style="background: white; padding: 12px 16px; border-radius: 12px; box-shadow: var(--shadow-sm); word-wrap: break-word;">
                                     @message.Content
                                 </div>
+=======
+                    var sender = message.Sender;
+                    var senderUserName = sender?.UserName ?? "user";
+                    var senderInitials = senderUserName.Substring(0, 1).ToUpper();
+
+                    <div class="message-item @(isCurrentUser ? "message-own" : "message-other")">
+                        <div class="message-avatar">
+                            @if (!string.IsNullOrEmpty(sender?.ProfileImage))
+                            {
+                                <img src="@sender.ProfileImage" alt="p" />
+                            }
+                            else
+                            {
+                                <span>@senderInitials</span>
+                            }
+                        </div>
+
+                        <div class="message-wrapper">
+                            <div class="message-header d-flex align-items-center gap-2">
+                                <span class="message-author">@(isCurrentUser ? "Eu" : "@" + senderUserName)</span>
+
+                                @if (isCurrentUser)
+                                {
+                                    <div class="dropdown">
+                                        <button class="btn btn-link p-0 text-muted" type="button" data-bs-toggle="dropdown">
+                                            <i class="bi bi-three-dots"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                            <li>
+                                                <a class="dropdown-item py-2" asp-action="Edit" asp-route-id="@message.Id">
+                                                    <i class="bi bi-pencil me-2"></i> Edit
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item text-danger py-2" asp-action="Delete" asp-route-id="@message.Id">
+                                                    <i class="bi bi-trash me-2"></i> Delete
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="message-text">
+                                @message.Content
+>>>>>>> otilia/main
                             </div>
                         </div>
                     </div>
@@ -75,13 +168,19 @@
             }
             else
             {
+<<<<<<< HEAD
                 <div class="text-center text-muted" style="padding: 40px;">
                     <i class="bi bi-chat-dots" style="font-size: 3rem; margin-bottom: 16px; display: block;"></i>
                     <p>No messages yet. Start the conversation!</p>
+=======
+                <div class="text-center text-muted my-auto">
+                    <p>Niciun mesaj încă. Începe conversația!</p>
+>>>>>>> otilia/main
                 </div>
             }
         </div>
 
+<<<<<<< HEAD
         <!-- Message Input -->
         <div style="padding: 16px; border-top: 1px solid var(--border-color); background: white;">
             <form id="message-form" class="d-flex gap-2">
@@ -89,12 +188,22 @@
                 <input type="text" id="message-input" class="form-control" placeholder="Type a message..." required autocomplete="off">
                 <button type="submit" class="btn btn-primary">
                     <i class="bi bi-send"></i> Send
+=======
+        <div class="message-input-area">
+            <form id="message-form" class="d-flex gap-2">
+                <input type="hidden" name="receiverId" value="@otherUser?.Id" />
+                <input type="text" id="message-input" class="form-control big-chat-input"
+                       placeholder="Scrie un mesaj..." required autocomplete="off">
+                <button type="submit" class="btn btn-purple-circle">
+                    <i class="bi bi-send-fill"></i>
+>>>>>>> otilia/main
                 </button>
             </form>
         </div>
     </div>
 </div>
 
+<<<<<<< HEAD
 @functions {
     private string GetTimeAgo(DateTime dateTime)
     {
@@ -208,3 +317,129 @@
     }
 </style>
 
+=======
+<style>
+    .chat-main-wrapper {
+        height: 600px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #messages-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        background: #fff;
+    }
+
+    .message-item {
+        display: flex;
+        gap: 10px;
+        width: 100%;
+        align-items: flex-end;
+    }
+
+    .message-own {
+        flex-direction: row-reverse;
+    }
+
+    .message-wrapper {
+        display: flex;
+        flex-direction: column;
+        max-width: 75%;
+    }
+
+    .message-own .message-wrapper {
+        align-items: flex-end;
+    }
+
+    .message-text {
+        background-color: #f1f1f1;
+        padding: 10px 15px;
+        border-radius: 18px;
+        color: #333;
+        word-wrap: break-word;
+    }
+
+    .message-own .message-text {
+        border-bottom-right-radius: 4px;
+    }
+
+    .message-other .message-text {
+        border-bottom-left-radius: 4px;
+    }
+
+    .message-avatar, .header-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #eee;
+        flex-shrink: 0;
+    }
+
+        .message-avatar img, .header-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .message-author {
+        font-size: 0.75rem;
+        font-weight: bold;
+        color: #999;
+    }
+
+    .message-input-area {
+        padding: 15px;
+        border-top: 1px solid #eee;
+    }
+
+    .big-chat-input {
+        height: 50px !important;
+        border-radius: 25px !important;
+        padding-left: 20px !important;
+        border: 1px solid #ddd !important;
+    }
+
+    .btn-purple-circle {
+        background-color: #8e44ad;
+        color: #fff;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: none;
+    }
+</style>
+
+<script>
+    const container = document.getElementById('messages-container');
+    container.scrollTop = container.scrollHeight;
+
+    document.getElementById('message-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const input = document.getElementById('message-input');
+        const content = input.value.trim();
+        if (!content) return;
+
+        const formData = new FormData();
+        formData.append('receiverId', '@otherUser?.Id');
+        formData.append('content', content);
+
+        const response = await fetch('@Url.Action("Send", "Messages")', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+        if (data.success) {
+            location.reload();
+        }
+    });
+</script>
+>>>>>>> otilia/main

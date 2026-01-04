@@ -80,6 +80,10 @@ namespace MicroSocialPlatform.Controllers
                 return NotFound();
             }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> otilia/main
             var user = await _context.Users
                 .Include(u => u.Posts) //include posts
                 .FirstOrDefaultAsync(u => u.Id == id);
@@ -89,6 +93,34 @@ namespace MicroSocialPlatform.Controllers
                 return NotFound();
             }
 
+<<<<<<< HEAD
+=======
+            var currentUser = await _userManager.GetUserAsync(User);
+
+            string? followStatus = null;
+
+            if (currentUser != null && currentUser.Id != user.Id)
+            {
+                followStatus = await _context.Follows
+                    .Where(f => f.FollowerId == currentUser.Id && f.FollowedId == user.Id)
+                    .Select(f => f.Status)
+                    .FirstOrDefaultAsync();
+            }
+
+            ViewBag.FollowStatus = followStatus;
+
+
+            var followersCount = await _context.Follows
+                .CountAsync(f => f.FollowedId == user.Id && f.Status == "Accepted");
+
+            var followingCount = await _context.Follows
+                .CountAsync(f => f.FollowerId == user.Id && f.Status == "Accepted");
+
+            ViewBag.FollowersCount = followersCount;
+            ViewBag.FollowingCount = followingCount;
+
+
+>>>>>>> otilia/main
             return View(user);
         }
 
@@ -236,5 +268,64 @@ namespace MicroSocialPlatform.Controllers
             TempData["Message"] = "Error deleting the user.";
             return RedirectToAction("Show", new { id = id });
         }
+<<<<<<< HEAD
+=======
+        public async Task<IActionResult> Followers(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                return NotFound();
+            }
+
+            var userExists = await _context.Users.AnyAsync(u => u.Id == id);
+            if (!userExists)
+            {
+                return NotFound();
+            }
+
+            var followers = await _context.Follows
+                .Where(f => f.FollowedId == id && f.Status == "Accepted")
+                .Include(f => f.Follower)
+                .OrderByDescending(f => f.RequestDate)
+                .Select(f => f.Follower)
+                .ToListAsync();
+
+            ViewBag.ProfileUserId = id;
+            ViewBag.Title = "Followers";
+
+            return View(followers);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Following(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                return NotFound();
+            }
+
+            var userExists = await _context.Users.AnyAsync(u => u.Id == id);
+            if (!userExists)
+            {
+                return NotFound();
+            }
+
+            var following = await _context.Follows
+                .Where(f => f.FollowerId == id && f.Status == "Accepted")
+                .Include(f => f.Followed)
+                .OrderByDescending(f => f.RequestDate)
+                .Select(f => f.Followed)
+                .ToListAsync();
+
+            ViewBag.ProfileUserId = id;
+            ViewBag.Title = "Following";
+
+            return View(following);
+        }
+
+
+
+
+>>>>>>> otilia/main
     }
 }
