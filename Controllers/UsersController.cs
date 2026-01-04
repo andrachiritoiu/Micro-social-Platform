@@ -80,10 +80,6 @@ namespace MicroSocialPlatform.Controllers
                 return NotFound();
             }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> otilia/main
             var user = await _context.Users
                 .Include(u => u.Posts) //include posts
                 .FirstOrDefaultAsync(u => u.Id == id);
@@ -93,8 +89,7 @@ namespace MicroSocialPlatform.Controllers
                 return NotFound();
             }
 
-<<<<<<< HEAD
-=======
+
             var currentUser = await _userManager.GetUserAsync(User);
 
             string? followStatus = null;
@@ -120,7 +115,6 @@ namespace MicroSocialPlatform.Controllers
             ViewBag.FollowingCount = followingCount;
 
 
->>>>>>> otilia/main
             return View(user);
         }
 
@@ -268,8 +262,7 @@ namespace MicroSocialPlatform.Controllers
             TempData["Message"] = "Error deleting the user.";
             return RedirectToAction("Show", new { id = id });
         }
-<<<<<<< HEAD
-=======
+
         public async Task<IActionResult> Followers(string id)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -324,8 +317,5 @@ namespace MicroSocialPlatform.Controllers
         }
 
 
-
-
->>>>>>> otilia/main
     }
 }

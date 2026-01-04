@@ -1,195 +1,121 @@
 ﻿@model List<MicroSocialPlatform.Models.ApplicationUser>
 
 @{
-    ViewData["Title"] = ViewBag.Title ?? "Following";
+    var pageTitle = ViewBag.Title ?? "Following";
+    string accentColor = "#7952b3";
+    string iconClass = "bi-person-check-fill";
 }
 
-<style>
-    body {
-        background: #fafafa;
-    }
+<div class="container mt-4" style="max-width: 800px;">
 
-    .ig-wrap {
-        max-width: 720px;
-        margin: 28px auto;
-        padding: 0 14px;
-    }
-
-    .ig-card {
-        background: #fff;
-        border: 1px solid #dbdbdb;
-        border-radius: 14px;
-        overflow: hidden;
-        box-shadow: 0 1px 0 rgba(0,0,0,.04);
-    }
-
-    .ig-header {
-        padding: 14px 16px;
-        border-bottom: 1px solid #efefef;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .ig-title {
-        margin: 0;
-        font-size: 16px;
-        font-weight: 800;
-        color: #111;
-    }
-
-    .ig-sub {
-        margin: 0;
-        font-size: 13px;
-        color: #737373;
-    }
-
-    .ig-list {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-    }
-
-    .ig-item {
-        display: flex;
-        gap: 12px;
-        align-items: center;
-        padding: 14px 16px;
-        border-bottom: 1px solid #efefef;
-    }
-
-        .ig-item:last-child {
-            border-bottom: none;
-        }
-
-    .ig-avatar {
-        width: 46px;
-        height: 46px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 1px solid #efefef;
-        background: #fafafa;
-    }
-
-    .ig-meta {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .ig-name {
-        margin: 0;
-        font-weight: 800;
-        font-size: 14px;
-        color: #111;
-    }
-
-    .ig-username {
-        margin: 2px 0 0;
-        font-size: 13px;
-        color: #737373;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .ig-btn {
-        border: 1px solid #dbdbdb;
-        background: #fff;
-        color: #111;
-        border-radius: 999px;
-        padding: 8px 14px;
-        font-size: 13px;
-        font-weight: 800;
-        text-decoration: none;
-        line-height: 1;
-        transition: transform .03s ease, opacity .15s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-        .ig-btn:active {
-            transform: scale(.98);
-        }
-
-        .ig-btn:hover {
-            opacity: .9;
-        }
-
-    .ig-empty {
-        padding: 28px 16px;
-        text-align: center;
-        color: #737373;
-    }
-
-        .ig-empty h3 {
-            margin: 0 0 6px;
-            font-size: 15px;
-            color: #111;
-        }
-
-        .ig-empty p {
-            margin: 0;
-            font-size: 13px;
-        }
-</style>
-
-<div class="ig-wrap">
-    <div class="ig-card">
-        <div class="ig-header">
-            <div>
-                <p class="ig-title">@ViewData["Title"]</p>
-                <p class="ig-sub">@((Model?.Count ?? 0)) utilizatori</p>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+        <div class="d-flex align-items-center w-100">
+            <div class="icon-box me-3 shadow-sm text-white d-flex align-items-center justify-content-center rounded-circle"
+                 style="width: 50px; height: 50px; background: linear-gradient(135deg, #7BA3E8 0%, #B5A8D8 100%); flex-shrink: 0;">
+                <i class="bi @iconClass fs-4"></i>
             </div>
-
-            <a asp-controller="Users"
-               asp-action="Show"
-               asp-route-id="@ViewBag.ProfileUserId"
-               class="ig-btn">
-                Înapoi
-            </a>
+            <div>
+                <h2 class="fw-bold mb-0">@pageTitle</h2>
+                <p class="text-muted mb-0">
+                    @((Model?.Count ?? 0)) people followed
+                </p>
+            </div>
         </div>
 
-        @if (Model == null || Model.Count == 0)
-        {
-            <div class="ig-empty">
-                <h3>Nimic aici încă</h3>
-                <p>Când apar oameni, îi vei vedea aici.</p>
-            </div>
-        }
-        else
-        {
-            <ul class="ig-list">
-                @foreach (var u in Model)
-                {
-                    var avatar = !string.IsNullOrWhiteSpace(u.ProfileImage)
-                    ? u.ProfileImage
-                    : "/images/default-avatar.png";
+        <a asp-controller="Users"
+           asp-action="Show"
+           asp-route-id="@ViewBag.ProfileUserId"
+           class="btn btn-outline-light text-dark border shadow-sm rounded-pill px-4 fw-bold d-flex align-items-center bg-white hover-scale">
+            <i class="bi bi-arrow-left me-2"></i> Back
+        </a>
+    </div>
 
-                    <li class="ig-item">
-                        <a asp-controller="Users" asp-action="Show" asp-route-id="@u.Id" class="text-decoration-none">
-                            <img src="@avatar" class="ig-avatar" alt="avatar" />
-                        </a>
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            @if (Model == null || Model.Count == 0)
+            {
+                <div class="text-center p-5">
+                    <div class="mb-3 text-muted opacity-50">
+                        <i class="bi bi-person-dash fs-1"></i>
+                    </div>
+                    <h5 class="fw-bold text-muted">Not following anyone</h5>
+                    <p class="text-muted small">Start following people to see them here.</p>
+                </div>
+            }
+            else
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var u in Model)
+                    {
+                        var userName = u.UserName ?? "User";
+                        var initial = userName.Substring(0, 1).ToUpper();
+                        var fullName = $"{u.FirstName} {u.LastName}".Trim();
+                        if (string.IsNullOrEmpty(fullName)) fullName = userName;
 
-                        <div class="ig-meta">
-                            <p class="ig-name">
-                                <a asp-controller="Users" asp-action="Show" asp-route-id="@u.Id"
-                                   class="text-decoration-none" style="color:#111;">
-                                    @u.FirstName @u.LastName
+                        <li class="list-group-item border-0 d-flex align-items-center p-3 p-md-4 hover-bg transition-all">
+
+                            <div class="d-flex align-items-center w-100">
+
+                                <a asp-controller="Users" asp-action="Show" asp-route-id="@u.Id" class="text-decoration-none flex-shrink-0">
+                                    <div class="me-3 position-relative">
+                                        @if (!string.IsNullOrWhiteSpace(u.ProfileImage))
+                                        {
+                                            <img src="@u.ProfileImage"
+                                                 alt="@userName"
+                                                 class="rounded-circle shadow-sm object-fit-cover"
+                                                 style="width: 55px; height: 55px; border: 2px solid #fff;" />
+                                        }
+                                        else
+                                        {
+                                            <div class="rounded-circle shadow-sm d-flex align-items-center justify-content-center text-white fw-bold"
+                                                 style="width: 55px; height: 55px; background: linear-gradient(135deg, #7BA3E8 0%, #B5A8D8 100%); border: 2px solid #fff; font-size: 1.2rem;">
+                                                @initial
+                                            </div>
+                                        }
+                                    </div>
                                 </a>
-                            </p>
-                            <p class="ig-username">@("@" + u.UserName)</p>
-                        </div>
 
-                        <a asp-controller="Users"
-                           asp-action="Show"
-                           asp-route-id="@u.Id"
-                           class="ig-btn">
-                            Vezi profil
-                        </a>
-                    </li>
-                }
-            </ul>
-        }
+                                <div class="overflow-hidden w-100">
+                                    <a asp-controller="Users" asp-action="Show" asp-route-id="@u.Id" class="text-dark text-decoration-none d-block">
+                                        <h6 class="fw-bold mb-0 text-truncate">@fullName</h6>
+                                        <span class="text-muted small text-truncate d-block">@@@userName</span>
+                                    </a>
+                                </div>
+
+                                <i class="bi bi-chevron-right text-muted opacity-25 ms-3"></i>
+                            </div>
+
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
     </div>
 </div>
+
+<style>
+    .hover-bg:hover {
+        background-color: #f8f9fa;
+        cursor: pointer;
+    }
+
+    .hover-scale:hover {
+        transform: scale(1.03);
+        transition: transform 0.2s;
+    }
+
+    .object-fit-cover {
+        object-fit: cover;
+    }
+
+    @@media (max-width: 576px) {
+        .list-group-item {
+            text-align: left;
+        }
+
+            .list-group-item .d-flex {
+                flex-direction: row;
+                align-items: center;
+            }
+    }
+</style>

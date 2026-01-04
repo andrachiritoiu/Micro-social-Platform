@@ -18,10 +18,13 @@
                 }
                 else
                 {
-                    var initials = (Model.User.FirstName?.FirstOrDefault().ToString() ?? "") +
-                    (Model.User.LastName?.FirstOrDefault().ToString() ?? "");
-                    <div class="avatar-placeholder me-2 d-flex align-items-center justify-content-center">
-                        <span>@initials</span>
+                    var initial = !string.IsNullOrEmpty(Model.User.UserName)
+                    ? Model.User.UserName.Substring(0, 1).ToUpper()
+                    : "U";
+
+                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm me-2"
+                         style="width: 40px; height: 40px; background-color: #7952b3; font-size: 1.2rem;">
+                        <span>@initial</span>
                     </div>
                 }
 
@@ -157,7 +160,6 @@
             @if (SignInManager.IsSignedIn(User))
             {
                 <form asp-controller="Comments" asp-action="New" method="post" class="mb-4">
-
                     <input type="hidden" name="PostId" value="@Model.Id" />
 
                     <div class="mb-2">
@@ -191,12 +193,18 @@
                                 <div class="flex-shrink-0 me-3">
                                     @if (!string.IsNullOrEmpty(comment.User?.ProfileImage))
                                     {
-                                        <img src="@comment.User.ProfileImage" class="rounded-circle" width="40" height="40" />
+                                        <img src="@comment.User.ProfileImage" class="rounded-circle shadow-sm" style="width: 40px; height: 40px; object-fit: cover;" />
                                     }
                                     else
                                     {
+                                        var initialC = !string.IsNullOrEmpty(comment.User?.UserName)
+                                        ? comment.User.UserName.Substring(0, 1).ToUpper()
+                                        : "U";
 
-                                        <img src="https://dummyimage.com/40x40/ced4da/6c757d.jpg" class="rounded-circle" width="40" height="40" />
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm"
+                                             style="width: 40px; height: 40px; background-color: #7952b3; font-size: 1.2rem;">
+                                            @initialC
+                                        </div>
                                     }
                                 </div>
 
@@ -232,7 +240,6 @@
                                     {
                                         <div id="comment-edit-@comment.Id" style="display:none;" class="mt-2">
                                             <form onsubmit="saveCommentAjax(event, '@comment.Id')">
-
                                                 <input type="hidden" name="Id" value="@comment.Id" />
                                                 <div class="form-group mb-2">
                                                     <textarea id="textarea-@comment.Id" name="Content" class="form-control" rows="2">@comment.Content</textarea>
@@ -266,7 +273,6 @@
     </div>
 </div>
 
-
 <div class="modal fade" id="reactionsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content rounded-4 shadow">
@@ -275,8 +281,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body pt-2">
-                <div id="reactionsListContainer" class="d-flex flex-column gap-3">
-                </div>
+                <div id="reactionsListContainer" class="d-flex flex-column gap-3"></div>
             </div>
         </div>
     </div>
@@ -301,10 +306,8 @@
             }
         }
 
-            // trimite datele la server fără refresh (AJAX)
         async function saveCommentAjax(event, id) {
             event.preventDefault();
-
             var textArea = document.getElementById('textarea-' + id);
             var content = textArea.value;
             var errorDiv = document.getElementById('error-msg-' + id);
@@ -326,11 +329,10 @@
 
                 if (response.ok) {
                     const result = await response.json();
-
                     if (result.success) {
                         document.getElementById('comment-view-' + id).innerText = result.newContent;
                         toggleEdit(id);
-                        errorDiv.innerText = ""; 
+                        errorDiv.innerText = "";
                     } else {
                         errorDiv.innerText = result.message;
                     }
@@ -343,47 +345,37 @@
             }
         }
 
-
         document.addEventListener("DOMContentLoaded", function () {
             const reactionBtns = document.querySelectorAll('.reaction-btn');
-
             reactionBtns.forEach(btn => {
                 btn.addEventListener('click', function (e) {
                     e.preventDefault();
                     const postId = this.getAttribute('data-post-id');
                     const type = this.getAttribute('data-type');
-
-                    // Trimitem cererea la server
                     fetch(`/Reactions/ToggleReaction?postId=${postId}&type=${type}`, { method: 'POST' })
-                    .then(r => r.status === 401 ? window.location.href = '/Identity/Account/Login' : r.json())
-                    .then(data => {
-                        if (data && data.success) {
-                            // Găsim butonul principal pentru a-l actualiza vizual
-                            const mainBtn = document.querySelector(`.btn-main-reaction-${postId}`);
-                            const icon = mainBtn.querySelector('i');
-                            const span = mainBtn.querySelector('span');
+                        .then(r => r.status === 401 ? window.location.href = '/Identity/Account/Login' : r.json())
+                        .then(data => {
+                            if (data && data.success) {
+                                const mainBtn = document.querySelector(`.btn-main-reaction-${postId}`);
+                                const icon = mainBtn.querySelector('i');
+                                const span = mainBtn.querySelector('span');
+                                mainBtn.classList.remove('text-pastel-blue', 'text-pastel-red', 'text-pastel-yellow', 'text-primary');
+                                mainBtn.style.color = '';
 
-                            // Resetăm clasele de culoare
-                            mainBtn.classList.remove('text-pastel-blue', 'text-pastel-red', 'text-pastel-yellow', 'text-primary');
-                            mainBtn.style.color = '';
-
-                            if (data.status === 'removed') {
-                                // Dacă s-a scos like-ul
-                                icon.className = 'bi bi-heart me-1 fs-5';
-                                span.innerText = `Like (${data.count})`;
-                                mainBtn.style.color = '#65676b';
-                            } else if (data.currentType) {
-                                // Dacă s-a adăugat/schimbat reacția
-                                span.innerText = `${data.currentType} (${data.count})`;
-
-                                if (data.currentType === 'Like') { icon.className = 'bi bi-hand-thumbs-up-fill me-1 fs-5'; mainBtn.classList.add('text-pastel-blue'); }
-                                else if (data.currentType === 'Love') { icon.className = 'bi bi-heart-fill me-1 fs-5'; mainBtn.classList.add('text-pastel-red'); }
-                                else if (data.currentType === 'Haha') { icon.className = 'bi bi-emoji-laughing-fill me-1 fs-5'; mainBtn.classList.add('text-pastel-yellow'); }
-                                else if (data.currentType === 'Wow') { icon.className = 'bi bi-star-fill me-1 fs-5'; mainBtn.classList.add('text-pastel-yellow'); }
+                                if (data.status === 'removed') {
+                                    icon.className = 'bi bi-heart me-1 fs-5';
+                                    span.innerText = `Like (${data.count})`;
+                                    mainBtn.style.color = '#65676b';
+                                } else if (data.currentType) {
+                                    span.innerText = `${data.currentType} (${data.count})`;
+                                    if (data.currentType === 'Like') { icon.className = 'bi bi-hand-thumbs-up-fill me-1 fs-5'; mainBtn.classList.add('text-pastel-blue'); }
+                                    else if (data.currentType === 'Love') { icon.className = 'bi bi-heart-fill me-1 fs-5'; mainBtn.classList.add('text-pastel-red'); }
+                                    else if (data.currentType === 'Haha') { icon.className = 'bi bi-emoji-laughing-fill me-1 fs-5'; mainBtn.classList.add('text-pastel-yellow'); }
+                                    else if (data.currentType === 'Wow') { icon.className = 'bi bi-star-fill me-1 fs-5'; mainBtn.classList.add('text-pastel-yellow'); }
+                                }
                             }
-                        }
-                    })
-                    .catch(err => console.error(err));
+                        })
+                        .catch(err => console.error(err));
                 });
             });
         });
@@ -391,15 +383,13 @@
         function showReactionList(postId) {
             var myModal = new bootstrap.Modal(document.getElementById('reactionsModal'));
             var listContainer = document.getElementById('reactionsListContainer');
-
             listContainer.innerHTML = `<div class="text-center py-3"><div class="spinner-border text-primary spinner-sm"></div></div>`;
             myModal.show();
 
             fetch(`/Reactions/GetReactionsList?postId=${postId}`)
                 .then(response => response.json())
                 .then(data => {
-                    listContainer.innerHTML = ""; 
-
+                    listContainer.innerHTML = "";
                     if (!data || data.length === 0) {
                         listContainer.innerHTML = '<div class="text-center text-muted small py-2">No reactions yet.</div>';
                         return;
@@ -407,17 +397,25 @@
 
                     data.forEach(user => {
                         let iconHtml = '';
-                        if(user.type === 'Like') iconHtml = '<i class="bi bi-hand-thumbs-up-fill text-pastel-blue"></i>';
-                        else if(user.type === 'Love') iconHtml = '<i class="bi bi-heart-fill text-pastel-red"></i>';
-                        else if(user.type === 'Haha') iconHtml = '<i class="bi bi-emoji-laughing-fill text-pastel-yellow"></i>';
-                        else if(user.type === 'Wow') iconHtml = '<i class="bi bi-star-fill text-pastel-yellow"></i>';
+                        if (user.type === 'Like') iconHtml = '<i class="bi bi-hand-thumbs-up-fill text-pastel-blue"></i>';
+                        else if (user.type === 'Love') iconHtml = '<i class="bi bi-heart-fill text-pastel-red"></i>';
+                        else if (user.type === 'Haha') iconHtml = '<i class="bi bi-emoji-laughing-fill text-pastel-yellow"></i>';
+                        else if (user.type === 'Wow') iconHtml = '<i class="bi bi-star-fill text-pastel-yellow"></i>';
 
-                        let imgUrl = user.profileImage ? user.profileImage : "https://dummyimage.com/32x32/ced4da/6c757d.jpg";
+                        const initial = user.userName ? user.userName.charAt(0).toUpperCase() : 'U';
+
+                        let avatarHtml = '';
+                        if (user.profileImage) {
+                            avatarHtml = `<img src="${user.profileImage}" class="rounded-circle me-2" width="32" height="32" style="object-fit:cover;">`;
+                        } else {
+                            avatarHtml = `<div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm me-2"
+                                                style="width: 32px; height: 32px; background-color: #7952b3; font-size: 0.9rem;">${initial}</div>`;
+                        }
 
                         listContainer.innerHTML += `
                             <div class="d-flex align-items-center justify-content-between border-bottom py-2">
                                 <div class="d-flex align-items-center">
-                                    <img src="${imgUrl}" class="rounded-circle me-2" width="32" height="32" style="object-fit:cover;">
+                                    ${avatarHtml}
                                     <span class="fw-bold small text-dark">${user.userName}</span>
                                 </div>
                                 <div class="fs-5">${iconHtml}</div>

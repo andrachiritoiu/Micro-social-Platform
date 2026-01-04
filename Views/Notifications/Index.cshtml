@@ -4,121 +4,141 @@
     ViewData["Title"] = "Notifications";
 }
 
-<div class="feed-container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 style="color: var(--text-primary); font-weight: 600;">Notifications</h2>
-        @if (Model.Any(n => !n.IsRead))
+<div class="insta-feed-container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+        <h3 class="fw-bold mb-0">Notifications</h3>
+
+        @if (Model.Any())
         {
-            <form asp-action="MarkAllAsRead" method="post" class="d-inline">
-                <button type="submit" class="btn btn-outline-primary btn-sm">
-                    <i class="bi bi-check-all"></i> Mark all as read
+            <form asp-controller="Notifications" asp-action="ClearAll" method="post">
+                <button type="submit" class="btn btn-sm btn-light text-danger shadow-sm fw-bold">
+                    <i class="bi bi-trash me-1"></i> Clear all
                 </button>
             </form>
         }
     </div>
 
-    @if (Model.Any())
-    {
-        <div class="custom-card">
-            <div class="list-group list-group-flush">
-                @foreach (var notification in Model)
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="list-group list-group-flush">
+            @if (Model.Any())
+            {
+                @foreach (var item in Model)
                 {
-                    var relatedUser = notification.RelatedUser;
-                    var relatedUserInitials = relatedUser?.UserName?.Substring(0, 1).ToUpper() ?? "U";
-                    var bgClass = notification.IsRead ? "" : "bg-light";
-                    var borderClass = notification.IsRead ? "" : "border-left: 3px solid var(--primary-blue);";
-                    var icon = GetNotificationIcon(notification.Type);
-                    
-                    <div class="list-group-item d-flex align-items-start gap-3 p-3 @bgClass" style="@borderClass border-bottom: 1px solid var(--border-color);">
-                        <div style="font-size: 1.5rem; color: var(--primary-blue); flex-shrink: 0;">
-                            @Html.Raw(icon)
-                        </div>
-                        <div class="flex-grow-1">
-                            <div style="font-weight: @(notification.IsRead ? "400" : "600"); color: var(--text-primary); margin-bottom: 4px;">
-                                @notification.Title
-                            </div>
-                            @if (!string.IsNullOrEmpty(notification.Content))
-                            {
-                                <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 4px;">
-                                    @notification.Content
-                                </div>
-                            }
-                            <small class="text-muted">@GetTimeAgo(notification.CreatedAt)</small>
-                            
-                            @if (notification.Type == "FollowRequest" && notification.RelatedUserId != null)
-                            {
-                                <div class="mt-2 d-flex gap-2">
-                                    <form asp-controller="Users" asp-action="AcceptFollow" asp-route-followerId="@notification.RelatedUserId" method="post" class="d-inline">
-                                        <button type="submit" class="btn btn-primary btn-sm">
-                                            <i class="bi bi-check"></i> Accept
-                                        </button>
-                                    </form>
-                                    <form asp-controller="Users" asp-action="DeclineFollow" asp-route-followerId="@notification.RelatedUserId" method="post" class="d-inline">
-                                        <button type="submit" class="btn btn-outline-danger btn-sm">
-                                            <i class="bi bi-x"></i> Decline
-                                        </button>
-                                    </form>
-                                </div>
-                            }
-                            else if (!string.IsNullOrEmpty(notification.Link))
-                            {
-                                <div class="mt-2">
-                                    <a href="@notification.Link" class="btn btn-outline-primary btn-sm">
-                                        View <i class="bi bi-arrow-right"></i>
-                                    </a>
-                                </div>
-                            }
-                        </div>
-                        @if (!notification.IsRead)
+                    var bgClass = item.IsRead ? "bg-white" : "bg-light";
+
+                    var iconDetails = item.Type switch
+                    {
+                        "NewReaction" => new { Icon = "bi-heart-fill", Color = "text-danger" },
+                        "NewComment" => new { Icon = "bi-chat-fill", Color = "text-primary" },
+                        "FollowRequest" => new { Icon = "bi-person-plus-fill", Color = "text-dark" }, // Omule? negru pt cerere
+                        "NewFollower" => new { Icon = "bi-person-check-fill", Color = "text-success" },
+                        "FollowAccepted" => new { Icon = "bi-check-circle-fill", Color = "text-success" },
+                        _ => new { Icon = "bi-bell-fill", Color = "text-secondary" }
+                    };
+
+                    string cleanContent = item.Content;
+                    if (item.RelatedUser != null)
+                    {
+                        string fullName = $"{item.RelatedUser.FirstName} {item.RelatedUser.LastName}".Trim();
+                        if (!string.IsNullOrEmpty(fullName) && cleanContent.StartsWith(fullName))
                         {
-                            <span class="badge rounded-pill" style="background: var(--primary-blue);">New</span>
+                            cleanContent = cleanContent.Replace(fullName, "").Trim();
+                        }
+                    }
+
+                    <div class="list-group-item p-3 border-bottom @bgClass d-flex align-items-center gap-3 position-relative" onclick="markAsRead(@item.Id)">
+
+                        <div class="flex-shrink-0 position-relative">
+                            <a href="/Users/Show/@(item.RelatedUserId)" class="text-decoration-none position-relative" style="z-index: 2;">
+                                @if (item.RelatedUser != null)
+                                {
+                                    if (!string.IsNullOrEmpty(item.RelatedUser.ProfileImage))
+                                    {
+                                        <img src="@item.RelatedUser.ProfileImage" class="rounded-circle border shadow-sm" style="width: 48px; height: 48px; object-fit: cover;" />
+                                    }
+                                    else
+                                    {
+                                        var initial = "U";
+
+                                        if (!string.IsNullOrEmpty(item.RelatedUser.FirstName))
+                                        {
+                                            initial = item.RelatedUser.FirstName.Substring(0, 1);
+                                        }
+                                        else if (!string.IsNullOrEmpty(item.RelatedUser.UserName))
+                                        {
+                                            initial = item.RelatedUser.UserName.Substring(0, 1);
+                                        }
+
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm"
+                                             style="width: 48px; height: 48px; background-color: #7952b3; font-size: 1.2rem;">
+                                            @initial.ToUpper()
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white" style="width: 48px; height: 48px;">
+                                        <i class="bi bi-bell-fill"></i>
+                                    </div>
+                                }
+                            </a>
+
+                            <div class="position-absolute bottom-0 end-0 bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                                 style="width: 20px; height: 20px; border: 1px solid white;">
+                                <i class="bi @iconDetails.Icon @iconDetails.Color" style="font-size: 10px;"></i>
+                            </div>
+                        </div>
+
+                        <div class="flex-grow-1">
+                            <div class="mb-1">
+                                <a href="@item.Link" class="text-decoration-none text-dark stretched-link">
+                                    <span class="fw-bold">@(item.RelatedUser?.UserName ?? "System")</span>
+                                    <span class="text-body">@Html.Raw(cleanContent)</span>
+                                </a>
+                            </div>
+                            <small class="text-muted opacity-75" style="font-size: 0.8rem;">
+                                @GetTimeAgo(item.CreatedAt)
+                            </small>
+                        </div>
+
+                        @if (!item.IsRead)
+                        {
+                            <span class="badge rounded-pill bg-primary p-1" style="background-color: #7952b3 !important; width: 8px; height: 8px;">
+                                <span class="visually-hidden">New</span>
+                            </span>
                         }
                     </div>
                 }
-            </div>
+            }
+            else
+            {
+                <div class="text-center p-5 text-muted">
+                    <div class="mb-3">
+                        <i class="bi bi-bell-slash fs-1 opacity-25"></i>
+                    </div>
+                    <h5 class="fw-bold">No notifications yet</h5>
+                    <p class="small opacity-75">When people interact with you, it will show up here.</p>
+                </div>
+            }
         </div>
-    }
-    else
-    {
-        <div class="custom-card text-center" style="padding: 60px 20px;">
-            <div style="font-size: 3rem; margin-bottom: 20px; color: var(--primary-blue);">
-                <i class="bi bi-bell-slash"></i>
-            </div>
-            <h3 style="color: var(--text-primary); margin-bottom: 10px;">No notifications</h3>
-            <p class="text-muted">You're all caught up!</p>
-        </div>
-    }
+    </div>
 </div>
 
-@functions {
-    private string GetNotificationIcon(string type)
-    {
-        return type switch
-        {
-            "FollowRequest" => "<i class=\"bi bi-person-plus\"></i>",
-            "FollowAccepted" => "<i class=\"bi bi-check-circle\"></i>",
-            "NewMessage" => "<i class=\"bi bi-envelope\"></i>",
-            "NewComment" => "<i class=\"bi bi-chat\"></i>",
-            "NewReaction" => "<i class=\"bi bi-heart\"></i>",
-            "GroupInvite" => "<i class=\"bi bi-people\"></i>",
-            _ => "<i class=\"bi bi-bell\"></i>"
-        };
+<script>
+    function markAsRead(id) {
+        // Trimite request in background
+        fetch('/Notifications/MarkAsRead?id=' + id, { method: 'POST' });
     }
+</script>
 
+@functions {
     private string GetTimeAgo(DateTime dateTime)
     {
         var timeSpan = DateTime.UtcNow - dateTime;
-
-        if (timeSpan.TotalSeconds < 60)
-            return "just now";
-        if (timeSpan.TotalMinutes < 60)
-            return $"{(int)timeSpan.TotalMinutes} minute{((int)timeSpan.TotalMinutes != 1 ? "s" : "")} ago";
-        if (timeSpan.TotalHours < 24)
-            return $"{(int)timeSpan.TotalHours} hour{((int)timeSpan.TotalHours != 1 ? "s" : "")} ago";
-        if (timeSpan.TotalDays < 7)
-            return $"{(int)timeSpan.TotalDays} day{((int)timeSpan.TotalDays != 1 ? "s" : "")} ago";
-
-        return dateTime.ToString("MMM dd, yyyy");
+        if (timeSpan.TotalMinutes < 1) return "Just now";
+        if (timeSpan.TotalMinutes < 60) return $"{(int)timeSpan.TotalMinutes}m";
+        if (timeSpan.TotalHours < 24) return $"{(int)timeSpan.TotalHours}h";
+        if (timeSpan.TotalDays < 7) return $"{(int)timeSpan.TotalDays}d";
+        return dateTime.ToString("MMM dd");
     }
 }
-

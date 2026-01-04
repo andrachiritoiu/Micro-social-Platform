@@ -1,151 +1,86 @@
-﻿@model List<MicroSocialPlatform.Models.Follow>
+﻿@model IEnumerable<MicroSocialPlatform.Models.Follow>
 
 @{
-    ViewData["Title"] = "Cereri de urmărire";
+    ViewData["Title"] = "Follow Requests";
 }
 
-<style>
-    /* Instagram-ish, clean */
-    .ig-wrap { max-width: 720px; margin: 28px auto; padding: 0 14px; }
-    .ig-card {
-        background: #fff;
-        border: 1px solid #dbdbdb;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 1px 0 rgba(0,0,0,.04);
-    }
-    .ig-header {
-        padding: 14px 16px;
-        border-bottom: 1px solid #efefef;
-        display:flex; align-items:center; justify-content:space-between;
-    }
-    .ig-title { font-size: 16px; font-weight: 700; margin: 0; }
-    .ig-sub { font-size: 13px; color: #737373; margin: 0; }
+<div class="insta-feed-container mt-4">
+    <h4 class="fw-bold mb-4 px-2">Follow Requests</h4>
 
-    .ig-list { list-style: none; margin: 0; padding: 0; }
-    .ig-item {
-        display:flex; gap: 12px;
-        padding: 14px 16px;
-        align-items:center;
-        border-bottom: 1px solid #efefef;
-    }
-    .ig-item:last-child { border-bottom: none; }
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
 
-    .ig-avatar {
-        width: 46px; height: 46px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 1px solid #efefef;
-        background: #fafafa;
-    }
-
-    .ig-meta { flex: 1; min-width: 0; }
-    .ig-name {
-        display:flex; align-items:center; gap: 8px;
-        font-weight: 700;
-        font-size: 14px;
-        margin: 0;
-        color: #111;
-    }
-    .ig-username { font-size: 13px; color: #737373; margin: 2px 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .ig-time { font-size: 12px; color: #9a9a9a; margin-top: 4px; }
-
-    .ig-actions { display:flex; gap: 8px; align-items:center; }
-    .ig-btn {
-        border: 1px solid transparent;
-        border-radius: 8px;
-        padding: 8px 12px;
-        font-size: 13px;
-        font-weight: 700;
-        cursor: pointer;
-        line-height: 1;
-        user-select: none;
-        transition: transform .03s ease, opacity .15s ease;
-    }
-    .ig-btn:active { transform: scale(0.98); }
-    .ig-btn-primary { background: #0095f6; color: #fff; }
-    .ig-btn-primary:hover { opacity: .92; }
-    .ig-btn-ghost { background: #efefef; color: #111; }
-    .ig-btn-ghost:hover { opacity: .9; }
-
-    .ig-empty {
-        padding: 28px 16px;
-        text-align:center;
-        color:#737373;
-    }
-    .ig-empty h3 { margin: 0 0 6px; font-size: 15px; color:#111; }
-    .ig-empty p { margin: 0; font-size: 13px; }
-
-    body { background: #fafafa; }
-</style>
-
-<div class="ig-wrap">
-    <div class="ig-card">
-        <div class="ig-header">
-            <div>
-                <p class="ig-title">Cereri de urmărire</p>
-                <p class="ig-sub">Aprobă sau respinge solicitările</p>
-            </div>
-            <div class="ig-sub">@Model?.Count ?? 0</div>
-        </div>
-
-        @if (Model == null || Model.Count == 0)
+        @if (Model.Any())
         {
-            <div class="ig-empty">
-                <h3>Nicio cerere nouă</h3>
-                <p>Când cineva îți trimite o cerere, o vei vedea aici.</p>
+            <div class="list-group list-group-flush">
+                @foreach (var item in Model)
+                {
+                    <div class="list-group-item p-3 d-flex align-items-center justify-content-between">
+
+                        <div class="d-flex align-items-center">
+                            <a asp-controller="Users" asp-action="Show" asp-route-id="@item.FollowerId" class="text-decoration-none">
+                                @if (!string.IsNullOrEmpty(item.Follower.ProfileImage))
+                                {
+                                    <img src="@item.Follower.ProfileImage" class="rounded-circle border me-3 shadow-sm"
+                                         style="width: 48px; height: 48px; object-fit: cover;" />
+                                }
+                                else
+                                {
+                                    var initial = "U";
+                                    if (!string.IsNullOrEmpty(item.Follower.FirstName))
+                                    {
+                                        initial = item.Follower.FirstName.Substring(0, 1);
+                                    }
+                                    else if (!string.IsNullOrEmpty(item.Follower.UserName))
+                                    {
+                                        initial = item.Follower.UserName.Substring(0, 1);
+                                    }
+
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm me-3"
+                                         style="width: 48px; height: 48px; background-color: #7952b3; font-size: 1.2rem;">
+                                        @initial.ToUpper()
+                                    </div>
+                                }
+                            </a>
+
+                            <div>
+                                <a asp-controller="Users" asp-action="Show" asp-route-id="@item.FollowerId" class="text-decoration-none text-dark fw-bold">
+                                    @item.Follower.UserName
+                                </a>
+                                <div class="text-muted small">
+                                    @(item.Follower.FirstName) @(item.Follower.LastName)
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <form asp-action="Accept" method="post">
+                                <input type="hidden" name="followerId" value="@item.FollowerId" />
+                                <button type="submit" class="btn btn-primary btn-sm px-3 rounded-pill fw-bold"
+                                        style="background-color: #7952b3; border: none;">
+                                    Confirm
+                                </button>
+                            </form>
+
+                            <form asp-action="Reject" method="post">
+                                <input type="hidden" name="followerId" value="@item.FollowerId" />
+                                <button type="submit" class="btn btn-light btn-sm border px-3 rounded-pill fw-bold">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
             </div>
         }
         else
         {
-            <ul class="ig-list">
-                @foreach (var req in Model)
-                {
-                    var follower = req.Follower;
-                    var fullName = follower != null ? $"{follower.FirstName} {follower.LastName}" : "Utilizator";
-                    var profileLink = follower != null ? $"/Users/Show/{follower.Id}" : "#";
-
-                    // Dacă ai stocat doar numele fișierului/relativ, adaptează calea după cum ai în proiect:
-                    // ex: "/images/profiles/" + follower.ProfileImage
-                    var avatarSrc = (follower != null && !string.IsNullOrWhiteSpace(follower.ProfileImage))
-                    ? follower.ProfileImage
-                    : "/images/default-avatar.png";
-
-                    <li class="ig-item">
-                        <a href="@profileLink" style="display:flex;align-items:center;text-decoration:none;">
-                            <img class="ig-avatar" src="@avatarSrc" alt="Avatar" />
-                        </a>
-
-                        <div class="ig-meta">
-                            <p class="ig-name">
-                                <a href="@profileLink" style="color:#111;text-decoration:none;">@fullName</a>
-                            </p>
-                            <p class="ig-username">
-                                <a href="@profileLink" style="color:#737373;text-decoration:none;">
-                                    @(follower?.UserName ?? follower?.Email ?? "—")
-                                </a>
-                            </p>
-                            <div class="ig-time">
-                                Cerere trimisă: @req.RequestDate.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
-                            </div>
-                        </div>
-
-                        <div class="ig-actions">
-                            <form asp-controller="Follows" asp-action="Accept" method="post" style="margin:0;">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@req.Id" />
-                                <button type="submit" class="ig-btn ig-btn-primary">Confirmă</button>
-                            </form>
-
-                            <form asp-controller="Follows" asp-action="Reject" method="post" style="margin:0;">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@req.Id" />
-                                <button type="submit" class="ig-btn ig-btn-ghost">Șterge</button>
-                            </form>
-                        </div>
-                    </li>
-                }
-            </ul>
+            <div class="text-center py-5 text-muted">
+                <div class="mb-3">
+                    <i class="bi bi-person-check fs-1 opacity-25"></i>
+                </div>
+                <h5 class="fw-bold">No pending requests</h5>
+                <p class="small opacity-75">When people ask to follow you, you'll see them here.</p>
+            </div>
         }
     </div>
 </div>

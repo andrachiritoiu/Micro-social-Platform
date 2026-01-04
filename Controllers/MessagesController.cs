@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 using Microsoft.AspNetCore.Authorization;
-=======
-﻿using Microsoft.AspNetCore.Authorization;
->>>>>>> otilia/main
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -27,17 +23,9 @@ namespace MicroSocialPlatform.Controllers
         public async Task<IActionResult> Index()
         {
             var user = await _userManager.GetUserAsync(User);
-<<<<<<< HEAD
-            if (user == null)
-            {
-                return Unauthorized();
-            }
-
-            // Get all conversations (users you've messaged or who messaged you)
-=======
             if (user == null) return Unauthorized();
 
->>>>>>> otilia/main
+            // Get all conversations (users you've messaged or who messaged you)
             var conversations = await _context.Messages
                 .Where(m => m.SenderId == user.Id || m.ReceiverId == user.Id)
                 .Include(m => m.Sender)
@@ -45,10 +33,7 @@ namespace MicroSocialPlatform.Controllers
                 .OrderByDescending(m => m.CreatedAt)
                 .ToListAsync();
 
-<<<<<<< HEAD
             // Group by conversation partner
-=======
->>>>>>> otilia/main
             var conversationPartners = conversations
                 .Select(m => m.SenderId == user.Id ? m.Receiver : m.Sender)
                 .Distinct()
@@ -61,26 +46,6 @@ namespace MicroSocialPlatform.Controllers
         // GET: Messages/Conversation/{userId}
         public async Task<IActionResult> Conversation(string? id)
         {
-<<<<<<< HEAD
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-            {
-                return Unauthorized();
-            }
-
-            var otherUser = await _userManager.FindByIdAsync(id);
-            if (otherUser == null)
-            {
-                return NotFound();
-            }
-
-            // Get all messages between current user and other user
-=======
             if (id == null) return NotFound();
 
             var user = await _userManager.GetUserAsync(User);
@@ -89,7 +54,7 @@ namespace MicroSocialPlatform.Controllers
             var otherUser = await _userManager.FindByIdAsync(id);
             if (otherUser == null) return NotFound();
 
->>>>>>> otilia/main
+            // Get all messages between current user and other user
             var messages = await _context.Messages
                 .Include(m => m.Sender)
                 .Include(m => m.Receiver)
@@ -98,28 +63,19 @@ namespace MicroSocialPlatform.Controllers
                 .OrderBy(m => m.CreatedAt)
                 .ToListAsync();
 
-<<<<<<< HEAD
             // Mark messages as read
             var unreadMessages = messages.Where(m => m.ReceiverId == user.Id && !m.IsRead).ToList();
             foreach (var message in unreadMessages)
             {
                 message.IsRead = true;
             }
-=======
-            var unreadMessages = messages.Where(m => m.ReceiverId == user.Id && !m.IsRead).ToList();
-            foreach (var message in unreadMessages) { message.IsRead = true; }
->>>>>>> otilia/main
+
             await _context.SaveChangesAsync();
 
             ViewData["OtherUser"] = otherUser;
             ViewData["CurrentUserId"] = user.Id;
             return View(messages);
         }
-
-<<<<<<< HEAD
-        // POST: Messages/Send
-=======
-        // --- CRUD MESAJ INDIVIDUAL (PAGINI SEPARATE CA LA GRUPURI) ---
 
         // GET: Messages/Edit/5
         public async Task<IActionResult> Edit(int id)
@@ -129,7 +85,7 @@ namespace MicroSocialPlatform.Controllers
 
             if (message == null || message.SenderId != user.Id) return NotFound();
 
-            return View(message); // Deschide Views/Messages/Edit.cshtml
+            return View(message);
         }
 
         [HttpPost]
@@ -156,7 +112,7 @@ namespace MicroSocialPlatform.Controllers
 
             if (message == null || message.SenderId != user.Id) return NotFound();
 
-            return View(message); // Deschide Views/Messages/Delete.cshtml
+            return View(message);
         }
 
         [HttpPost]
@@ -175,14 +131,10 @@ namespace MicroSocialPlatform.Controllers
             return RedirectToAction(nameof(Conversation), new { id = otherUserId });
         }
 
-        // --- ALTE OPERATII ---
-
->>>>>>> otilia/main
         [HttpPost]
         [IgnoreAntiforgeryToken]
         public async Task<IActionResult> Send(string receiverId, string content)
         {
-<<<<<<< HEAD
             if (string.IsNullOrWhiteSpace(content))
             {
                 return Json(new { success = false, message = "Message cannot be empty" });
@@ -199,10 +151,6 @@ namespace MicroSocialPlatform.Controllers
             {
                 return Json(new { success = false, message = "Receiver not found" });
             }
-=======
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null || string.IsNullOrWhiteSpace(content)) return Json(new { success = false });
->>>>>>> otilia/main
 
             var message = new Message
             {
@@ -216,8 +164,8 @@ namespace MicroSocialPlatform.Controllers
             _context.Messages.Add(message);
             await _context.SaveChangesAsync();
 
-<<<<<<< HEAD
-            // Create notification for receiver
+            // Create notification logic here (optional if you have NotificationsController)
+            // ... (Am păstrat logica ta de notificare comentată sau o poți decomenta dacă NotificationsController e static) ...
             var receiverFirstName = receiver.FirstName ?? "";
             var receiverLastName = receiver.LastName ?? "";
             var receiverFullName = $"{receiverFirstName} {receiverLastName}".Trim();
@@ -228,6 +176,7 @@ namespace MicroSocialPlatform.Controllers
             var senderFullName = $"{senderFirstName} {senderLastName}".Trim();
             if (string.IsNullOrEmpty(senderFullName)) senderFullName = user.UserName ?? "User";
 
+            // Asigură-te că NotificationsController este accesibil
             await NotificationsController.CreateNotification(
                 _context,
                 receiverId,
@@ -270,12 +219,6 @@ namespace MicroSocialPlatform.Controllers
 
             return dateTime.ToString("MMM dd, yyyy");
         }
-    }
-}
-
-=======
-            return Json(new { success = true, message = new { id = message.Id, content = message.Content } });
-        }
 
         [HttpPost]
         public async Task<IActionResult> DeleteConversation(string id)
@@ -288,4 +231,3 @@ namespace MicroSocialPlatform.Controllers
         }
     }
 }
->>>>>>> otilia/main

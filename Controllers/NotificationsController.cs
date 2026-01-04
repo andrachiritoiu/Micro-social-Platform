@@ -133,7 +133,6 @@ namespace MicroSocialPlatform.Controllers
             return Json(new { success = true });
         }
 
-        // Helper method to create notification
         public static async Task CreateNotification(ApplicationDbContext context, string userId, string type, string title, string? content = null, string? link = null, string? relatedUserId = null)
         {
             var notification = new Notification
@@ -149,6 +148,26 @@ namespace MicroSocialPlatform.Controllers
 
             context.Notifications.Add(notification);
             await context.SaveChangesAsync();
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> ClearAll()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
+            var notifications = await _context.Notifications
+                .Where(n => n.UserId == user.Id)
+                .ToListAsync();
+
+            if (notifications.Any())
+            {
+                _context.Notifications.RemoveRange(notifications);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction("Index");
         }
     }
 }

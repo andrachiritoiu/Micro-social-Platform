@@ -30,16 +30,44 @@ namespace MicroSocialPlatform.Controllers
 
         [HttpPost]
         [Authorize] // orice utilizator autentificat poate adauga comentarii
-        public IActionResult New(Comment comment)
+        public async Task<IActionResult> New(Comment comment)
         {
             comment.Date = DateTime.Now;
-            comment.UserId = _userManager.GetUserId(User); 
+            comment.UserId = _userManager.GetUserId(User);
 
             if (!string.IsNullOrWhiteSpace(comment.Content))
             {
                 _context.Comments.Add(comment);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
                 TempData["Message"] = "The comment has been added!";
+
+                //NOTIFICARE
+                var post = await _context.Posts.FindAsync(comment.PostId);
+                var currentUserId = _userManager.GetUserId(User);
+
+                //Nu trimitem notificare daca comentam la propria postare
+                if (post != null && post.UserId != currentUserId)
+                {
+                    // Trunchiem textul pentru a nu fi prea lung in notificare
+                    string previewContent = comment.Content.Length > 50
+                        ? comment.Content.Substring(0, 50) + "..."
+                        : comment.Content;
+
+                    var notif = new Notification
+                    {
+                        UserId = post.UserId, //Proprietarul postarii primeste notificarea
+                        RelatedUserId = currentUserId, //Cel care a comentat
+                        Type = "NewComment",
+                        Title = "New Comment",
+                        Content = $"commented: \"{previewContent}\"",
+                        Link = $"/Posts/Details/{post.Id}",
+                        CreatedAt = DateTime.UtcNow,
+                        IsRead = false
+                    };
+                    _context.Notifications.Add(notif);
+                    await _context.SaveChangesAsync();
+                }
+                // --- LOGICA NOTIFICARE (STOP) ---
 
                 return Redirect("/Posts/Details/" + comment.PostId);
             }
@@ -47,7 +75,6 @@ namespace MicroSocialPlatform.Controllers
             TempData["Message"] = "The comment cannot be empty.";
             return Redirect("/Posts/Details/" + comment.PostId);
         }
-
         [Authorize] 
         public IActionResult Edit(int id)
         {

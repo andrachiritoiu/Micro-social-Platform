@@ -2,39 +2,30 @@
 using MicroSocialPlatform.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-<<<<<<< HEAD
-=======
 using Microsoft.EntityFrameworkCore;
->>>>>>> otilia/main
 
 namespace MicroSocialPlatform.Controllers
 {
     public class FollowsController : Controller
     {
-        // urmarire / dezurmarrire utilizatori
-<<<<<<< HEAD
-     
-=======
-
->>>>>>> otilia/main
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+
         public FollowsController(
         ApplicationDbContext context,
         UserManager<ApplicationUser> userManager,
         RoleManager<IdentityRole> roleManager)
         {
             _context = context;
-            _userManager = userManager; // Initializează UserManager
-            _roleManager = roleManager; // Initializează RoleManager
+            _userManager = userManager;
+            _roleManager = roleManager;
         }
+
         public IActionResult Index()
         {
             return View();
         }
-<<<<<<< HEAD
-=======
 
         [HttpPost]
         public async Task<IActionResult> SendFollowRequest(string id)
@@ -63,7 +54,6 @@ namespace MicroSocialPlatform.Controllers
                 }
             }
 
-
             if (existingFollow != null && existingFollow.Status == "Rejected")
             {
                 if (userToFollow.IsPrivate)
@@ -89,41 +79,50 @@ namespace MicroSocialPlatform.Controllers
                 _context.Follows.Add(follow);
             }
 
-            if (userToFollow.IsPrivate)
-            {
-                var notification = new Notification
-                {
-                    UserId = userToFollow.Id,
-                    Type = "FollowRequest",
-                    Title = "follow request",
-                    Content = $"{user.FirstName} {user.LastName} has sent you a follow request.",
-                    Link = "/Follows/Requests",
-                    RelatedUserId = user.Id,
-                    IsRead = false,
-                    CreatedAt = DateTime.UtcNow
-                };
-                _context.Notifications.Add(notification);
-            }
-            else
-            {
-                var notification = new Notification
-                {
-                    UserId = userToFollow.Id,
-                    Type = "NewFollower",
-                    Title = "new follower",
-                    Content = $"{user.FirstName} {user.LastName} is now following you.",
-                    Link = $"/Users/Show/{user.Id}",
-                    RelatedUserId = user.Id,
-                    IsRead = false,
-                    CreatedAt = DateTime.UtcNow
-                };
-                _context.Notifications.Add(notification);
+            // Verific daca notificarea exista deja
+            bool notificationExists = await _context.Notifications.AnyAsync(n =>
+                n.UserId == userToFollow.Id &&
+                n.RelatedUserId == user.Id &&
+                (n.Type == "FollowRequest" || n.Type == "NewFollower") &&
+                !n.IsRead);
 
+            if (!notificationExists)
+            {
+                if (userToFollow.IsPrivate)
+                {
+                    var notification = new Notification
+                    {
+                        UserId = userToFollow.Id,
+                        Type = "FollowRequest",
+                        Title = "Follow Request",
+                        Content = "has sent you a follow request.",
+                        Link = "/Follows/Requests", // Redirect la requests page
+                        RelatedUserId = user.Id,
+                        IsRead = false,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.Notifications.Add(notification);
+                }
+                else
+                {
+                    var notification = new Notification
+                    {
+                        UserId = userToFollow.Id,
+                        Type = "NewFollower",
+                        Title = "New Follower",
+                        Content = "started following you.",
+                        Link = $"/Users/Show/{user.Id}",
+                        RelatedUserId = user.Id,
+                        IsRead = false,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.Notifications.Add(notification);
+                }
             }
+
             await _context.SaveChangesAsync();
 
             return RedirectToAction("Show", "Users", new { id = userToFollow.Id });
-
         }
 
         public async Task<IActionResult> Requests()
@@ -140,26 +139,52 @@ namespace MicroSocialPlatform.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Accept(int id)
+        public async Task<IActionResult> Accept(string followerId)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Unauthorized();
 
             var followRequest = await _context.Follows
-                .FirstOrDefaultAsync(f => f.Id == id && f.FollowedId == user.Id && f.Status == "Pending");
+                .FirstOrDefaultAsync(f => f.FollowerId == followerId && f.FollowedId == user.Id && f.Status == "Pending");
+
             if (followRequest == null)
             {
                 return NotFound();
             }
+
             followRequest.Status = "Accepted";
 
+            // Sterg vechea "Follow Request" notificare
+            var oldNotification = await _context.Notifications
+                .FirstOrDefaultAsync(n => n.UserId == user.Id &&
+                                          n.RelatedUserId == followerId &&
+                                          n.Type == "FollowRequest");
+            if (oldNotification != null)
+            {
+                _context.Notifications.Remove(oldNotification);
+            }
 
+            // Creez "New Follower" notificare pentru mine(cel care a acceptat)
+            var newFollowerNotif = new Notification
+            {
+                UserId = user.Id,
+                RelatedUserId = followerId,
+                Type = "NewFollower",
+                Title = "New Follower",
+                Content = "is now following you.",
+                Link = $"/Users/Show/{followerId}",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Notifications.Add(newFollowerNotif);
+
+            // Trimit "Follow Accepted" notificare follower-ului
             var notification = new Notification
             {
                 UserId = followRequest.FollowerId,
                 Type = "FollowAccepted",
-                Title = "follow request accepted",
-                Content = $"{user.FirstName} {user.LastName} has accepted your follow request.",
+                Title = "Follow Request Accepted",
+                Content = "accepted your follow request.",
                 Link = $"/Users/Show/{user.Id}",
                 RelatedUserId = user.Id,
                 IsRead = false,
@@ -168,25 +193,27 @@ namespace MicroSocialPlatform.Controllers
 
             _context.Notifications.Add(notification);
             await _context.SaveChangesAsync();
-            return RedirectToAction("Requests");
 
+            return RedirectToAction("Requests");
         }
 
-
         [HttpPost]
-        public async Task<IActionResult> Reject(int id)
+        public async Task<IActionResult> Reject(string followerId)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Unauthorized();
 
             var followRequest = await _context.Follows
-                .FirstOrDefaultAsync(f => f.Id == id && f.FollowedId == user.Id && f.Status == "Pending");
+                .FirstOrDefaultAsync(f => f.FollowerId == followerId && f.FollowedId == user.Id && f.Status == "Pending");
+
             if (followRequest == null)
             {
                 return NotFound();
             }
+
             followRequest.Status = "Rejected";
             await _context.SaveChangesAsync();
+
             return RedirectToAction("Requests");
         }
 
@@ -213,6 +240,19 @@ namespace MicroSocialPlatform.Controllers
                 return RedirectToAction("Show", "Users", new { id = userToUnfollow.Id });
             }
             _context.Follows.Remove(existingFollow);
+
+            //Stergem notificare (daca dam unfollow)
+            var notification = await _context.Notifications
+                    .FirstOrDefaultAsync(n => n.UserId == userToUnfollow.Id && 
+                                              n.RelatedUserId == user.Id &&    
+                                              n.Type == "NewFollower");        // Tipul notificarii
+
+            if (notification != null)
+            {
+                _context.Notifications.Remove(notification);
+            }
+
+
             await _context.SaveChangesAsync();
             return RedirectToAction("Show", "Users", new { id = userToUnfollow.Id });
         }
@@ -240,9 +280,21 @@ namespace MicroSocialPlatform.Controllers
                 return RedirectToAction("Show", "Users", new { id = userToUnfollow.Id });
             }
             _context.Follows.Remove(existingFollow);
+
+
+            var notification = await _context.Notifications
+                .FirstOrDefaultAsync(n => n.UserId == userToUnfollow.Id &&
+                                  n.RelatedUserId == user.Id &&
+                                  n.Type == "FollowRequest");
+
+            if (notification != null)
+            {
+                _context.Notifications.Remove(notification);
+            }
+
+
             await _context.SaveChangesAsync();
             return RedirectToAction("Show", "Users", new { id = userToUnfollow.Id });
         }
->>>>>>> otilia/main
     }
 }

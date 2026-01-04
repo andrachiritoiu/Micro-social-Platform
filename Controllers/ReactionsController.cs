@@ -68,6 +68,25 @@ namespace MicroSocialPlatform.Controllers
 
             await _context.SaveChangesAsync();
 
+            //NOTIFICARE (Doar cand se adauga o reactie noua)
+            if (status == "added" && post.UserId != currentUser.Id)
+            {
+                var notification = new Notification
+                {
+                    UserId = post.UserId, // Proprietarul postarii primeste notificarea
+                    RelatedUserId = currentUser.Id, // Cel care a reactionat
+                    Type = "NewReaction",
+                    Title = "New Reaction",
+                    Content = $"reacted with {type} to your post.",
+                    Link = $"/Posts/Details/{postId}", // Link catre postare
+                    CreatedAt = DateTime.UtcNow,
+                    IsRead = false
+                };
+
+                _context.Notifications.Add(notification);
+                await _context.SaveChangesAsync();
+            }
+
             var reactionsCount = post.Reactions.Count;
             var currentReactionType = status == "removed" ? null : type;
 
@@ -85,6 +104,8 @@ namespace MicroSocialPlatform.Controllers
                 .Select(r => new
                 {
                     userName = r.User.UserName,
+                    firstName = r.User.FirstName, 
+                    lastName = r.User.LastName,
                     profileImage = r.User.ProfileImage,
                     type = r.Type
                 })
