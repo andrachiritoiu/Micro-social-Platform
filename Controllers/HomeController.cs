@@ -11,7 +11,7 @@ namespace MicroSocialPlatform.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<ApplicationUser> _userManager; // 1. Adãugãm UserManager
+        private readonly UserManager<ApplicationUser> _userManager; 
 
         public HomeController(ILogger<HomeController> logger, ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
