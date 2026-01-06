@@ -75,47 +75,69 @@ namespace MicroSocialPlatform.Controllers
 
         public async Task<IActionResult> Show(string id)
         {
-            if (id == null)
+            if (string.IsNullOrEmpty(id))
             {
                 return NotFound();
             }
 
-            var user = await _context.Users
-                .Include(u => u.Posts) //include posts
+            //Usrul pe care vreau sa il vad
+            var targetUser = await _context.Users
+                .Include(u => u.Posts)
+                .Include(u => u.Followers)
+                .Include(u => u.Following)
                 .FirstOrDefaultAsync(u => u.Id == id);
 
-            if (user == null)
+            if (targetUser == null)
             {
                 return NotFound();
             }
 
-
+            //Eu(user logat)
             var currentUser = await _userManager.GetUserAsync(User);
 
-            string? followStatus = null;
+            //Permisiunile
+            bool isMe = (currentUser != null && currentUser.Id == targetUser.Id);
+            bool isFollowing = false;
+            string followStatus = "None"; // Poate fi: None, Pending, Accepted, Rejected
 
-            if (currentUser != null && currentUser.Id != user.Id)
+            if (currentUser != null && !isMe)
             {
-                followStatus = await _context.Follows
-                    .Where(f => f.FollowerId == currentUser.Id && f.FollowedId == user.Id)
-                    .Select(f => f.Status)
-                    .FirstOrDefaultAsync();
+                //Verificam dacă exista o relație de follow 
+                var existingFollow = await _context.Follows
+                    .FirstOrDefaultAsync(f => f.FollowerId == currentUser.Id && f.FollowedId == targetUser.Id);
+
+                if (existingFollow != null)
+                {
+                    followStatus = existingFollow.Status;
+                    if (existingFollow.Status == "Accepted")
+                    {
+                        isFollowing = true;
+                    }
+                }
             }
 
-            ViewBag.FollowStatus = followStatus;
 
+            // Poti vedea continutul daca:
+            // a) E contul meu (isMe == true)
+            // b) Contul NU este privat (!targetUser.IsPrivate)
+            // c) Contul e privat, DAR il urmaresc deja (isFollowing == true)
+            bool canViewContent = isMe || !targetUser.IsPrivate || isFollowing;
 
+            // Calculam numărul de followeri și following 
             var followersCount = await _context.Follows
-                .CountAsync(f => f.FollowedId == user.Id && f.Status == "Accepted");
+                .CountAsync(f => f.FollowedId == targetUser.Id && f.Status == "Accepted");
 
             var followingCount = await _context.Follows
-                .CountAsync(f => f.FollowerId == user.Id && f.Status == "Accepted");
+                .CountAsync(f => f.FollowerId == targetUser.Id && f.Status == "Accepted");
 
+            ViewBag.CanViewContent = canViewContent;
+            ViewBag.IsMe = isMe;
+            ViewBag.FollowStatus = followStatus;
+            ViewBag.CurrentUserId = currentUser?.Id;
             ViewBag.FollowersCount = followersCount;
             ViewBag.FollowingCount = followingCount;
 
-
-            return View(user);
+            return View(targetUser);
         }
 
 

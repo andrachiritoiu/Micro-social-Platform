@@ -24,14 +24,41 @@ namespace MicroSocialPlatform.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var posts = await _context.Posts
-                 .Include(p => p.User)       
-                 .Include(p => p.Comments)
-                     .ThenInclude(c => c.User)
-                 .Include(p => p.Reactions)
-                    .ThenInclude(r => r.User)
-                 .OrderByDescending(p => p.CreatedAt) 
-                 .ToListAsync();
+            // 1. Construim query-ul de bază (fără să aducem datele încă)
+            var postsQuery = _context.Posts
+                    .Include(p => p.User)
+                    .Include(p => p.Comments)
+                        .ThenInclude(c => c.User)
+                    .Include(p => p.Reactions)
+                        .ThenInclude(r => r.User)
+                    .AsQueryable();
+
+            if (User.Identity.IsAuthenticated)
+            {
+                //logat
+                var currentUserId = _userManager.GetUserId(User);
+
+                //persoanle pe care le urmaresti
+                var followingIds = await _context.Follows
+                    .Where(f => f.FollowerId == currentUserId && f.Status == "Accepted")
+                    .Select(f => f.FollowedId)
+                    .ToListAsync();
+
+                //si eu
+                followingIds.Add(currentUserId);
+
+                // Filtram: Vrem postarile care au UserId in lista noastra
+                postsQuery = postsQuery.Where(p => followingIds.Contains(p.UserId));
+            }
+            else
+            {
+                //nelogat
+                postsQuery = postsQuery.Where(p => !p.User.IsPrivate);
+            }
+
+            var posts = await postsQuery
+                    .OrderByDescending(p => p.CreatedAt)
+                    .ToListAsync();
 
             return View(posts);
         }
