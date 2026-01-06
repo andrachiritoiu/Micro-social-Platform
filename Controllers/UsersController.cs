@@ -143,14 +143,13 @@ namespace MicroSocialPlatform.Controllers
 
         //afiseaza formularul de editare a profilului
         [HttpGet]
-        [Authorize] // orice utilizator autentificat isi poate edita propriul profil si adminul
+        [Authorize]
         public async Task<IActionResult> Edit(string id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
-
-            //daca id-ul este null, insemna ca editam propriul profil
             ApplicationUser userToEdit;
 
+            // Daca nu e specificat ID, editam profilul curent
             if (string.IsNullOrEmpty(id))
             {
                 userToEdit = currentUser;
@@ -160,11 +159,9 @@ namespace MicroSocialPlatform.Controllers
                 userToEdit = await _userManager.FindByIdAsync(id);
             }
 
-            if (userToEdit == null)
-            {
-                return NotFound();
-            }
+            if (userToEdit == null) return NotFound();
 
+            // Verificare permisiune (Doar eu sau Admin)
             if (currentUser.Id != userToEdit.Id && !User.IsInRole("Admin"))
             {
                 TempData["Message"] = "You do not have permission to edit this profile.";
@@ -174,29 +171,53 @@ namespace MicroSocialPlatform.Controllers
             return View(userToEdit);
         }
 
-        //preia datele din formular si le salveaza in bd
+
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> Edit(string id, string FirstName, string LastName, string? Description, bool IsPrivate, IFormFile? userImage)
+        public async Task<IActionResult> Edit(string id, string FirstName, string LastName, string Description, bool IsPrivate, IFormFile? userImage)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var userToEdit = await _userManager.FindByIdAsync(id);
 
             if (userToEdit == null) return NotFound();
 
+            //Verificare permisiune
             if (currentUser.Id != userToEdit.Id && !User.IsInRole("Admin"))
             {
                 TempData["Message"] = "You do not have permission to edit this profile.";
                 return RedirectToAction("Show", new { id = id });
             }
 
+            bool hasOldImage = !string.IsNullOrEmpty(userToEdit.ProfileImage);
+            bool hasNewImage = (userImage != null && userImage.Length > 0);
+
+            //Daca nu am poza veche si nu incarc una noua -> EROARE
+            if (!hasOldImage && !hasNewImage)
+            {
+                ModelState.AddModelError("", "Profile picture is required!");
+            }
+
+            if (string.IsNullOrWhiteSpace(FirstName)) ModelState.AddModelError("FirstName", "First name is required.");
+            if (string.IsNullOrWhiteSpace(LastName)) ModelState.AddModelError("LastName", "Last name is required.");
+            if (string.IsNullOrWhiteSpace(Description)) ModelState.AddModelError("Description", "Description is required.");
+
+            if (!ModelState.IsValid)
+            {
+                userToEdit.FirstName = FirstName;
+                userToEdit.LastName = LastName;
+                userToEdit.Description = Description;
+                userToEdit.IsPrivate = IsPrivate;
+                return View(userToEdit);
+            }
+
+            //Salvare date
             userToEdit.FirstName = FirstName;
             userToEdit.LastName = LastName;
             userToEdit.Description = Description;
             userToEdit.IsPrivate = IsPrivate;
 
-            // upload imagine profil
-            if (userImage != null && userImage.Length > 0)
+            //Upload poza
+            if (hasNewImage)
             {
                 var storagePath = Path.Combine(_env.WebRootPath, "images", "profiles");
                 if (!Directory.Exists(storagePath)) Directory.CreateDirectory(storagePath);
@@ -213,7 +234,6 @@ namespace MicroSocialPlatform.Controllers
             }
 
             await _userManager.UpdateSecurityStampAsync(userToEdit);
-
             var result = await _userManager.UpdateAsync(userToEdit);
 
             if (result.Succeeded)
@@ -224,7 +244,6 @@ namespace MicroSocialPlatform.Controllers
 
             return View(userToEdit);
         }
-
 
 
         [HttpPost]

@@ -16,7 +16,7 @@ namespace MicroSocialPlatform.Models
 
 
 
-        [Required(ErrorMessage = "Mesajul nu poate fi gol!")]
+        [Required(ErrorMessage = "The message cannot be empty.")] 
         public string Content { get; set; }
 
 

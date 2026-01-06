@@ -18,9 +18,8 @@ namespace MicroSocialPlatform.Models
         public virtual Post Post { get; set; }
 
 
-        [Required(ErrorMessage = "Comentariul nu poate fi gol!")]
-        [StringLength(1000, ErrorMessage = "Comentariul nu poate depăși 1000 de caractere.")]
-        public string Content { get; set; }
+        [Required(ErrorMessage = "The comment cannot be empty.")]
+        [StringLength(1000, ErrorMessage = "The comment cannot exceed 1000 characters.")] public string Content { get; set; }
 
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

@@ -8,14 +8,12 @@ namespace MicroSocialPlatform.Models
         public int Id { get; set; }
 
 
-        [Required(ErrorMessage = "Numele grupului este obligatoriu.")]
-        [StringLength(100, ErrorMessage = "Numele grupului nu poate depăși 100 de caractere.")]
-        public string Name { get; set; }
+        [Required(ErrorMessage = "The group name is required.")]
+        [StringLength(100, ErrorMessage = "The group name cannot exceed 100 characters.")] public string Name { get; set; }
 
 
-        [Required(ErrorMessage = "Descrierea grupului este obligatorie.")]
-        [StringLength(500, ErrorMessage = "Descrierea grupului nu poate depăși 500 de caractere.")]
-        public string Description { get; set; }
+        [Required(ErrorMessage = "The group description is required.")]
+        [StringLength(500, ErrorMessage = "The group description cannot exceed 500 characters.")] public string Description { get; set; }
 
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
