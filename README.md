@@ -114,15 +114,15 @@ Relațiile sunt gestionate prin **Entity Framework Core**, folosind convenții �
 - [x] Profil public/privat + editare profil
 - [x] Postare (text + media) + feed
 - [x] Like-uri și comentarii
-- [ ] Follow + feed filtrat după following
+- [x] Follow + feed filtrat după following
 - [x] Grupuri + join request + moderare de bază
-- [X] Notificări UI complete (follow, like, comment, join accept)
-- [X] Mesagerie: inbox + status citit + paginare
-- [X] Search îmbunătățit (filtre)
+- [x] Notificări UI complete (follow, like, comment, join accept)
+- [x] Mesagerie: inbox + status citit + paginare
+- [x] Search îmbunătățit (filtre)
 
 ### In progress / Next
-- [ ] Moderare AI înainte de salvarea postărilor
-- [ ] UI : empty states, skeleton loading, toast messages
+- [x] Moderare AI înainte de salvarea postărilor
+- [x] UI : empty states, skeleton loading, toast messages
 
 ### Nice to have
 - [ ] Refresh feed fără reload (AJAX)
