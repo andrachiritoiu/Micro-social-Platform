@@ -68,7 +68,6 @@ namespace MicroSocialPlatform.Controllers
 
             await _context.SaveChangesAsync();
 
-<<<<<<< HEAD
             //NOTIFICARE (Doar cand se adauga o reactie noua)
             if (status == "added" && post.UserId != currentUser.Id)
             {
@@ -88,8 +87,6 @@ namespace MicroSocialPlatform.Controllers
                 await _context.SaveChangesAsync();
             }
 
-=======
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
             var reactionsCount = post.Reactions.Count;
             var currentReactionType = status == "removed" ? null : type;
 
@@ -107,11 +104,8 @@ namespace MicroSocialPlatform.Controllers
                 .Select(r => new
                 {
                     userName = r.User.UserName,
-<<<<<<< HEAD
                     firstName = r.User.FirstName, 
                     lastName = r.User.LastName,
-=======
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
                     profileImage = r.User.ProfileImage,
                     type = r.Type
                 })

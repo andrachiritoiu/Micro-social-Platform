@@ -1,17 +1,19 @@
-<<<<<<< HEAD
 @model IEnumerable<MicroSocialPlatform.Models.Message>
 @using Microsoft.AspNetCore.Identity
 @using MicroSocialPlatform.Models
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
-=======
-﻿@model IEnumerable<MicroSocialPlatform.Models.Message>
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
 
 @{
     var otherUser = ViewData["OtherUser"] as ApplicationUser;
     var currentUserId = ViewData["CurrentUserId"] as string;
-<<<<<<< HEAD
+
+    // ✅ dictionary cu traduceri (setat în controller)
+    var translatedDict = ViewData["Translated"] as Dictionary<int, string>;
+
+    // (îl poți păstra sau elimina dacă nu mai folosești limbi multiple)
+    var chatLang = (ViewData["ChatLang"] as string) ?? "ro";
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
 
     // Logica pentru inițiale și nume
     var otherUserInitials = otherUser?.UserName?.Substring(0, 1).ToUpper() ?? "U";
@@ -20,9 +22,6 @@
     var otherUserFullName = $"{otherUserFirstName} {otherUserLastName}".Trim();
     if (string.IsNullOrEmpty(otherUserFullName)) otherUserFullName = otherUser?.UserName ?? "User";
 
-=======
-    var otherUserInitials = otherUser?.UserName?.Substring(0, 1).ToUpper() ?? "U";
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
     ViewData["Title"] = "Chat with " + otherUser?.UserName;
 }
 
@@ -33,7 +32,6 @@
                 <a asp-action="Index" class="btn btn-link p-0" style="color: var(--text-primary);">
                     <i class="bi bi-arrow-left" style="font-size: 1.2rem;"></i>
                 </a>
-<<<<<<< HEAD
 
                 <div class="header-avatar">
                     @if (!string.IsNullOrEmpty(otherUser?.ProfileImage))
@@ -43,43 +41,43 @@
                     else
                     {
                         <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #666;">
-=======
-                <div class="header-avatar">
-                    @if (!string.IsNullOrEmpty(otherUser?.ProfileImage))
-                    {
-                        <img src="@otherUser.ProfileImage" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" />
-                    }
-                    else
-                    {
-                        <div style="width: 100%; height: 100%; background: #eee; display: flex; align-items: center; justify-content: center;">
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
                             @otherUserInitials
                         </div>
                     }
                 </div>
-<<<<<<< HEAD
 
                 <div>
                     <div style="font-weight: 600; color: var(--text-primary);">@otherUserFullName</div>
                     <small class="text-muted">@@@otherUser?.UserName</small>
-=======
-                <div>
-                    <div style="font-weight: 600;">@@@otherUser?.UserName</div>
-                    <small class="text-muted">Online</small>
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
                 </div>
             </div>
 
-            <form asp-action="DeleteConversation" asp-route-id="@otherUser?.Id" method="post"
-                  onsubmit="return confirm('Ești sigur că vrei să ștergi TOATĂ conversația?');">
-<<<<<<< HEAD
-                <button type="submit" class="btn btn-link text-muted p-0" title="Delete conversation">
-=======
-                <button type="submit" class="btn btn-link text-muted p-0">
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
-                    <i class="bi bi-trash3" style="font-size: 1.1rem;"></i>
-                </button>
-            </form>
+            <div class="d-flex align-items-center gap-3">
+                <!-- ✅ Language selector (poți elimina complet dacă traduci mereu în ro și nu mai ai SetChatLanguage) -->
+                <form asp-action="SetChatLanguage" method="post" class="d-flex align-items-center gap-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="returnUrl" value="@returnUrl" />
+
+                    <small class="text-muted" style="white-space: nowrap;">Language:</small>
+                    <select name="lang" class="form-select form-select-sm"
+                            style="width: 140px;"
+                            onchange="this.form.submit()">
+                        <option value="ro" selected="@(chatLang == "ro")">Română</option>
+                        <option value="en" selected="@(chatLang == "en")">English</option>
+                        <option value="fr" selected="@(chatLang == "fr")">Français</option>
+                        <option value="de" selected="@(chatLang == "de")">Deutsch</option>
+                        <option value="es" selected="@(chatLang == "es")">Español</option>
+                        <option value="it" selected="@(chatLang == "it")">Italiano</option>
+                    </select>
+                </form>
+
+                <form asp-action="DeleteConversation" asp-route-id="@otherUser?.Id" method="post"
+                      onsubmit="return confirm('Ești sigur că vrei să ștergi TOATĂ conversația?');">
+                    <button type="submit" class="btn btn-link text-muted p-0" title="Delete conversation">
+                        <i class="bi bi-trash3" style="font-size: 1.1rem;"></i>
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -90,17 +88,19 @@
                 @foreach (var message in Model)
                 {
                     var isCurrentUser = message.SenderId == currentUserId;
-<<<<<<< HEAD
                     var sender = isCurrentUser ? await UserManager.GetUserAsync(User) : message.Sender;
 
                     var senderUserName = sender?.UserName ?? "user";
                     var senderInitials = senderUserName.Substring(0, 1).ToUpper();
                     var timeAgo = GetTimeAgo(message.CreatedAt);
-=======
-                    var sender = message.Sender;
-                    var senderUserName = sender?.UserName ?? "user";
-                    var senderInitials = senderUserName.Substring(0, 1).ToUpper();
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
+
+                    // ✅ alegem textul care se afișează (tradus dacă există în dict)
+                    var contentToShow =
+                    (translatedDict != null &&
+                    translatedDict.TryGetValue(message.Id, out var t) &&
+                    !string.IsNullOrWhiteSpace(t))
+                    ? t
+                    : message.Content;
 
                     <div class="message-item @(isCurrentUser ? "message-own" : "message-other")">
                         <div class="message-avatar">
@@ -116,45 +116,27 @@
 
                         <div class="message-wrapper">
                             <div class="message-header d-flex align-items-center gap-2">
-<<<<<<< HEAD
                                 <span class="message-author">@(isCurrentUser ? "You" : senderUserName)</span>
                                 <small class="text-muted" style="font-size: 0.7rem;">@timeAgo</small>
-=======
-                                <span class="message-author">@(isCurrentUser ? "Eu" : "@" + senderUserName)</span>
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
 
                                 @if (isCurrentUser)
                                 {
                                     <div class="dropdown">
                                         <button class="btn btn-link p-0 text-muted" type="button" data-bs-toggle="dropdown">
-<<<<<<< HEAD
                                             <i class="bi bi-three-dots-vertical" style="font-size: 0.8rem;"></i>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end shadow border-0">
                                             <li>
                                                 <a class="dropdown-item py-2 small" asp-action="Edit" asp-route-id="@message.Id">
-=======
-                                            <i class="bi bi-three-dots"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                                            <li>
-                                                <a class="dropdown-item py-2" asp-action="Edit" asp-route-id="@message.Id">
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
                                                     <i class="bi bi-pencil me-2"></i> Edit
                                                 </a>
                                             </li>
                                             <li>
-<<<<<<< HEAD
                                                 <form asp-action="DeleteMessage" asp-route-id="@message.Id" method="post">
                                                     <button type="submit" class="dropdown-item text-danger py-2 small">
                                                         <i class="bi bi-trash me-2"></i> Delete
                                                     </button>
                                                 </form>
-=======
-                                                <a class="dropdown-item text-danger py-2" asp-action="Delete" asp-route-id="@message.Id">
-                                                    <i class="bi bi-trash me-2"></i> Delete
-                                                </a>
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
                                             </li>
                                         </ul>
                                     </div>
@@ -162,7 +144,7 @@
                             </div>
 
                             <div class="message-text">
-                                @message.Content
+                                @contentToShow
                             </div>
                         </div>
                     </div>
@@ -171,12 +153,8 @@
             else
             {
                 <div class="text-center text-muted my-auto">
-<<<<<<< HEAD
                     <i class="bi bi-chat-dots mb-2" style="font-size: 2rem;"></i>
                     <p>No messages yet. Start the conversation!</p>
-=======
-                    <p>Niciun mesaj încă. Începe conversația!</p>
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
                 </div>
             }
         </div>
@@ -185,13 +163,8 @@
             <form id="message-form" class="d-flex gap-2">
                 <input type="hidden" name="receiverId" value="@otherUser?.Id" />
                 <input type="text" id="message-input" class="form-control big-chat-input"
-<<<<<<< HEAD
                        placeholder="Type a message..." required autocomplete="off">
                 <button type="submit" class="btn btn-purple-circle shadow-sm">
-=======
-                       placeholder="Scrie un mesaj..." required autocomplete="off">
-                <button type="submit" class="btn btn-purple-circle">
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
                     <i class="bi bi-send-fill"></i>
                 </button>
             </form>
@@ -199,7 +172,6 @@
     </div>
 </div>
 
-<<<<<<< HEAD
 @functions {
     private string GetTimeAgo(DateTime dateTime)
     {
@@ -212,19 +184,14 @@
     }
 }
 
-=======
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
 <style>
     .chat-main-wrapper {
         height: 600px;
         display: flex;
         flex-direction: column;
-<<<<<<< HEAD
         background: #fff;
         border-radius: 15px;
         overflow: hidden;
-=======
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
     }
 
     #messages-container {
@@ -234,16 +201,10 @@
         display: flex;
         flex-direction: column;
         gap: 15px;
-<<<<<<< HEAD
         background: #f8f9fa;
     }
 
     /* Mesaje */
-=======
-        background: #fff;
-    }
-
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
     .message-item {
         display: flex;
         gap: 10px;
@@ -266,7 +227,6 @@
     }
 
     .message-text {
-<<<<<<< HEAD
         padding: 10px 15px;
         border-radius: 18px;
         word-wrap: break-word;
@@ -287,27 +247,9 @@
     }
 
     .message-own .message-author {
-        display: none; /* Ascundem numele autorului pentru mesajele proprii pentru curățenie */
+        display: none;
     }
 
- 
-=======
-        background-color: #f1f1f1;
-        padding: 10px 15px;
-        border-radius: 18px;
-        color: #333;
-        word-wrap: break-word;
-    }
-
-    .message-own .message-text {
-        border-bottom-right-radius: 4px;
-    }
-
-    .message-other .message-text {
-        border-bottom-left-radius: 4px;
-    }
-
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
     .message-avatar, .header-avatar {
         width: 38px;
         height: 38px;
@@ -318,16 +260,7 @@
         justify-content: center;
         background: #eee;
         flex-shrink: 0;
-<<<<<<< HEAD
         font-weight: bold;
-    }
-
-     .message-avatar img, .header-avatar img {
-         width: 100%;
-         height: 100%;
-         object-fit: cover;
-     }
-=======
     }
 
         .message-avatar img, .header-avatar img {
@@ -335,12 +268,10 @@
             height: 100%;
             object-fit: cover;
         }
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
 
     .message-author {
         font-size: 0.75rem;
         font-weight: bold;
-<<<<<<< HEAD
         color: #666;
     }
 
@@ -349,21 +280,12 @@
         padding: 15px;
         border-top: 1px solid #eee;
         background: white;
-=======
-        color: #999;
-    }
-
-    .message-input-area {
-        padding: 15px;
-        border-top: 1px solid #eee;
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
     }
 
     .big-chat-input {
         height: 50px !important;
         border-radius: 25px !important;
         padding-left: 20px !important;
-<<<<<<< HEAD
         border: 1px solid #e0e0e0 !important;
         background-color: #f8f9fa;
     }
@@ -375,19 +297,11 @@
 
     .btn-purple-circle {
         background: linear-gradient(135deg, #7BA3E8 0%, #B5A8D8 100%);
-=======
-        border: 1px solid #ddd !important;
-    }
-
-    .btn-purple-circle {
-        background-color: #8e44ad;
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
         color: #fff;
         width: 50px;
         height: 50px;
         border-radius: 50%;
         border: none;
-<<<<<<< HEAD
         display: flex;
         align-items: center;
         justify-content: center;
@@ -405,19 +319,19 @@
     const messageForm = document.getElementById('message-form');
     const messageInput = document.getElementById('message-input');
 
-    // Scroll jos la încărcare
-    if(messagesContainer) {
+    if (messagesContainer) {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
-    // Trimitere mesaj fara reload
     if (messageForm) {
-        messageForm.addEventListener('submit', async function(e) {
+        messageForm.addEventListener('submit', async function (e) {
             e.preventDefault();
+
             const content = messageInput.value.trim();
             if (!content) return;
 
             const receiverId = '@otherUser?.Id';
+
             const formData = new FormData();
             formData.append('receiverId', receiverId);
             formData.append('content', content);
@@ -428,59 +342,47 @@
                     body: formData
                 });
 
-                const data = await response.json();
-                if (data.success) {
-                    // Construim HTML-ul pentru noul mesaj
-                    const messageHtml = `
-                        <div class="message-item message-own" style="margin-bottom: 16px;">
-                            <div class="message-avatar">
-                                 <span>ME</span>
-                            </div>
-                            <div class="message-wrapper">
-                                <div class="message-text">
-                                    ${data.message.content}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-
-                    // Inseram mesajul si dam scroll
-                    messagesContainer.insertAdjacentHTML('beforeend', messageHtml);
-                    messageInput.value = '';
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.error('Send failed:', response.status, text);
+                    alert('Failed to send message.');
+                    return;
                 }
+
+                let data;
+                try {
+                    data = await response.json();
+                } catch (err) {
+                    const text = await response.text();
+                    console.error('Invalid JSON:', text);
+                    alert('Failed to send message.');
+                    return;
+                }
+
+                if (!data.success) {
+                    alert('Failed to send message.');
+                    return;
+                }
+
+                const safeContent = (data.message.content ?? '').toString();
+
+                const messageHtml = `
+                    <div class="message-item message-own" style="margin-bottom: 16px;">
+                        <div class="message-avatar"><span>ME</span></div>
+                        <div class="message-wrapper">
+                            <div class="message-text">${safeContent}</div>
+                        </div>
+                    </div>
+                `;
+
+                messagesContainer.insertAdjacentHTML('beforeend', messageHtml);
+                messageInput.value = '';
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
             } catch (error) {
-                console.error('Error sending message:', error);
+                console.error('Network error:', error);
                 alert('Failed to send message.');
             }
         });
     }
-=======
-    }
-</style>
-
-<script>
-    const container = document.getElementById('messages-container');
-    container.scrollTop = container.scrollHeight;
-
-    document.getElementById('message-form').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const input = document.getElementById('message-input');
-        const content = input.value.trim();
-        if (!content) return;
-
-        const formData = new FormData();
-        formData.append('receiverId', '@otherUser?.Id');
-        formData.append('content', content);
-
-        const response = await fetch('@Url.Action("Send", "Messages")', {
-            method: 'POST',
-            body: formData
-        });
-        const data = await response.json();
-        if (data.success) {
-            location.reload();
-        }
-    });
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
 </script>

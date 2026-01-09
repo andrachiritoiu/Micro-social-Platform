@@ -3,17 +3,13 @@ using MicroSocialPlatform.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-<<<<<<< HEAD
 using Microsoft.EntityFrameworkCore;
 using MicroSocialPlatform.Services;
-=======
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
 
 namespace MicroSocialPlatform.Controllers
 {
     public class CommentsController : Controller
     {
-<<<<<<< HEAD
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
@@ -24,37 +20,20 @@ namespace MicroSocialPlatform.Controllers
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
             ICommentValidationService commentValidation)
-=======
-        // adaugare, editare si stergere comentarii
-        private readonly ApplicationDbContext _context;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
-
-        public CommentsController(
-        ApplicationDbContext context,
-        UserManager<ApplicationUser> userManager,
-        RoleManager<IdentityRole> roleManager)
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
         {
             _context = context;
             _userManager = userManager;
             _roleManager = roleManager;
-<<<<<<< HEAD
             _commentValidation = commentValidation;
         }
 
 
-=======
-        }
-
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
         public IActionResult Index()
         {
             return View();
         }
 
         [HttpPost]
-<<<<<<< HEAD
         [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> New(Comment comment)
@@ -126,72 +105,29 @@ namespace MicroSocialPlatform.Controllers
         {
             Comment comment = _context.Comments.Find(id);
             if (comment == null) return NotFound();
-=======
-        [Authorize] // orice utilizator autentificat poate adauga comentarii
-        public IActionResult New(Comment comment)
-        {
-            comment.Date = DateTime.Now;
-            comment.UserId = _userManager.GetUserId(User); 
-
-            if (!string.IsNullOrWhiteSpace(comment.Content))
-            {
-                _context.Comments.Add(comment);
-                _context.SaveChanges();
-                TempData["Message"] = "The comment has been added!";
-
-                return Redirect("/Posts/Details/" + comment.PostId);
-            }
-
-            TempData["Message"] = "The comment cannot be empty.";
-            return Redirect("/Posts/Details/" + comment.PostId);
-        }
-
-        [Authorize] 
-        public IActionResult Edit(int id)
-        {
-            Comment comment = _context.Comments.Find(id);
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
 
             if (comment.UserId == _userManager.GetUserId(User) || User.IsInRole("Admin"))
             {
                 TempData["EditingCommentId"] = id;
                 return Redirect("/Posts/Details/" + comment.PostId);
             }
-<<<<<<< HEAD
 
             TempData["Message"] = "You do not have permission to edit this comment.";
             return Redirect("/Posts/Details/" + comment.PostId);
         }
 
-=======
-            else
-            {
-                TempData["Message"] = "You do not have permission to edit this comment.";
-                return Redirect("/Posts/Details/" + comment.PostId);
-            }
-        }
-
-
-
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
         [HttpPost]
         [Authorize]
         public IActionResult Edit(int id, Comment commentRequest)
         {
             var comm = _context.Comments.Find(id);
-<<<<<<< HEAD
             if (comm == null) return NotFound();
 
-=======
-
-            if (comm == null) return NotFound();
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
             if (comm.UserId != _userManager.GetUserId(User) && !User.IsInRole("Admin"))
             {
                 return Json(new { success = false, message = "You do not have permission to edit this comment." });
             }
 
-<<<<<<< HEAD
             var newContent = (commentRequest.Content ?? "").Trim();
             if (string.IsNullOrWhiteSpace(newContent))
             {
@@ -237,46 +173,3 @@ namespace MicroSocialPlatform.Controllers
         }
     }
 }
-=======
-          
-            if (!string.IsNullOrWhiteSpace(commentRequest.Content))
-            {
-                comm.Content = commentRequest.Content;
-                comm.Date = DateTime.Now;
-
-                _context.Comments.Update(comm);
-                _context.SaveChanges();
-
-                return Json(new { success = true, newContent = comm.Content });
-            }
-
-            return Json(new { success = false, message = "The comment text cannot be empty." });
-        }
-
-        [HttpPost]
-        [Authorize] // doar utilizatori autentificati (autorul sau adminul)
-        public IActionResult Delete(int id)
-        {
-            Comment comment = _context.Comments.Find(id);
-
-            // salvam postId inainte de stergere pentru redirectionare
-            int postId = comment.PostId;
-
-            if (comment.UserId == _userManager.GetUserId(User) ||
-                User.IsInRole("Admin"))
-            {
-                _context.Comments.Remove(comment);
-                _context.SaveChanges();
-                TempData["Message"] = "The comment has been deleted!";
-
-                return Redirect("/Posts/Details/" + postId);
-            }
-            else
-            {
-                TempData["Message"] = "You do not have permission to delete this comment.";
-                return Redirect("/Posts/Details/" + postId);
-            }
-        }
-    }
-}
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0

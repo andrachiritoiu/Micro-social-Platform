@@ -4,16 +4,14 @@ using System.Text.Json;
 
 namespace MicroSocialPlatform.Services
 {
-    // Implementarea concretă care folosește Gemini (Google AI)
     public class GeminiCommentValidationService : ICommentValidationService
     {
         private readonly HttpClient _httpClient;
         private readonly string _apiKey;
 
-        // Endpoint-ul oficial pentru Gemini (Generative Language API)
+        // Endpoint-ul oficial pentru Gemini
         private const string BaseUrl = "https://generativelanguage.googleapis.com/v1beta/models/";
 
-        // Un model rapid / ieftin pentru text (bun pentru moderare)
         private const string Model = "gemini-2.5-flash-lite";
 
         public GeminiCommentValidationService(IConfiguration config)
@@ -22,18 +20,17 @@ namespace MicroSocialPlatform.Services
             _apiKey = config["GoogleAI:ApiKey"]
                 ?? throw new Exception("Lipsește cheia GoogleAI:ApiKey din appsettings.json");
 
-            // Cream HttpClient (în curs se folosește pentru requesturi HTTP către API)
+            // Cream HttpClient 
             _httpClient = new HttpClient();
         }
 
         public async Task<bool> IsCommentValidAsync(string text)
         {
-            // Dacă textul e gol, îl considerăm invalid (sau poți returna true, cum vrei)
+            // Dacă textul e gol, îl considerăm invalid 
             if (string.IsNullOrWhiteSpace(text))
                 return false;
 
             // PROMPT pentru moderare:
-            // Vrem răspuns strict YES / NO ca să fie ușor de interpretat în cod.
             var prompt =
                 $@"You are a strict content moderation system for a social media application.
 
@@ -53,7 +50,6 @@ namespace MicroSocialPlatform.Services
 
 
             // Construim body-ul JSON în formatul cerut de Gemini:
-            // contents -> parts -> text
             var body = new
             {
                 contents = new[]
@@ -66,7 +62,7 @@ namespace MicroSocialPlatform.Services
                         }
                     }
                 },
-                // Setări pentru a reduce "halucinațiile"
+          
                 generationConfig = new
                 {
                     temperature = 0.0,
@@ -80,16 +76,19 @@ namespace MicroSocialPlatform.Services
             // Îl trimitem ca application/json
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            // URL final cu cheia în query param (?key=...)
+            // URL final cu cheia în query param 
             var url = $"{BaseUrl}{Model}:generateContent?key={_apiKey}";
 
             // Request POST către Gemini
             var response = await _httpClient.PostAsync(url, content);
             var responseText = await response.Content.ReadAsStringAsync();
 
-            // Dacă API-ul a dat eroare, aruncăm excepție (ca să vezi clar problema)
+            // Dacă API-ul a dat eroare, aruncăm excepție 
             if (!response.IsSuccessStatusCode)
-                throw new Exception($"Gemini API error: {response.StatusCode} - {responseText}");
+            {
+                // dacă AI nu răspunde, NU blocăm aplicația
+                return true;
+            }
 
             // Parsăm răspunsul:
             // candidates[0].content.parts[0].text

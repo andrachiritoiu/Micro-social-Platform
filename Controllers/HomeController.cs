@@ -3,10 +3,7 @@ using MicroSocialPlatform.Models;
 using MicroSocialPlatform.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-<<<<<<< HEAD
 using Microsoft.AspNetCore.Identity; 
-=======
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
 
 namespace MicroSocialPlatform.Controllers
 {
@@ -14,7 +11,6 @@ namespace MicroSocialPlatform.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly ApplicationDbContext _context;
-<<<<<<< HEAD
         private readonly UserManager<ApplicationUser> _userManager; 
 
         public HomeController(ILogger<HomeController> logger, ApplicationDbContext context, UserManager<ApplicationUser> userManager)
@@ -22,28 +18,16 @@ namespace MicroSocialPlatform.Controllers
             _logger = logger;
             _context = context;
             _userManager = userManager;
-=======
-
-        public HomeController(ILogger<HomeController> logger, ApplicationDbContext context)
-        {
-            _logger = logger;
-            _context = context;
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
         }
 
         public async Task<IActionResult> Index()
         {
-<<<<<<< HEAD
             var postsQuery = _context.Posts
-=======
-            var posts = await _context.Posts
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
                 .Include(p => p.User)
                 .Include(p => p.Reactions)
                     .ThenInclude(r => r.User)
                 .Include(p => p.Comments)
                     .ThenInclude(c => c.User)
-<<<<<<< HEAD
                 .AsQueryable();
 
             if (User.Identity.IsAuthenticated)
@@ -68,9 +52,6 @@ namespace MicroSocialPlatform.Controllers
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
 
-=======
-                .ToListAsync();
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
             return View(posts);
         }
 
@@ -85,8 +66,4 @@ namespace MicroSocialPlatform.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0

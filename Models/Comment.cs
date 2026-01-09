@@ -7,7 +7,6 @@ namespace MicroSocialPlatform.Models
         [Key]
         public int Id { get; set; }
 
-<<<<<<< HEAD
         // Cine a comentat
         [Required]
         public string UserId { get; set; } = string.Empty;
@@ -29,25 +28,4 @@ namespace MicroSocialPlatform.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
        }
-=======
-
-        //Cine a comentat
-        public string UserId { get; set; }
-        public virtual ApplicationUser User { get; set; } //un comentariu apartine unui singur user
-
-
-        //La ce postare a comentat
-        public int PostId { get; set; }
-        public virtual Post Post { get; set; }
-
-
-        [Required(ErrorMessage = "Comentariul nu poate fi gol!")]
-        [StringLength(1000, ErrorMessage = "Comentariul nu poate depăși 1000 de caractere.")]
-        public string Content { get; set; }
-
-
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime Date { get; internal set; }
-    }
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
 }

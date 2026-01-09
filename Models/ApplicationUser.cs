@@ -6,38 +6,22 @@ namespace MicroSocialPlatform.Models
 {
     public class ApplicationUser : IdentityUser
     {
-<<<<<<< HEAD
         [Required(ErrorMessage = "First name is required.")]
-=======
-        [Required(ErrorMessage = "Prenumele este obligatoriu!")]
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
         [MaxLength(50)]
         public string FirstName { get; set; }
 
 
-<<<<<<< HEAD
         [Required(ErrorMessage = "Last name is required.")]
-=======
-        [Required(ErrorMessage = "Numele de familie este obligatoriu!")]
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
         [MaxLength(50)]
         public string LastName { get; set; }
 
 
-<<<<<<< HEAD
         [Required(ErrorMessage = "Description is required.")]
         [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters.")] public string? Description { get; set; }
 
 
         //este obligatoarie
         public string ProfileImage { get; set; }
-=======
-        [StringLength(500, ErrorMessage = "Descrierea nu poate depăși 500 de caractere")]
-        public string? Description { get; set; }
-
-
-        public string? ProfileImage { get; set; }
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
 
 
         public bool IsPrivate { get; set; } = false;

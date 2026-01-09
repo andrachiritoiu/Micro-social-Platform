@@ -24,7 +24,6 @@
         @foreach (var item in Model.OrderByDescending(p => p.CreatedAt))
         {
             <article class="insta-post-card shadow-soft hover-lift mb-4">
-<<<<<<< HEAD
 
                 <div class="insta-post-header d-flex align-items-center justify-content-between px-3 pt-3">
                     <div class="d-flex align-items-center">
@@ -56,34 +55,6 @@
                                 </small>
                             </div>
                         </a>
-=======
-                <!-- HEADER: avatar + username + time -->
-                <div class="insta-post-header d-flex align-items-center justify-content-between px-3 pt-3">
-                    <div class="d-flex align-items-center">
-                        @if (!string.IsNullOrEmpty(item.User.ProfileImage))
-                        {
-                            <img src="@item.User.ProfileImage"
-                                 alt="@item.User.FullName"
-                                 class="avatar-circle me-2" />
-                        }
-                        else
-                        {
-                            var initials = (item.User.FirstName?.FirstOrDefault().ToString() ?? "") +
-                                           (item.User.LastName?.FirstOrDefault().ToString() ?? "");
-                            <div class="avatar-placeholder me-2 d-flex align-items-center justify-content-center">
-                                <span>@initials</span>
-                            </div>
-                        }
-
-                        <div>
-                            <div class="insta-username">
-                                @item.User.UserName
-                            </div>
-                            <small class="text-muted d-block">
-                                @item.CreatedAt.ToLocalTime().ToString("dd MMM yyyy • HH:mm")
-                            </small>
-                        </div>
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
                     </div>
 
                     @if (currentUserId == item.UserId || isAdmin)
@@ -113,7 +84,6 @@
                     }
                 </div>
 
-<<<<<<< HEAD
                 @if (!string.IsNullOrWhiteSpace(item.MediaUrl))
                 {
                     <div class="insta-post-media mt-2 position-relative">
@@ -133,55 +103,18 @@
                     </div>
                 }
 
-=======
-                <!-- MEDIA -->
-                @if (!string.IsNullOrWhiteSpace(item.MediaUrl))
-                {
-                    <div class="insta-post-media mt-2 position-relative">
-                        @if (item.MediaUrl.Contains(".mp4") || item.MediaUrl.Contains(".mov"))
-                        {
-                            <video controls
-                                   playsinline
-                                   preload="metadata"
-                                   class="w-100"
-                                   style="max-height: 500px; background-color: #000;">
-
-                                <source src="@item.MediaUrl#t=0.1" type="video/mp4" />
-                                Your browser does not support the video tag.
-                            </video>
-                        }
-                        else
-                        {
-                            <img src="@item.MediaUrl" alt="Post media" />
-                        }
-                    </div>
-                }
-
-                <!-- CAPTION -->
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
                 <div class="insta-post-body px-3 pt-3 pb-2">
                     @if (!string.IsNullOrEmpty(item.Title))
                     {
                         <div class="fw-semibold mb-1">@item.Title</div>
                     }
-<<<<<<< HEAD
                     @if (!string.IsNullOrEmpty(item.Content))
                     {
                         var text = item.Content.Length > 220 ? item.Content.Substring(0, 220) + "..." : item.Content;
-=======
-
-                    @if (!string.IsNullOrEmpty(item.Content))
-                    {
-                        var text = item.Content.Length > 220
-                            ? item.Content.Substring(0, 220) + "..."
-                            : item.Content;
-
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
                         <p class="insta-post-caption mb-0">@text</p>
                     }
                 </div>
 
-<<<<<<< HEAD
                 <div class="insta-post-actions d-flex justify-content-between align-items-center px-3 pb-3 pt-2">
                     <div class="d-flex align-items-center">
                         @{
@@ -190,19 +123,6 @@
                             string triggerText = "Like";
                             string triggerColor = "";
                             string triggerIcon = "bi-heart";
-=======
-                <!-- ACTIONS -->
-                <div class="insta-post-actions d-flex justify-content-between align-items-center px-3 pb-3 pt-2">
-                    <div class="d-flex align-items-center">
-
-                        @{
-                            var myReaction = item.Reactions?.FirstOrDefault(r => r.User.UserName == User.Identity.Name);
-                            string myType = myReaction?.Type;
-
-                            string triggerText = "Like";
-                            string triggerColor = "";
-                            string triggerIcon = "bi-heart"; 
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
 
                             if (myType != null)
                             {
@@ -227,10 +147,6 @@
                         }
 
                         <div class="reaction-wrapper me-3">
-<<<<<<< HEAD
-=======
-
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
                             <div class="reactions-box">
                                 @foreach (var type in new[] { "Like", "Love", "Haha", "Wow" })
                                 {
@@ -242,7 +158,6 @@
                                         "Wow" => "bi-star-fill text-pastel-yellow",
                                         _ => ""
                                     };
-<<<<<<< HEAD
                                     <button class="btn btn-link p-0 text-decoration-none reaction-btn" data-post-id="@item.Id" data-type="@type">
                                         <div class="reaction-circle"><i class="bi @iconClass"></i></div>
                                     </button>
@@ -251,65 +166,25 @@
                             <button type="button" class="btn-trigger btn-main-reaction-@item.Id @triggerColor" onclick="showReactionList(@item.Id)">
                                 <i class="bi @triggerIcon me-1 fs-5"></i>
                                 <span class="fw-bold text-decoration-underline-hover">@triggerText (@(item.Reactions?.Count ?? 0))</span>
-=======
-
-                                    <button class="btn btn-link p-0 text-decoration-none reaction-btn"
-                                            data-post-id="@item.Id"
-                                            data-type="@type">
-                                        <div class="reaction-circle">
-                                            <i class="bi @iconClass"></i>
-                                        </div>
-                                    </button>
-                                }
-                            </div>
-
-                            <button type="button"
-                                    class="btn-trigger btn-main-reaction-@item.Id @triggerColor"
-                                    onclick="showReactionList(@item.Id)">
-
-                                <i class="bi @triggerIcon me-1 fs-5"></i>
-                                <span class="fw-bold text-decoration-underline-hover">
-                                    @triggerText (@(item.Reactions?.Count ?? 0))
-                                </span>
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
                             </button>
                         </div>
 
                         <button type="button" class="btn-action btn-comments-toggle bg-transparent border-0 text-muted fw-bold" onclick="toggleComments(@item.Id)">
-<<<<<<< HEAD
                             <i class="bi bi-chat me-1"></i> Comments (@(item.Comments?.Count ?? 0))
                         </button>
                     </div>
                     <a asp-action="Details" asp-route-id="@item.Id" class="text-muted small text-decoration-none">View details</a>
                 </div>
 
-=======
-                            <i class="bi bi-chat me-1"></i>
-                            Comments (@item.Comments.Count)
-                        </button>
-                    </div>
-
-                    <a asp-action="Details" asp-route-id="@item.Id" class="text-muted small text-decoration-none">
-                        View details
-                    </a>
-                </div>
-
-                <!-- Comments section -->
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
                 <div id="comments-@item.Id" class="comments-section px-3 pb-3" style="display: none;">
                     @if (item.Comments != null && item.Comments.Any())
                     {
                         <div class="list-group list-group-flush border-top pt-3 mt-2">
-<<<<<<< HEAD
                             @foreach (var comment in item.Comments.OrderByDescending(c => c.CreatedAt).Take(5))
-=======
-                            @foreach (var comment in item.Comments.OrderByDescending(c => c.CreatedAt))
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
                             {
                                 <div class="list-group-item px-0 border-bottom py-2">
                                     <div class="d-flex w-100">
                                         <div class="flex-shrink-0 me-2">
-<<<<<<< HEAD
                                             <a asp-controller="Users" asp-action="Show" asp-route-id="@comment.UserId" class="text-decoration-none">
                                                 @if (!string.IsNullOrEmpty(comment.User?.ProfileImage))
                                                 {
@@ -327,16 +202,6 @@
                                                     </div>
                                                 }
                                             </a>
-=======
-                                            @if (!string.IsNullOrEmpty(comment.User?.ProfileImage))
-                                            {
-                                                <img src="@comment.User.ProfileImage" class="rounded-circle" width="32" height="32" />
-                                            }
-                                            else
-                                            {
-                                                <img src="https://dummyimage.com/32x32/ced4da/6c757d.jpg" class="rounded-circle" width="32" height="32" />
-                                            }
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
                                         </div>
                                         <div class="w-100">
                                             <div class="fw-bold small">
@@ -377,13 +242,7 @@
             <div class="modal-body pt-2">
                 <div id="reactionsListContainer" class="d-flex flex-column gap-3">
                     <div class="text-center py-3">
-<<<<<<< HEAD
                         <div class="spinner-border text-primary spinner-sm" role="status"></div>
-=======
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
                     </div>
                 </div>
             </div>
@@ -404,7 +263,6 @@
 
         document.addEventListener("DOMContentLoaded", function () {
             const reactionBtns = document.querySelectorAll('.reaction-btn');
-<<<<<<< HEAD
             reactionBtns.forEach(btn => {
                 btn.addEventListener('click', function (e) {
                     e.preventDefault();
@@ -438,104 +296,28 @@
                             }
                         })
                         .catch(error => console.error('Error:', error));
-=======
-
-            reactionBtns.forEach(btn => {
-                btn.addEventListener('click', function (e) {
-                    e.preventDefault();
-
-                    const postId = this.getAttribute('data-post-id');
-                    const type = this.getAttribute('data-type');
-
-                    fetch(`/Reactions/ToggleReaction?postId=${postId}&type=${type}`, {
-                        method: 'POST',
-                        headers: {}
-                    })
-                    .then(response => {
-                        if (response.status === 401) {
-                            window.location.href = '/Identity/Account/Login';
-                            return null;
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data && data.success) {
-
-                            const mainBtn = document.querySelector(`.btn-main-reaction-${postId}`);
-                            const icon = mainBtn.querySelector('i');
-                            const span = mainBtn.querySelector('span');
-
-                            mainBtn.classList.remove('text-pastel-blue', 'text-pastel-red', 'text-pastel-yellow', 'text-primary');
-                            mainBtn.style.color = '';
-
-                            if (data.status === 'removed') {
-                                icon.className = 'bi bi-heart me-1 fs-5'; 
-                                span.innerText = `Like (${data.count})`; 
-                                mainBtn.style.color = '#65676b'; 
-                            }
-                            else if (data.currentType) {
-                                span.innerText = `${data.currentType} (${data.count})`;
-
-                                if (data.currentType === 'Like') {
-                                    icon.className = 'bi bi-hand-thumbs-up-fill me-1 fs-5';
-                                    mainBtn.classList.add('text-pastel-blue');
-                                } else if (data.currentType === 'Love') {
-                                    icon.className = 'bi bi-heart-fill me-1 fs-5';
-                                    mainBtn.classList.add('text-pastel-red');
-                                } else if (data.currentType === 'Haha') {
-                                    icon.className = 'bi bi-emoji-laughing-fill me-1 fs-5';
-                                    mainBtn.classList.add('text-pastel-yellow');
-                                } else if (data.currentType === 'Wow') {
-                                    icon.className = 'bi bi-star-fill me-1 fs-5';
-                                    mainBtn.classList.add('text-pastel-yellow');
-                                }
-                            }
-                        }
-                    })
-                    .catch(error => console.error('Error:', error));
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
                 });
             });
         });
 
-<<<<<<< HEAD
         // ✅ DOAR PRIMA LITERĂ în modal (Reactions)
         function showReactionList(postId) {
             var myModal = new bootstrap.Modal(document.getElementById('reactionsModal'));
             var listContainer = document.getElementById('reactionsListContainer');
             listContainer.innerHTML = `<div class="text-center py-3"><div class="spinner-border text-primary spinner-sm" role="status"></div></div>`;
-=======
-
-        function showReactionList(postId) {
-            var myModal = new bootstrap.Modal(document.getElementById('reactionsModal'));
-            var listContainer = document.getElementById('reactionsListContainer');
-
-            listContainer.innerHTML = `
-                <div class="text-center py-3">
-                    <div class="spinner-border text-primary spinner-sm" role="status"></div>
-                </div>`;
-
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
             myModal.show();
 
             fetch(`/Reactions/GetReactionsList?postId=${postId}`)
                 .then(response => response.json())
                 .then(data => {
-<<<<<<< HEAD
                     listContainer.innerHTML = "";
                     if (!data || data.length === 0) {
-=======
-                    listContainer.innerHTML = ""; 
-
-                    if (data.length === 0) {
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
                         listContainer.innerHTML = '<div class="text-center text-muted small py-2">No reactions yet.</div>';
                         return;
                     }
 
                     data.forEach(user => {
                         let iconHtml = '';
-<<<<<<< HEAD
                         if (user.type === 'Like') iconHtml = '<i class="bi bi-hand-thumbs-up-fill text-pastel-blue"></i>';
                         else if (user.type === 'Love') iconHtml = '<i class="bi bi-heart-fill text-pastel-red"></i>';
                         else if (user.type === 'Haha') iconHtml = '<i class="bi bi-emoji-laughing-fill text-pastel-yellow"></i>';
@@ -564,27 +346,6 @@
                                 </div>
                             </a>
                         `;
-=======
-                        if(user.type === 'Like') iconHtml = '<i class="bi bi-hand-thumbs-up-fill text-pastel-blue"></i>';
-                        else if(user.type === 'Love') iconHtml = '<i class="bi bi-heart-fill text-pastel-red"></i>';
-                        else if(user.type === 'Haha') iconHtml = '<i class="bi bi-emoji-laughing-fill text-pastel-yellow"></i>';
-                        else if(user.type === 'Wow') iconHtml = '<i class="bi bi-star-fill text-pastel-yellow"></i>'; // Steluța
-
-                        let imgUrl = user.profileImage ? user.profileImage : "https://dummyimage.com/32x32/ced4da/6c757d.jpg";
-
-                        let itemHtml = `
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center">
-                                    <img src="${imgUrl}" class="rounded-circle me-2" width="32" height="32" style="object-fit:cover;">
-                                    <span class="fw-bold small">${user.userName}</span>
-                                </div>
-                                <div class="fs-5">
-                                    ${iconHtml}
-                                </div>
-                            </div>
-                        `;
-                        listContainer.innerHTML += itemHtml;
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
                     });
                 })
                 .catch(err => {
@@ -593,8 +354,4 @@
                 });
         }
     </script>
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0

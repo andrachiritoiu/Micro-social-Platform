@@ -1,12 +1,8 @@
-<<<<<<< HEAD
-﻿using System;
-=======
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
 using System;
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -50,7 +46,6 @@ namespace MicroSocialPlatform.Areas.Identity.Pages.Account
             _emailSender = emailSender;
         }
 
-<<<<<<< HEAD
         [BindProperty]
         public InputModel Input { get; set; }
 
@@ -58,47 +53,13 @@ namespace MicroSocialPlatform.Areas.Identity.Pages.Account
 
         public IList<AuthenticationScheme> ExternalLogins { get; set; }
 
+        // Datele din formular (Input) care vor fi mapate pe user
         public class InputModel
         {
-=======
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
-        [BindProperty]
-        public InputModel Input { get; set; }
-
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
-        public string ReturnUrl { get; set; }
-
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
-        public IList<AuthenticationScheme> ExternalLogins { get; set; }
-
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
-        public class InputModel
-        {
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
             [Required]
             [Display(Name = "Prenume")]
             public string FirstName { get; set; }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
             [Required]
             [Display(Name = "Nume de familie")]
             public string LastName { get; set; }
@@ -107,63 +68,34 @@ namespace MicroSocialPlatform.Areas.Identity.Pages.Account
             [Display(Name = "Username")]
             public string Username { get; set; }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
             [Required]
             [EmailAddress]
             [Display(Name = "Email")]
             public string Email { get; set; }
 
-<<<<<<< HEAD
-=======
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
             [Required]
             [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
             [DataType(DataType.Password)]
             [Display(Name = "Password")]
             public string Password { get; set; }
 
-<<<<<<< HEAD
-=======
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
             [DataType(DataType.Password)]
             [Display(Name = "Confirm password")]
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
             public string ConfirmPassword { get; set; }
         }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
         public async Task OnGetAsync(string returnUrl = null)
         {
             ReturnUrl = returnUrl;
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
         }
 
-<<<<<<< HEAD
-=======
-        //iau datele din formualr(Input) si le pun in obiectul care merge in user
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
             returnUrl ??= Url.Content("~/");
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-<<<<<<< HEAD
 
-=======
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
             if (ModelState.IsValid)
             {
                 // verificam dacă Username-ul este deja in bd
@@ -183,28 +115,18 @@ namespace MicroSocialPlatform.Areas.Identity.Pages.Account
                 }
 
                 var user = CreateUser();
-<<<<<<< HEAD
 
-
-=======
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
                 user.FirstName = Input.FirstName;
                 user.LastName = Input.LastName;
                 user.UserName = Input.Username;
 
-<<<<<<< HEAD
-                //Setam valorile default pentru a nu primi eroare de la baza de date
-                user.Description = "New member of the community"; 
-                user.ProfileImage = "/images/default.png";        // Calea catre imaginea default
-
+                // Setam valorile default pentru a nu primi eroare de la baza de date
+                user.Description = "New member of the community";
+                user.ProfileImage = "/images/default.png";
 
                 await _userStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
 
-=======
-                await _userStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
-                await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
                 if (result.Succeeded)
@@ -233,16 +155,13 @@ namespace MicroSocialPlatform.Areas.Identity.Pages.Account
                         return LocalRedirect(returnUrl);
                     }
                 }
+
                 foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
             }
 
-<<<<<<< HEAD
-=======
-            // If we got this far, something failed, redisplay form
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
             return Page();
         }
 
@@ -266,6 +185,7 @@ namespace MicroSocialPlatform.Areas.Identity.Pages.Account
             {
                 throw new NotSupportedException("The default UI requires a user store with email support.");
             }
+
             return (IUserEmailStore<ApplicationUser>)_userStore;
         }
     }

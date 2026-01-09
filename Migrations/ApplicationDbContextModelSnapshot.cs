@@ -38,10 +38,9 @@ namespace MicroSocialPlatform.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-<<<<<<< HEAD
+
                         .IsRequired()
-=======
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
+
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
@@ -89,10 +88,9 @@ namespace MicroSocialPlatform.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("ProfileImage")
-<<<<<<< HEAD
+
                         .IsRequired()
-=======
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
+
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SecurityStamp")
@@ -134,12 +132,10 @@ namespace MicroSocialPlatform.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-<<<<<<< HEAD
-=======
+
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
                     b.Property<int>("PostId")
                         .HasColumnType("int");
 
