@@ -4,6 +4,7 @@ using MicroSocialPlatform.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MicroSocialPlatform.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260107140354_CreateBD")]
+    partial class CreateBD
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -38,9 +41,7 @@ namespace MicroSocialPlatform.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-
                         .IsRequired()
-
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
@@ -88,9 +89,7 @@ namespace MicroSocialPlatform.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("ProfileImage")
-
                         .IsRequired()
-
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SecurityStamp")
@@ -131,7 +130,6 @@ namespace MicroSocialPlatform.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
-
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");

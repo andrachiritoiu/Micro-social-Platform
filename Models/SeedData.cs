@@ -9,85 +9,84 @@ namespace MicroSocialPlatform.Models
         public static void Initialize(IServiceProvider serviceProvider)
         {
             using (var context = new ApplicationDbContext(
-            serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+                serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
-                // Verificam daca in baza de date exista cel putin un rol
+                // Daca exista deja roluri, nu mai seed-uim
                 if (context.Roles.Any())
                 {
-                    return; // baza de date contine deja roluri
+                    return;
                 }
 
-                // CREAREA ROLURILOR IN BD
+                // CREARE ROLURI
                 context.Roles.AddRange(
-                    new IdentityRole { Id = "2c5e174e-3b0e-446f-86af483d56fd7210", Name = "Admin", NormalizedName = "ADMIN" },
-                    new IdentityRole { Id = "2c5e174e-3b0e-446f-86af483d56fd7211", Name = "UnregisteredUser", NormalizedName = "UNREGISTEREDUSER" },
-                    new IdentityRole { Id = "2c5e174e-3b0e-446f-86af483d56fd7212", Name = "User", NormalizedName = "USER" }
+                    new IdentityRole { Id = "role-admin", Name = "Admin", NormalizedName = "ADMIN" },
+                    new IdentityRole { Id = "role-user", Name = "User", NormalizedName = "USER" }
                 );
 
                 var hasher = new PasswordHasher<ApplicationUser>();
 
-                // CREAREA USERILOR IN BD
+                // CREARE UTILIZATORI
                 context.Users.AddRange(
                     new ApplicationUser
                     {
-                        Id = "8e445865-a24d-4543-a6c6-9443d048cdb0",
+                        Id = "admin-id",
                         UserName = "admin@test.com",
+                        Email = "admin@test.com",
+                        NormalizedEmail = "ADMIN@TEST.COM",
+                        NormalizedUserName = "ADMIN@TEST.COM",
                         FirstName = "Admin",
                         LastName = "System",
                         EmailConfirmed = true,
-                        NormalizedEmail = "ADMIN@TEST.COM",
-                        Email = "admin@test.com",
-                        NormalizedUserName = "ADMIN@TEST.COM",
                         PasswordHash = hasher.HashPassword(null, "Admin1!"),
                         Description = "System Administrator Account",
-                        ProfileImage = "/images/default.png" // <--- Am adaugat asta
+                        ProfileImage = "/images/default.png"
                     },
                     new ApplicationUser
                     {
-                        Id = "8e445865-a24d-4543-a6c6-9443d048cdb1",
-                        UserName = "unregistered@test.com",
-                        FirstName = "Unregistered",
-                        LastName = "User",
+                        Id = "user1-id",
+                        UserName = "user1@test.com",
+                        Email = "user1@test.com",
+                        NormalizedEmail = "USER1@TEST.COM",
+                        NormalizedUserName = "USER1@TEST.COM",
+                        FirstName = "User",
+                        LastName = "One",
                         EmailConfirmed = true,
-                        NormalizedEmail = "UNREGISTERED@TEST.COM",
-                        Email = "unregistered@test.com",
-                        NormalizedUserName = "UNREGISTERED@TEST.COM",
-                        PasswordHash = hasher.HashPassword(null, "Unregistered1!"),
-                        Description = "Unregistered User",
-                        ProfileImage = "/images/default.png" // <--- Am adaugat asta
-                    },
-                    new ApplicationUser
-                    {
-                        Id = "8e445865-a24d-4543-a6c6-9443d048cdb2",
-                        UserName = "user@test.com",
-                        FirstName = "Standard",
-                        LastName = "User",
-                        EmailConfirmed = true,
-                        NormalizedEmail = "USER@TEST.COM",
-                        Email = "user@test.com",
-                        NormalizedUserName = "USER@TEST.COM",
                         PasswordHash = hasher.HashPassword(null, "User1!"),
-                        Description = "Standard Platform User",
-                        ProfileImage = "/images/default.png" // <--- Am adaugat asta
+                        Description = "Default User 1",
+                        ProfileImage = "/images/default.png"
+                    },
+                    new ApplicationUser
+                    {
+                        Id = "user2-id",
+                        UserName = "user2@test.com",
+                        Email = "user2@test.com",
+                        NormalizedEmail = "USER2@TEST.COM",
+                        NormalizedUserName = "USER2@TEST.COM",
+                        FirstName = "User",
+                        LastName = "Two",
+                        EmailConfirmed = true,
+                        PasswordHash = hasher.HashPassword(null, "User1!"),
+                        Description = "Default User 2",
+                        ProfileImage = "/images/default.png"
                     }
                 );
 
-                // ASOCIEREA USER-ROLE
+                // ASOCIERE USER ↔ ROLE
                 context.UserRoles.AddRange(
                     new IdentityUserRole<string>
                     {
-                        RoleId = "2c5e174e-3b0e-446f-86af483d56fd7210",
-                        UserId = "8e445865-a24d-4543-a6c6-9443d048cdb0"
+                        UserId = "admin-id",
+                        RoleId = "role-admin"
                     },
                     new IdentityUserRole<string>
                     {
-                        RoleId = "2c5e174e-3b0e-446f-86af483d56fd7211",
-                        UserId = "8e445865-a24d-4543-a6c6-9443d048cdb1"
+                        UserId = "user1-id",
+                        RoleId = "role-user"
                     },
                     new IdentityUserRole<string>
                     {
-                        RoleId = "2c5e174e-3b0e-446f-86af483d56fd7212",
-                        UserId = "8e445865-a24d-4543-a6c6-9443d048cdb2"
+                        UserId = "user2-id",
+                        RoleId = "role-user"
                     }
                 );
 

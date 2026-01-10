@@ -8,6 +8,13 @@
     var otherUser = ViewData["OtherUser"] as ApplicationUser;
     var currentUserId = ViewData["CurrentUserId"] as string;
 
+    // ✅ dictionary cu traduceri (setat în controller)
+    var translatedDict = ViewData["Translated"] as Dictionary<int, string>;
+
+    // (îl poți păstra sau elimina dacă nu mai folosești limbi multiple)
+    var chatLang = (ViewData["ChatLang"] as string) ?? "ro";
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
+
     // Logica pentru inițiale și nume
     var otherUserInitials = otherUser?.UserName?.Substring(0, 1).ToUpper() ?? "U";
     var otherUserFirstName = otherUser?.FirstName ?? "";
@@ -45,12 +52,32 @@
                 </div>
             </div>
 
-            <form asp-action="DeleteConversation" asp-route-id="@otherUser?.Id" method="post"
-                  onsubmit="return confirm('Ești sigur că vrei să ștergi TOATĂ conversația?');">
-                <button type="submit" class="btn btn-link text-muted p-0" title="Delete conversation">
-                    <i class="bi bi-trash3" style="font-size: 1.1rem;"></i>
-                </button>
-            </form>
+            <div class="d-flex align-items-center gap-3">
+                <!-- ✅ Language selector (poți elimina complet dacă traduci mereu în ro și nu mai ai SetChatLanguage) -->
+                <form asp-action="SetChatLanguage" method="post" class="d-flex align-items-center gap-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="returnUrl" value="@returnUrl" />
+
+                    <small class="text-muted" style="white-space: nowrap;">Language:</small>
+                    <select name="lang" class="form-select form-select-sm"
+                            style="width: 140px;"
+                            onchange="this.form.submit()">
+                        <option value="ro" selected="@(chatLang == "ro")">Română</option>
+                        <option value="en" selected="@(chatLang == "en")">English</option>
+                        <option value="fr" selected="@(chatLang == "fr")">Français</option>
+                        <option value="de" selected="@(chatLang == "de")">Deutsch</option>
+                        <option value="es" selected="@(chatLang == "es")">Español</option>
+                        <option value="it" selected="@(chatLang == "it")">Italiano</option>
+                    </select>
+                </form>
+
+                <form asp-action="DeleteConversation" asp-route-id="@otherUser?.Id" method="post"
+                      onsubmit="return confirm('Ești sigur că vrei să ștergi TOATĂ conversația?');">
+                    <button type="submit" class="btn btn-link text-muted p-0" title="Delete conversation">
+                        <i class="bi bi-trash3" style="font-size: 1.1rem;"></i>
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -66,6 +93,14 @@
                     var senderUserName = sender?.UserName ?? "user";
                     var senderInitials = senderUserName.Substring(0, 1).ToUpper();
                     var timeAgo = GetTimeAgo(message.CreatedAt);
+
+                    // ✅ alegem textul care se afișează (tradus dacă există în dict)
+                    var contentToShow =
+                    (translatedDict != null &&
+                    translatedDict.TryGetValue(message.Id, out var t) &&
+                    !string.IsNullOrWhiteSpace(t))
+                    ? t
+                    : message.Content;
 
                     <div class="message-item @(isCurrentUser ? "message-own" : "message-other")">
                         <div class="message-avatar">
@@ -109,7 +144,7 @@
                             </div>
 
                             <div class="message-text">
-                                @message.Content
+                                @contentToShow
                             </div>
                         </div>
                     </div>
@@ -212,10 +247,9 @@
     }
 
     .message-own .message-author {
-        display: none; /* Ascundem numele autorului pentru mesajele proprii pentru curățenie */
+        display: none;
     }
 
- 
     .message-avatar, .header-avatar {
         width: 38px;
         height: 38px;
@@ -229,11 +263,11 @@
         font-weight: bold;
     }
 
-     .message-avatar img, .header-avatar img {
-         width: 100%;
-         height: 100%;
-         object-fit: cover;
-     }
+        .message-avatar img, .header-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
 
     .message-author {
         font-size: 0.75rem;
@@ -285,19 +319,19 @@
     const messageForm = document.getElementById('message-form');
     const messageInput = document.getElementById('message-input');
 
-    // Scroll jos la încărcare
-    if(messagesContainer) {
+    if (messagesContainer) {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
-    // Trimitere mesaj fara reload
     if (messageForm) {
-        messageForm.addEventListener('submit', async function(e) {
+        messageForm.addEventListener('submit', async function (e) {
             e.preventDefault();
+
             const content = messageInput.value.trim();
             if (!content) return;
 
             const receiverId = '@otherUser?.Id';
+
             const formData = new FormData();
             formData.append('receiverId', receiverId);
             formData.append('content', content);
@@ -308,29 +342,45 @@
                     body: formData
                 });
 
-                const data = await response.json();
-                if (data.success) {
-                    // Construim HTML-ul pentru noul mesaj
-                    const messageHtml = `
-                        <div class="message-item message-own" style="margin-bottom: 16px;">
-                            <div class="message-avatar">
-                                 <span>ME</span>
-                            </div>
-                            <div class="message-wrapper">
-                                <div class="message-text">
-                                    ${data.message.content}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-
-                    // Inseram mesajul si dam scroll
-                    messagesContainer.insertAdjacentHTML('beforeend', messageHtml);
-                    messageInput.value = '';
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.error('Send failed:', response.status, text);
+                    alert('Failed to send message.');
+                    return;
                 }
+
+                let data;
+                try {
+                    data = await response.json();
+                } catch (err) {
+                    const text = await response.text();
+                    console.error('Invalid JSON:', text);
+                    alert('Failed to send message.');
+                    return;
+                }
+
+                if (!data.success) {
+                    alert('Failed to send message.');
+                    return;
+                }
+
+                const safeContent = (data.message.content ?? '').toString();
+
+                const messageHtml = `
+                    <div class="message-item message-own" style="margin-bottom: 16px;">
+                        <div class="message-avatar"><span>ME</span></div>
+                        <div class="message-wrapper">
+                            <div class="message-text">${safeContent}</div>
+                        </div>
+                    </div>
+                `;
+
+                messagesContainer.insertAdjacentHTML('beforeend', messageHtml);
+                messageInput.value = '';
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
             } catch (error) {
-                console.error('Error sending message:', error);
+                console.error('Network error:', error);
                 alert('Failed to send message.');
             }
         });

@@ -2,8 +2,11 @@ using MicroSocialPlatform.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MicroSocialPlatform.Models;
+using MicroSocialPlatform.Services;
+
 
 var builder = WebApplication.CreateBuilder(args);
+
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
@@ -15,6 +18,12 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
     .AddRoles<IdentityRole>()   
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
+
+// adaug servicii pentru Gemini API
+builder.Services.AddScoped<ICommentValidationService, GeminiCommentValidationService>();
+builder.Services.AddHttpClient<ITranslationService, GeminiTranslationService>();
+builder.Services.AddMemoryCache();
+
 
 var app = builder.Build();
 

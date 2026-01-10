@@ -1,4 +1,8 @@
-﻿using System;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+#nullable disable
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -49,6 +53,7 @@ namespace MicroSocialPlatform.Areas.Identity.Pages.Account
 
         public IList<AuthenticationScheme> ExternalLogins { get; set; }
 
+        // Datele din formular (Input) care vor fi mapate pe user
         public class InputModel
         {
             [Required]
@@ -111,15 +116,13 @@ namespace MicroSocialPlatform.Areas.Identity.Pages.Account
 
                 var user = CreateUser();
 
-
                 user.FirstName = Input.FirstName;
                 user.LastName = Input.LastName;
                 user.UserName = Input.Username;
 
-                //Setam valorile default pentru a nu primi eroare de la baza de date
-                user.Description = "New member of the community"; 
-                user.ProfileImage = "/images/default.png";        // Calea catre imaginea default
-
+                // Setam valorile default pentru a nu primi eroare de la baza de date
+                user.Description = "New member of the community";
+                user.ProfileImage = "/images/default.png";
 
                 await _userStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
@@ -152,6 +155,7 @@ namespace MicroSocialPlatform.Areas.Identity.Pages.Account
                         return LocalRedirect(returnUrl);
                     }
                 }
+
                 foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
@@ -181,6 +185,7 @@ namespace MicroSocialPlatform.Areas.Identity.Pages.Account
             {
                 throw new NotSupportedException("The default UI requires a user store with email support.");
             }
+
             return (IUserEmailStore<ApplicationUser>)_userStore;
         }
     }

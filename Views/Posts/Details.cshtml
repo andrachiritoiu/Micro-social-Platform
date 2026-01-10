@@ -51,6 +51,7 @@
                         <li>
                             <form asp-action="Delete" asp-route-id="@Model.Id" method="post"
                                   onsubmit="return confirm('Are you sure you want to delete this post?');">
+                                @Html.AntiForgeryToken()
                                 <button class="dropdown-item text-danger" type="submit">
                                     <i class="bi bi-trash me-2"></i>Delete
                                 </button>
@@ -160,11 +161,17 @@
             @if (SignInManager.IsSignedIn(User))
             {
                 <form asp-controller="Comments" asp-action="New" method="post" class="mb-4">
+                    @Html.AntiForgeryToken()
+
                     <input type="hidden" name="PostId" value="@Model.Id" />
 
                     <div class="mb-2">
-                        <label for="content" class="form-label">Add a comment</label>
-                        <textarea name="Content" class="form-control" rows="2" required
+                        <label for="commentContent" class="form-label">Add a comment</label>
+                        <textarea id="commentContent"
+                              name="Content"
+                              class="form-control"
+                              rows="2"
+                              required
                               placeholder="Write something nice..."></textarea>
                     </div>
                     <button type="submit" class="btn btn-primary btn-sm">
@@ -218,12 +225,17 @@
                                         @if (comment.UserId == currentUserId || User.IsInRole("Admin"))
                                         {
                                             <div class="d-flex gap-2">
-                                                <button onclick="toggleEdit('@comment.Id')" class="btn btn-link text-primary p-0 border-0" title="Edit">
+                                                <a asp-controller="Comments"
+                                                   asp-action="Edit"
+                                                   asp-route-id="@comment.Id"
+                                                   class="btn btn-link text-primary p-0 border-0"
+                                                   title="Edit">
                                                     <i class="bi bi-pencil-square"></i>
-                                                </button>
+                                                </a>
 
                                                 <form asp-controller="Comments" asp-action="Delete" asp-route-id="@comment.Id" method="post"
                                                       onsubmit="return confirm('Delete this post?');">
+                                                    @Html.AntiForgeryToken()
                                                     <button type="submit" class="btn btn-link text-danger p-0 border-0" title="Delete">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
