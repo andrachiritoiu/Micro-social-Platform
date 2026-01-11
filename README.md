@@ -95,9 +95,6 @@ dotnet ef database update
 ```
 
 
-### 4. Rulează aplicația
-=======
-
 
 ### 4. Rulează Aplicația
 Pornește serverul local cu următoarea comandă:
