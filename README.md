@@ -55,7 +55,7 @@ Micro-social-Platform/
 
 Urmează pașii de mai jos pentru a rula proiectul pe mașina locală.
 
-<<<<<<< HEAD
+
 ### 1️. Clonează repository-ul
 ```bash
 git clone https://github.com/andrachiritoiu/Micro-social-Platform.git
@@ -64,7 +64,7 @@ git clone https://github.com/andrachiritoiu/Micro-social-Platform.git
 Deschide terminalul (Command Prompt, PowerShell sau Git Bash) și rulează comanda:
 ```bash
 git clone [https://github.com/andrachiritoiu/Micro-social-Platform.git](https://github.com/andrachiritoiu/Micro-social-Platform.git)
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
+
 ```
 
 ### 2. Navighează în folderul proiectului
@@ -72,11 +72,10 @@ git clone [https://github.com/andrachiritoiu/Micro-social-Platform.git](https://
 cd Micro-social-Platform
 ```
 
-<<<<<<< HEAD
 ### 3. Aplică migrațiile bazei de date
 
 Asigură-te că SQL Server este pornit și connection string-ul este configurat corect.
-=======
+
 ### 3. Configurează Baza de Date și AI
 Înainte de a rula migrațiile, deschide fișierul `appsettings.json` și fă următoarele setări:
 
@@ -89,14 +88,13 @@ Asigură-te că SQL Server este pornit și connection string-ul este configurat 
     ```
 
 După ce ai salvat fișierul, rulează următoarele comenzi în terminal (sau Package Manager Console) pentru a crea baza de date și a popula tabelele cu **Seed Data**:
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
 
 ```bash
 dotnet tool install --global dotnet-ef
 dotnet ef database update
 ```
 
-<<<<<<< HEAD
+
 ### 4. Rulează aplicația
 =======
 
@@ -104,7 +102,7 @@ dotnet ef database update
 ### 4. Rulează Aplicația
 Pornește serverul local cu următoarea comandă:
 
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
+
 ```bash
 dotnet run
 ```
@@ -122,7 +120,7 @@ După rularea migrațiilor, baza de date este populată automat cu următorii ut
 * **Utilizator 2:** `user2@test.com` / Parola: `User2!`
   
 
-<<<<<<< HEAD
+
 Baza de date include următoarele entități principale:
 - **Users**
 - **Posts**
@@ -165,31 +163,3 @@ Relațiile sunt gestionate prin **Entity Framework Core**, folosind convenții �
 
 
 
-=======
-## 🐳 Rulare cu Docker (Alternativ)
-
-Dacă preferi să nu instalezi SQL Server local, poți rula aplicația folosind Docker.
-
-### Cerințe preliminare
-* [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalat și pornit.
-
-### Pași pentru rulare
-
-1.  **Deschide terminalul** în rădăcina proiectului (unde se află fișierul `docker-compose.yml`).
-2.  **Construiește și pornește containerele:**
-    ```bash
-    docker-compose up --build
-    ```
-3.  **Accesarea aplicației:**
-    După ce log-urile indică faptul că aplicația a pornit, deschide browserul la:
-    * **http://localhost:8080**
-
-4.  **Oprirea aplicației:**
-    Pentru a opri serviciile, apasă `Ctrl+C` sau rulează:
-    ```bash
-    docker-compose down
-    ```
-
----
-
->>>>>>> efb3eb4a47a9c6afe9b76812eaceb1b9c58010d0
