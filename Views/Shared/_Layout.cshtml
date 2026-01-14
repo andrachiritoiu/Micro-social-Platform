@@ -104,18 +104,21 @@
                         </li>
 
                         <li class="nav-item ms-lg-3 position-relative">
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-0 rounded-start-pill">
-                                    <i class="bi bi-search text-muted"></i>
-                                </span>
+                            <form asp-controller="Users" asp-action="Index" method="get" class="d-flex w-100">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-0 rounded-start-pill">
+                                        <i class="bi bi-search text-muted"></i>
+                                    </span>
 
-                                <input type="text"
-                                       id="globalSearchInput"
-                                       class="form-control border-0 rounded-end-pill"
-                                       placeholder="Search people..."
-                                       autocomplete="off"
-                                       style="width: 220px;" />
-                            </div>
+                                    <input type="text"
+                                           id="globalSearchInput"
+                                           name="searchString"
+                                           class="form-control border-0 rounded-end-pill"
+                                           placeholder="Search people..."
+                                           autocomplete="off"
+                                           style="width: 220px;" />
+                                </div>
+                            </form>
 
                             <div id="globalSearchResults"
                                  class="list-group position-absolute shadow mt-2 overflow-hidden"

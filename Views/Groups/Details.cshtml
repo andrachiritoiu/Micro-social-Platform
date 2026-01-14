@@ -35,7 +35,7 @@
                 </div>
 
                 <div class="d-flex gap-2">
-                    @if (isModerator)
+                    @if (isModerator || User.IsInRole("Admin"))
                     {
                         <a asp-action="Edit" asp-route-id="@Model.Id"
                            class="btn btn-sm rounded-pill px-4 py-2 shadow-sm fw-bold text-white hover-scale"
@@ -149,7 +149,7 @@
                     </h5>
                 </div>
 
-                @if (userStatus == "Member")
+                @if (userStatus == "Member" || User.IsInRole("Admin"))
                 {
                     <div id="messages-container" class="card-body overflow-auto p-4" style="height: 500px; background-color: #f8f9fa;">
                         @if (!Model.GroupPosts.Any())
@@ -213,7 +213,7 @@
                                                     </button>
                                                 }
 
-                                                @if (isMe || isModerator)
+                                                @if (isMe || isModerator || User.IsInRole("Admin"))
                                                 {
                                                     <form asp-action="DeleteMessage" method="post" class="lh-1">
                                                         <input type="hidden" name="messageId" value="@message.Id" />
@@ -230,17 +230,20 @@
                         }
                     </div>
 
-                    <div class="card-footer bg-white p-3 border-top-0">
-                        <form asp-action="SendMessage" method="post" class="d-flex gap-2 align-items-center">
-                            <input type="hidden" name="groupId" value="@Model.Id" />
-                            <input type="text" name="content" class="form-control rounded-pill bg-light border-0 px-4 py-2 shadow-sm"
-                                   placeholder="Type a message..." required autocomplete="off" style="height: 50px;" />
-                            <button type="submit" class="btn rounded-circle text-white shadow-sm hover-scale d-flex align-items-center justify-content-center"
-                                    style="background-color: @accentColor; width: 50px; height: 50px; border: none;">
-                                <i class="bi bi-send-fill fs-5"></i>
-                            </button>
-                        </form>
-                    </div>
+                    @if (userStatus == "Member")
+                    {
+                        <div class="card-footer bg-white p-3 border-top-0">
+                            <form asp-action="SendMessage" method="post" class="d-flex gap-2 align-items-center">
+                                <input type="hidden" name="groupId" value="@Model.Id" />
+                                <input type="text" name="content" class="form-control rounded-pill bg-light border-0 px-4 py-2 shadow-sm"
+                                       placeholder="Type a message..." required autocomplete="off" style="height: 50px;" />
+                                <button type="submit" class="btn rounded-circle text-white shadow-sm hover-scale d-flex align-items-center justify-content-center"
+                                        style="background-color: @accentColor; width: 50px; height: 50px; border: none;">
+                                    <i class="bi bi-send-fill fs-5"></i>
+                                </button>
+                            </form>
+                        </div>
+                    }
                 }
                 else
                 {
@@ -298,7 +301,7 @@
                                     </div>
                                 </div>
 
-                                @if (isModerator && member.UserId != currentUserId)
+                                @if ((isModerator || User.IsInRole("Admin")) && member.UserId != currentUserId)
                                 {
                                     <form asp-action="RemoveMember" method="post" onsubmit="return confirm('Remove user?');">
                                         <input type="hidden" name="groupId" value="@Model.Id" />

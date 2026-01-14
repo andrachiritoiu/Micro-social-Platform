@@ -1,4 +1,4 @@
-using MicroSocialPlatform.Data;
+﻿using MicroSocialPlatform.Data;
 using MicroSocialPlatform.Models;
 using MicroSocialPlatform.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MicroSocialPlatform.Controllers
 {
+    //controller mesaje private
     [Authorize]
     public class MessagesController : Controller
     {
@@ -25,7 +26,7 @@ namespace MicroSocialPlatform.Controllers
             _translation = translation;
         }
 
-        // lista conversatii
+        //lista conversatii
         public async Task<IActionResult> Index()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -47,6 +48,7 @@ namespace MicroSocialPlatform.Controllers
             return View(partners);
         }
 
+        //test traducere
         [AllowAnonymous]
         public async Task<IActionResult> TestTranslate()
         {
@@ -54,8 +56,156 @@ namespace MicroSocialPlatform.Controllers
             return Content(t);
         }
 
+        //editare mesaj
+        public async Task<IActionResult> Edit(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
 
-        // conversatie cu un user
+            var msg = await _context.Messages
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (msg == null) return NotFound();
+            
+            if (msg.SenderId != user.Id && !User.IsInRole("Admin")) return Forbid();
+
+            ViewData["ReturnToUserId"] = msg.ReceiverId;
+            return View(msg);
+        }
+
+        // procesare editare
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, string content, string returnToUserId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
+            var msg = await _context.Messages.FirstOrDefaultAsync(m => m.Id == id);
+            if (msg == null) return NotFound();
+            
+            if (msg.SenderId != user.Id && !User.IsInRole("Admin")) return Forbid();
+
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                ModelState.AddModelError("", "Mesajul nu poate fi gol.");
+                ViewData["ReturnToUserId"] = returnToUserId;
+                return View(msg);
+            }
+
+            msg.Content = content;
+            await _context.SaveChangesAsync();
+
+            if (User.IsInRole("Admin") && msg.SenderId != user.Id)
+            {
+                 return RedirectToAction(nameof(AdminChat), new { user1Id = msg.SenderId, user2Id = msg.ReceiverId });
+            }
+
+            return RedirectToAction(nameof(Conversation), new { id = returnToUserId });
+        }
+
+        // confirmare stergere
+        public async Task<IActionResult> Delete(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
+            var msg = await _context.Messages
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (msg == null) return NotFound();
+            
+            if (msg.SenderId != user.Id && !User.IsInRole("Admin")) return Forbid();
+
+            ViewData["ReturnToUserId"] = msg.ReceiverId;
+            return View(msg);
+        }
+
+        // stergere efectiva
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id, string returnToUserId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
+            var msg = await _context.Messages.FirstOrDefaultAsync(m => m.Id == id);
+            if (msg == null) return NotFound();
+
+            if (msg.SenderId != user.Id && !User.IsInRole("Admin")) return Forbid();
+
+            var senderId = msg.SenderId;
+            var receiverId = msg.ReceiverId;
+
+            _context.Messages.Remove(msg);
+            await _context.SaveChangesAsync();
+
+            if (User.IsInRole("Admin") && msg.SenderId != user.Id)
+            {
+                 return RedirectToAction(nameof(AdminChat), new { user1Id = senderId, user2Id = receiverId });
+            }
+
+            return RedirectToAction(nameof(Conversation), new { id = returnToUserId });
+        }
+
+        // ADMIN: Lista toate conversatiile
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AdminConversations()
+        {
+            var messages = await _context.Messages
+                .Include(m => m.Sender)
+                .Include(m => m.Receiver)
+                .OrderByDescending(m => m.CreatedAt)
+                .ToListAsync();
+
+            var conversations = messages
+                .GroupBy(m => string.Compare(m.SenderId, m.ReceiverId) < 0 
+                    ? (m.SenderId, m.ReceiverId) 
+                    : (m.ReceiverId, m.SenderId))
+                .Select(g => new AdminConversationViewModel
+                {
+                    User1 = g.FirstOrDefault(m => m.SenderId == g.Key.Item1).Sender ?? g.FirstOrDefault(m => m.ReceiverId == g.Key.Item1).Receiver,
+                    User2 = g.FirstOrDefault(m => m.SenderId == g.Key.Item2).Sender ?? g.FirstOrDefault(m => m.ReceiverId == g.Key.Item2).Receiver,
+                    LastMessage = g.OrderByDescending(m => m.CreatedAt).FirstOrDefault(),
+                    MessageCount = g.Count()
+                })
+                .OrderByDescending(c => c.LastMessage?.CreatedAt)
+                .ToList();
+
+            return View(conversations);
+        }
+
+        // ADMIN: Vezi chat complet
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AdminChat(string user1Id, string user2Id)
+        {
+            if (string.IsNullOrEmpty(user1Id) || string.IsNullOrEmpty(user2Id)) return BadRequest();
+
+            var messages = await _context.Messages
+                .Include(m => m.Sender)
+                .Include(m => m.Receiver)
+                .Where(m =>
+                    (m.SenderId == user1Id && m.ReceiverId == user2Id) ||
+                    (m.SenderId == user2Id && m.ReceiverId == user1Id))
+                .OrderBy(m => m.CreatedAt)
+                .ToListAsync();
+
+            ViewData["IsAdminView"] = true;
+            ViewData["User1Id"] = user1Id;
+            ViewData["User2Id"] = user2Id;
+
+            var u1 = await _userManager.FindByIdAsync(user1Id);
+            var u2 = await _userManager.FindByIdAsync(user2Id);
+            ViewData["User1Name"] = u1?.UserName ?? "Necunoscut";
+            ViewData["User2Name"] = u2?.UserName ?? "Necunoscut";
+            ViewData["Title"] = $"Chat: {u1?.UserName} <-> {u2?.UserName}";
+
+            return View("Conversation", messages);
+        }
+
+        // chat cu user
         public async Task<IActionResult> Conversation(string id)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -73,7 +223,7 @@ namespace MicroSocialPlatform.Controllers
                 .OrderBy(m => m.CreatedAt)
                 .ToListAsync();
 
-            // marcam mesajele necitite ca fiind citite
+            // marcare citit
             var unread = messages
                 .Where(m => m.ReceiverId == user.Id && !m.IsRead)
                 .ToList();
@@ -83,10 +233,8 @@ namespace MicroSocialPlatform.Controllers
 
             await _context.SaveChangesAsync();
 
-            // traducere mesaje in romana
+            // traducere
             var targetLang = "ro";
-
-            // traducem doar ultimele 5 mesaje primite
             var lastMessages = messages
                 .OrderByDescending(m => m.CreatedAt)
                 .Take(5)
@@ -96,7 +244,6 @@ namespace MicroSocialPlatform.Controllers
 
             foreach (var msg in lastMessages)
             {
-                // nu traduce mesajele trimise de userul curent
                 if (msg.SenderId == user.Id) continue;
 
                 var t = await _translation.TranslateAsync(msg.Content, targetLang);
@@ -110,7 +257,7 @@ namespace MicroSocialPlatform.Controllers
             return View(messages);
         }
 
-        // trimitere mesaj (AJAX)
+        // trimite mesaj (AJAX)
         [HttpPost]
         [IgnoreAntiforgeryToken]
         public async Task<IActionResult> Send(string receiverId, string content)
@@ -130,7 +277,7 @@ namespace MicroSocialPlatform.Controllers
                 ReceiverId = receiverId,
                 Content = content,
                 CreatedAt = DateTime.UtcNow,
-                IsRead = false
+                IsRead = false 
             };
 
             _context.Messages.Add(message);

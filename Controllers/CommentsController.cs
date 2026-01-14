@@ -8,6 +8,7 @@ using MicroSocialPlatform.Services;
 
 namespace MicroSocialPlatform.Controllers
 {
+    // gestionarea comentariilor
     public class CommentsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -28,34 +29,42 @@ namespace MicroSocialPlatform.Controllers
         }
 
 
+        //  view-ul principal
+        // comentariile sunt afișate direct în pagina postării
         public IActionResult Index()
         {
             return View();
         }
 
+        // adăugarea unui comentariu nou 
+        // Este accesibilă doar utilizatorilor autentificați și primește datele comentariului prin formular (POST).
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> New(Comment comment)
         {
-            // 1) Setăm câmpurile controlate de server (nu vin din form)
+            // 1) Aici ne asigurăm că setăm câmpurile pe care serverul trebuie să le controleze,
+            // nu le lăsăm la mâna utilizatorului din formular (de exemplu, cine este autorul).
             comment.UserId = _userManager.GetUserId(User);
+            
+            // Curățăm conținutul de spații inutile la început și sfârșit.
             comment.Content = (comment.Content ?? "").Trim();
 
-            // 2) Scoatem din ModelState câmpurile care NU vin din form,
-            //    altfel ModelState rămâne invalid din cauza [Required] pe UserId / navigații.
+            // 2) Eliminăm din validare câmpurile care nu vin din formularul de creare,
+            // pentru că ModelState ar da eroare "User is required" sau "Post is required", deși noi le setăm manual.
             ModelState.Remove(nameof(Comment.UserId));
             ModelState.Remove(nameof(Comment.User));
             ModelState.Remove(nameof(Comment.Post));
 
-            // 3) Validare clasică (DataAnnotations) pentru Content + PostId etc.
+            // 3) Facem verificarea standard (dacă e gol textul, dacă PostId e valid etc.)
             if (!ModelState.IsValid)
             {
-                TempData["Message"] = "The comment cannot be empty.";
+                TempData["Message"] = "Comentariul nu poate fi gol.";
                 return Redirect("/Posts/Details/" + comment.PostId);
             }
 
-            // 4) Validare AI (Gemini) – dacă e ofensator, nu salvăm în DB
+            // 4) Folosim serviciul nostru de AI (Gemini) pentru a verifica dacă textul este civilizat.
+            // Dacă robotul zice că e de rău, respingem comentariul.
             var isOk = await _commentValidation.IsCommentValidAsync(comment.Content);
             if (!isOk)
             {
@@ -63,18 +72,20 @@ namespace MicroSocialPlatform.Controllers
                 return Redirect("/Posts/Details/" + comment.PostId);
             }
 
-            // 5) Salvăm comentariul
+            // 5) Totul e în regulă, așa că salvăm comentariul în baza de date.
             _context.Comments.Add(comment);
             await _context.SaveChangesAsync();
 
-            TempData["Message"] = "The comment has been added!";
+            TempData["Message"] = "Comentariul a fost adăugat cu succes!";
 
-            // 6) NOTIFICARE către owner-ul postării (dacă nu îți comentezi singur)
+            // 6) Trimitem o notificare proprietarului postării, ca să știe că cineva i-a scris.
+            // Evident, nu-i trimitem notificare dacă și-a comentat singur la propria postare.
             var post = await _context.Posts.FindAsync(comment.PostId);
             var currentUserId = comment.UserId;
 
             if (post != null && post.UserId != currentUserId)
             {
+                // Facem un mic rezumat al comentariului pentru notificare (primele 50 de caractere).
                 string previewContent = comment.Content.Length > 50
                     ? comment.Content.Substring(0, 50) + "..."
                     : comment.Content;
@@ -84,8 +95,8 @@ namespace MicroSocialPlatform.Controllers
                     UserId = post.UserId,
                     RelatedUserId = currentUserId,
                     Type = "NewComment",
-                    Title = "New Comment",
-                    Content = $"commented: \"{previewContent}\"",
+                    Title = "Comentariu Nou",
+                    Content = $"a comentat: \"{previewContent}\"",
                     Link = $"/Posts/Details/{post.Id}",
                     CreatedAt = DateTime.UtcNow,
                     IsRead = false
@@ -95,68 +106,105 @@ namespace MicroSocialPlatform.Controllers
                 await _context.SaveChangesAsync();
             }
 
-            // 7) Ne întoarcem înapoi la pagina postării
+            // 7) Ne întoarcem pe pagina postării ca să vedem comentariul proaspăt adăugat.
             return Redirect("/Posts/Details/" + comment.PostId);
         }
 
 
+        // Aceasta este metoda care afișează formularul de editare pentru un comentariu existent.
+        // Verificăm dacă utilizatorul are dreptul să îl editeze (e autorul sau e Admin).
         [Authorize]
         public IActionResult Edit(int id)
         {
-            Comment comment = _context.Comments.Find(id);
+            var comment = _context.Comments.Find(id);
+            
+            // Dacă nu găsim comentariul, afișăm o eroare 404.
             if (comment == null) return NotFound();
 
+            // Verificăm permisiunile: doar proprietarul sau Adminul pot edita.
             if (comment.UserId == _userManager.GetUserId(User) || User.IsInRole("Admin"))
             {
-                TempData["EditingCommentId"] = id;
-                return Redirect("/Posts/Details/" + comment.PostId);
+                // Returnăm view-ul dedicat editării acestui comentariu.
+                return View(comment);
             }
 
-            TempData["Message"] = "You do not have permission to edit this comment.";
+            // Dacă n-are voie, îi dăm peste mână și îl trimitem înapoi.
+            TempData["Message"] = "Nu aveți permisiunea de a edita acest comentariu.";
             return Redirect("/Posts/Details/" + comment.PostId);
         }
 
+        // Aici se procesează propriu-zis modificarea comentariului (când apasă butonul "Salvează").
         [HttpPost]
         [Authorize]
+        [ValidateAntiForgeryToken]
         public IActionResult Edit(int id, Comment commentRequest)
         {
             var comm = _context.Comments.Find(id);
             if (comm == null) return NotFound();
 
+            // Verificăm din nou permisiunile, să fim siguri că nu a "fentat" formularul.
             if (comm.UserId != _userManager.GetUserId(User) && !User.IsInRole("Admin"))
             {
-                return Json(new { success = false, message = "You do not have permission to edit this comment." });
+                return Forbid();
             }
 
+            // Curățăm textul nou.
             var newContent = (commentRequest.Content ?? "").Trim();
+            
+            // Verificăm să nu fi șters tot textul din greșeală.
             if (string.IsNullOrWhiteSpace(newContent))
             {
-                return Json(new { success = false, message = "The comment text cannot be empty." });
+                ModelState.AddModelError("Content", "Textul comentariului nu poate fi gol.");
+                return View(comm);
             }
 
+            // Punem și o limită de bun simț la lungime.
             if (newContent.Length > 1000)
             {
-                return Json(new { success = false, message = "The comment cannot exceed 1000 characters." });
+                ModelState.AddModelError("Content", "Comentariul nu poate depăși 1000 de caractere.");
+                return View(comm);
             }
 
+            // Actualizăm conținutul în obiectul din memorie.
             comm.Content = newContent;
-            // daca vrei "updated at", adauga un camp UpdatedAt in model; altfel nu forta Date
+            
+            // Putem actualiza și data modificării dacă am avea un câmp pentru asta, dar momentan doar salvăm.
             // comm.UpdatedAt = DateTime.UtcNow;
 
             _context.Comments.Update(comm);
             _context.SaveChanges();
 
-            return Json(new { success = true, newContent = comm.Content });
+            // Ne întoarcem la postare să vedem ce am modificat.
+            return RedirectToAction("Details", "Posts", new { id = comm.PostId });
         }
 
-        [HttpPost]
+        // Metoda care afișează pagina de confirmare pentru ștergerea unui comentariu.
+        // La fel, doar autorul sau Adminul au voie aici.
         [Authorize]
-    
         public IActionResult Delete(int id)
         {
-            Comment comment = _context.Comments.Find(id);
+            var comment = _context.Comments.Find(id);
             if (comment == null) return NotFound();
 
+            if (comment.UserId == _userManager.GetUserId(User) || User.IsInRole("Admin"))
+            {
+                return View(comment);
+            }
+
+            TempData["Message"] = "Nu aveți permisiunea de a șterge acest comentariu.";
+            return Redirect("/Posts/Details/" + comment.PostId);
+        }
+
+        // Ștergerea definitivă din baza de date, după ce utilizatorul confirmă.
+        [HttpPost, ActionName("Delete")]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public IActionResult DeleteConfirmed(int id)
+        {
+            var comment = _context.Comments.Find(id);
+            if (comment == null) return NotFound();
+
+            // Păstrăm ID-ul postării ca să știm unde să ne întoarcem după ce dispare comentariul.
             int postId = comment.PostId;
 
             if (comment.UserId == _userManager.GetUserId(User) || User.IsInRole("Admin"))
@@ -164,11 +212,11 @@ namespace MicroSocialPlatform.Controllers
                 _context.Comments.Remove(comment);
                 _context.SaveChanges();
 
-                TempData["Message"] = "The comment has been deleted!";
+                TempData["Message"] = "Comentariul a fost șters!";
                 return Redirect("/Posts/Details/" + postId);
             }
 
-            TempData["Message"] = "You do not have permission to delete this comment.";
+            TempData["Message"] = "Nu aveți permisiunea de a șterge acest comentariu.";
             return Redirect("/Posts/Details/" + postId);
         }
     }

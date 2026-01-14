@@ -7,16 +7,14 @@ using MicroSocialPlatform.Models;
 
 namespace MicroSocialPlatform.Controllers
 {
+ 
     public class UsersController : Controller
     {
-        //afisare profil
-        //editare profil
-        // management utilizatori de catre admin
-
-        private readonly UserManager<ApplicationUser> _userManager;  //pt gestionarea utilizatorilor
-        private readonly ApplicationDbContext _context; //pt conexiunea cu baza de date
-        private readonly IWebHostEnvironment _env; //pt lucrul cu fisierele
+        private readonly UserManager<ApplicationUser> _userManager; 
+        private readonly ApplicationDbContext _context; 
+        private readonly IWebHostEnvironment _env; 
         private readonly RoleManager<IdentityRole> _roleManager;
+
         public UsersController(UserManager<ApplicationUser> userManager, ApplicationDbContext context, IWebHostEnvironment env, RoleManager<IdentityRole> roleManager)
         {
             _userManager = userManager;
@@ -25,7 +23,7 @@ namespace MicroSocialPlatform.Controllers
             _roleManager = roleManager;
         }
 
-        //pagina pricipala de cautare
+        ///lista utilizatori 
         public async Task<IActionResult> Index(string searchString)
         {
             ViewData["CurrentFilter"] = searchString;
@@ -43,10 +41,7 @@ namespace MicroSocialPlatform.Controllers
             return View(users);
         }
 
-
-        //motorul de cautare - Ajax
-        //asyc -  nu se blocheaza asteptand raspunsul de la baza de date
-        //json - cautare live
+        //cautare live 
         [HttpGet]
         public async Task<IActionResult> SearchUsers(string term)
         {
@@ -55,7 +50,6 @@ namespace MicroSocialPlatform.Controllers
                 return Json(new List<object>());
             }
 
-            //interogarea bazei de date pentru utilizatori al caror nume contine termenul cautat(LINQ)
             var users = await _context.Users
                 .Where(u => u.UserName.Contains(term) ||
                             u.FirstName.Contains(term) ||
@@ -67,12 +61,13 @@ namespace MicroSocialPlatform.Controllers
                     FullName = u.FirstName + " " + u.LastName,
                     u.ProfileImage
                 })
-                .Take(5) //ia max 5 rezultate
+                .Take(5) 
                 .ToListAsync();
 
             return Json(users);
         }
 
+        //profil utilizator
         public async Task<IActionResult> Show(string id)
         {
             if (string.IsNullOrEmpty(id))
@@ -80,7 +75,6 @@ namespace MicroSocialPlatform.Controllers
                 return NotFound();
             }
 
-            //Usrul pe care vreau sa il vad
             var targetUser = await _context.Users
                 .Include(u => u.Posts)
                 .Include(u => u.Followers)
@@ -92,17 +86,14 @@ namespace MicroSocialPlatform.Controllers
                 return NotFound();
             }
 
-            //Eu(user logat)
             var currentUser = await _userManager.GetUserAsync(User);
 
-            //Permisiunile
             bool isMe = (currentUser != null && currentUser.Id == targetUser.Id);
             bool isFollowing = false;
-            string followStatus = "None"; // Poate fi: None, Pending, Accepted, Rejected
+            string followStatus = "None"; 
 
             if (currentUser != null && !isMe)
             {
-                //Verificam dacă exista o relație de follow 
                 var existingFollow = await _context.Follows
                     .FirstOrDefaultAsync(f => f.FollowerId == currentUser.Id && f.FollowedId == targetUser.Id);
 
@@ -117,13 +108,8 @@ namespace MicroSocialPlatform.Controllers
             }
 
 
-            // Poti vedea continutul daca:
-            // a) E contul meu (isMe == true)
-            // b) Contul NU este privat (!targetUser.IsPrivate)
-            // c) Contul e privat, DAR il urmaresc deja (isFollowing == true)
             bool canViewContent = isMe || !targetUser.IsPrivate || isFollowing;
 
-            // Calculam numărul de followeri și following 
             var followersCount = await _context.Follows
                 .CountAsync(f => f.FollowedId == targetUser.Id && f.Status == "Accepted");
 
@@ -141,7 +127,7 @@ namespace MicroSocialPlatform.Controllers
         }
 
 
-        //afiseaza formularul de editare a profilului
+        // editare profil
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> Edit(string id)
@@ -149,7 +135,6 @@ namespace MicroSocialPlatform.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             ApplicationUser userToEdit;
 
-            // Daca nu e specificat ID, editam profilul curent
             if (string.IsNullOrEmpty(id))
             {
                 userToEdit = currentUser;
@@ -161,17 +146,16 @@ namespace MicroSocialPlatform.Controllers
 
             if (userToEdit == null) return NotFound();
 
-            // Verificare permisiune (Doar eu sau Admin)
             if (currentUser.Id != userToEdit.Id && !User.IsInRole("Admin"))
             {
-                TempData["Message"] = "You do not have permission to edit this profile.";
+                TempData["Message"] = "Nu aveți permisiunea de a edita acest profil.";
                 return RedirectToAction("Show", new { id = userToEdit.Id });
             }
 
             return View(userToEdit);
         }
 
-
+        // salvare profil
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> Edit(string id, string FirstName, string LastName, string Description, bool IsPrivate, IFormFile? userImage)
@@ -181,25 +165,23 @@ namespace MicroSocialPlatform.Controllers
 
             if (userToEdit == null) return NotFound();
 
-            //Verificare permisiune
             if (currentUser.Id != userToEdit.Id && !User.IsInRole("Admin"))
             {
-                TempData["Message"] = "You do not have permission to edit this profile.";
+                TempData["Message"] = "Nu aveți permisiunea de a edita acest profil.";
                 return RedirectToAction("Show", new { id = id });
             }
 
             bool hasOldImage = !string.IsNullOrEmpty(userToEdit.ProfileImage);
             bool hasNewImage = (userImage != null && userImage.Length > 0);
 
-            //Daca nu am poza veche si nu incarc una noua -> EROARE
             if (!hasOldImage && !hasNewImage)
             {
-                ModelState.AddModelError("", "Profile picture is required!");
+                ModelState.AddModelError("", "Poza de profil este obligatorie!");
             }
 
-            if (string.IsNullOrWhiteSpace(FirstName)) ModelState.AddModelError("FirstName", "First name is required.");
-            if (string.IsNullOrWhiteSpace(LastName)) ModelState.AddModelError("LastName", "Last name is required.");
-            if (string.IsNullOrWhiteSpace(Description)) ModelState.AddModelError("Description", "Description is required.");
+            if (string.IsNullOrWhiteSpace(FirstName)) ModelState.AddModelError("FirstName", "Prenumele este obligatoriu.");
+            if (string.IsNullOrWhiteSpace(LastName)) ModelState.AddModelError("LastName", "Numele este obligatoriu.");
+            if (string.IsNullOrWhiteSpace(Description)) ModelState.AddModelError("Description", "Descrierea este obligatorie.");
 
             if (!ModelState.IsValid)
             {
@@ -210,13 +192,11 @@ namespace MicroSocialPlatform.Controllers
                 return View(userToEdit);
             }
 
-            //Salvare date
             userToEdit.FirstName = FirstName;
             userToEdit.LastName = LastName;
             userToEdit.Description = Description;
             userToEdit.IsPrivate = IsPrivate;
 
-            //Upload poza
             if (hasNewImage)
             {
                 var storagePath = Path.Combine(_env.WebRootPath, "images", "profiles");
@@ -238,14 +218,14 @@ namespace MicroSocialPlatform.Controllers
 
             if (result.Succeeded)
             {
-                TempData["Message"] = "Profile updated successfully!";
+                TempData["Message"] = "Profilul a fost actualizat cu succes!";
                 return RedirectToAction("Show", new { id = userToEdit.Id });
             }
 
             return View(userToEdit);
         }
 
-
+        //stergere profil
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> Delete(string id)
@@ -260,33 +240,25 @@ namespace MicroSocialPlatform.Controllers
 
             if (currentUser.Id != userToDelete.Id && !User.IsInRole("Admin"))
             {
-                TempData["Message"] = "You do not have permission to delete this account.";
+                TempData["Message"] = "Nu aveți permisiunea de a șterge acest cont.";
                 return RedirectToAction("Show", new { id = id });
             }
 
-            //Stergem manual datele care au DeleteBehavior.Restrict
-            //Comentariile 
             var comments = _context.Comments.Where(c => c.UserId == userToDelete.Id);
             _context.Comments.RemoveRange(comments);
 
-            //Reactiile 
             var reactions = _context.Reactions.Where(r => r.UserId == userToDelete.Id);
             _context.Reactions.RemoveRange(reactions);
 
-            // Grupurile unde userul este Moderator 
-            // Celelalte date (Postări, Mesaje, Membri, Notificări) se vor sterge singure 
-            // datorită setării CASCADE din DbContext
             var moderatedGroups = _context.Groups.Where(g => g.ModeratorId == userToDelete.Id);
             _context.Groups.RemoveRange(moderatedGroups);
 
             await _context.SaveChangesAsync();
 
-
             var result = await _userManager.DeleteAsync(userToDelete);
 
             if (result.Succeeded)
             {
-                //daca mi-am sters propriul cont, ma si deloghez
                 if (currentUser.Id == userToDelete.Id)
                 {
                     await Microsoft.AspNetCore.Authentication.AuthenticationHttpContextExtensions.SignOutAsync(HttpContext, IdentityConstants.ApplicationScheme);
@@ -294,16 +266,16 @@ namespace MicroSocialPlatform.Controllers
                 }
                 else
                 {
-                    // daca Adminul a sters pe altcineva
-                    TempData["Message"] = "The user has been deleted.";
+                    TempData["Message"] = "Utilizatorul a fost șters.";
                     return RedirectToAction("Index"); 
                 }
             }
 
-            TempData["Message"] = "Error deleting the user.";
+            TempData["Message"] = "Eroare la ștergerea utilizatorului.";
             return RedirectToAction("Show", new { id = id });
         }
 
+        //lista urmaritori
         public async Task<IActionResult> Followers(string id)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -325,11 +297,12 @@ namespace MicroSocialPlatform.Controllers
                 .ToListAsync();
 
             ViewBag.ProfileUserId = id;
-            ViewBag.Title = "Followers";
+            ViewBag.Title = "Urmăritori";
 
             return View(followers);
         }
 
+        // lista persoane urmarite
         [HttpGet]
         public async Task<IActionResult> Following(string id)
         {
@@ -352,11 +325,9 @@ namespace MicroSocialPlatform.Controllers
                 .ToListAsync();
 
             ViewBag.ProfileUserId = id;
-            ViewBag.Title = "Following";
+            ViewBag.Title = "Urmărește";
 
             return View(following);
         }
-
-
     }
 }

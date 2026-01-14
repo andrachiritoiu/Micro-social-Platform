@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace MicroSocialPlatform.Controllers
 {
+  
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -20,6 +21,7 @@ namespace MicroSocialPlatform.Controllers
             _userManager = userManager;
         }
 
+        // afiseaza feed-ul de postari
         public async Task<IActionResult> Index()
         {
             var postsQuery = _context.Posts
@@ -32,6 +34,7 @@ namespace MicroSocialPlatform.Controllers
 
             if (User.Identity.IsAuthenticated)
             {
+                // utilizator Logat
                 var currentUserId = _userManager.GetUserId(User);
 
                 var followingIds = await _context.Follows
@@ -41,10 +44,12 @@ namespace MicroSocialPlatform.Controllers
 
                 followingIds.Add(currentUserId);
 
+                // doar postarile prietenilor si ale noastre
                 postsQuery = postsQuery.Where(p => followingIds.Contains(p.UserId));
             }
             else
             {
+                // vizitator (doar postari publice)
                 postsQuery = postsQuery.Where(p => !p.User.IsPrivate);
             }
 
@@ -60,6 +65,7 @@ namespace MicroSocialPlatform.Controllers
             return View();
         }
 
+        // pagina eroare
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MicroSocialPlatform.Controllers
 {
+   
     public class FollowsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -27,6 +28,7 @@ namespace MicroSocialPlatform.Controllers
             return View();
         }
 
+        // trimite o cerere de urmarire
         [HttpPost]
         public async Task<IActionResult> SendFollowRequest(string id)
         {
@@ -79,7 +81,7 @@ namespace MicroSocialPlatform.Controllers
                 _context.Follows.Add(follow);
             }
 
-            // Verific daca notificarea exista deja
+            // verificare notificare existenta
             bool notificationExists = await _context.Notifications.AnyAsync(n =>
                 n.UserId == userToFollow.Id &&
                 n.RelatedUserId == user.Id &&
@@ -96,7 +98,7 @@ namespace MicroSocialPlatform.Controllers
                         Type = "FollowRequest",
                         Title = "Follow Request",
                         Content = "has sent you a follow request.",
-                        Link = "/Follows/Requests", // Redirect la requests page
+                        Link = "/Follows/Requests",
                         RelatedUserId = user.Id,
                         IsRead = false,
                         CreatedAt = DateTime.UtcNow
@@ -125,6 +127,7 @@ namespace MicroSocialPlatform.Controllers
             return RedirectToAction("Show", "Users", new { id = userToFollow.Id });
         }
 
+        // afiseaza cererile de urmarire primite
         public async Task<IActionResult> Requests()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -138,6 +141,7 @@ namespace MicroSocialPlatform.Controllers
             return View(followRequests);
         }
 
+        // accepta o cerere de urmarire
         [HttpPost]
         public async Task<IActionResult> Accept(string followerId)
         {
@@ -154,7 +158,7 @@ namespace MicroSocialPlatform.Controllers
 
             followRequest.Status = "Accepted";
 
-            // Sterg vechea "Follow Request" notificare
+            // sterge notificarea veche
             var oldNotification = await _context.Notifications
                 .FirstOrDefaultAsync(n => n.UserId == user.Id &&
                                           n.RelatedUserId == followerId &&
@@ -164,7 +168,7 @@ namespace MicroSocialPlatform.Controllers
                 _context.Notifications.Remove(oldNotification);
             }
 
-            // Creez "New Follower" notificare pentru mine(cel care a acceptat)
+            // creeaza notificare noua penru mine
             var newFollowerNotif = new Notification
             {
                 UserId = user.Id,
@@ -178,7 +182,7 @@ namespace MicroSocialPlatform.Controllers
             };
             _context.Notifications.Add(newFollowerNotif);
 
-            // Trimit "Follow Accepted" notificare follower-ului
+            // trimite notificare utilizatorului acceptat
             var notification = new Notification
             {
                 UserId = followRequest.FollowerId,
@@ -197,6 +201,7 @@ namespace MicroSocialPlatform.Controllers
             return RedirectToAction("Requests");
         }
 
+        // respinge o cerere de urmarire
         [HttpPost]
         public async Task<IActionResult> Reject(string followerId)
         {
@@ -217,6 +222,7 @@ namespace MicroSocialPlatform.Controllers
             return RedirectToAction("Requests");
         }
 
+        // unfollow
         [HttpPost]
         public async Task<IActionResult> Unfollow(string id)
         {
@@ -239,13 +245,14 @@ namespace MicroSocialPlatform.Controllers
             {
                 return RedirectToAction("Show", "Users", new { id = userToUnfollow.Id });
             }
+            
             _context.Follows.Remove(existingFollow);
 
-            //Stergem notificare (daca dam unfollow)
+            // sterge notificarea
             var notification = await _context.Notifications
                     .FirstOrDefaultAsync(n => n.UserId == userToUnfollow.Id && 
                                               n.RelatedUserId == user.Id &&    
-                                              n.Type == "NewFollower");        // Tipul notificarii
+                                              n.Type == "NewFollower");
 
             if (notification != null)
             {
@@ -257,6 +264,7 @@ namespace MicroSocialPlatform.Controllers
             return RedirectToAction("Show", "Users", new { id = userToUnfollow.Id });
         }
 
+        //anuleaza cererea trimisa
         [HttpPost]
         public async Task<IActionResult> cancelRequest(string id)
         {
@@ -279,8 +287,8 @@ namespace MicroSocialPlatform.Controllers
             {
                 return RedirectToAction("Show", "Users", new { id = userToUnfollow.Id });
             }
+            
             _context.Follows.Remove(existingFollow);
-
 
             var notification = await _context.Notifications
                 .FirstOrDefaultAsync(n => n.UserId == userToUnfollow.Id &&

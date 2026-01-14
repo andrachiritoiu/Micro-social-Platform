@@ -7,6 +7,7 @@ using MicroSocialPlatform.Models;
 
 namespace MicroSocialPlatform.Controllers
 {
+    
     [Authorize]
     public class NotificationsController : Controller
     {
@@ -19,7 +20,7 @@ namespace MicroSocialPlatform.Controllers
             _userManager = userManager;
         }
 
-        // GET: Notifications
+        // lista notificari
         public async Task<IActionResult> Index()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -37,7 +38,7 @@ namespace MicroSocialPlatform.Controllers
             return View(notifications);
         }
 
-        // GET: Notifications/GetCount - pentru AJAX
+        // returneaza numar notificari necitite (AJAX)
         [HttpGet]
         public async Task<IActionResult> GetCount()
         {
@@ -53,7 +54,7 @@ namespace MicroSocialPlatform.Controllers
             return Json(new { count = count });
         }
 
-        // GET: Notifications/GetRecent - pentru dropdown
+        // returneaza notificari recente (AJAX)
         [HttpGet]
         public async Task<IActionResult> GetRecent()
         {
@@ -85,7 +86,7 @@ namespace MicroSocialPlatform.Controllers
             return Json(notifications);
         }
 
-        // POST: Notifications/MarkAsRead
+        //marcheaza ca citit
         [HttpPost]
         [IgnoreAntiforgeryToken]
         public async Task<IActionResult> MarkAsRead(int id)
@@ -109,7 +110,7 @@ namespace MicroSocialPlatform.Controllers
             return Json(new { success = false });
         }
 
-        // POST: Notifications/MarkAllAsRead
+        //marcheaza toate ca citite
         [HttpPost]
         [IgnoreAntiforgeryToken]
         public async Task<IActionResult> MarkAllAsRead()
@@ -133,6 +134,7 @@ namespace MicroSocialPlatform.Controllers
             return Json(new { success = true });
         }
 
+        //metoda helper creare notificare
         public static async Task CreateNotification(ApplicationDbContext context, string userId, string type, string title, string? content = null, string? link = null, string? relatedUserId = null)
         {
             var notification = new Notification
@@ -151,6 +153,7 @@ namespace MicroSocialPlatform.Controllers
         }
 
 
+        //sterge toate notificarile
         [HttpPost]
         public async Task<IActionResult> ClearAll()
         {
@@ -171,4 +174,3 @@ namespace MicroSocialPlatform.Controllers
         }
     }
 }
-

@@ -7,25 +7,24 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MicroSocialPlatform.Controllers
 {
+    
     public class GroupsController : Controller
     {
-        // creare grup, aderare grup, parasire, gestionare
-        // pentru a seta un moderator id
-        // pentru a permite doar moderatorului sa editeze sau stearga grupul
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+
         public GroupsController(
         ApplicationDbContext context,
         UserManager<ApplicationUser> userManager,
         RoleManager<IdentityRole> roleManager)
         {
             _context = context;
-            _userManager = userManager; // Initializează UserManager
-            _roleManager = roleManager; // Initializează RoleManager
+            _userManager = userManager;
+            _roleManager = roleManager;
         }
 
-        //lista grupuri
+        // lista grupurilor in ordinea crearii
         public async Task<IActionResult> Index()
         {
             var groups = await _context.Groups
@@ -36,12 +35,14 @@ namespace MicroSocialPlatform.Controllers
         }
 
 
+        // formular creare grup
         public IActionResult Create()
         {
             return View();
         }
 
 
+        // salvare grup nou
         [HttpPost]
         public async Task<IActionResult> Create(Group group)
         {
@@ -52,13 +53,12 @@ namespace MicroSocialPlatform.Controllers
             {
                 var user = await _userManager.GetUserAsync(User);
 
-                //Moderatorul
                 group.CreatedAt = DateTime.UtcNow;
                 group.ModeratorId = user.Id;
                 _context.Groups.Add(group);
                 await _context.SaveChangesAsync();
 
-                //Moderatorul devine automat MEMBRU ACCEPTAT
+                // moderatorul este adaugat automat ca membru
                 var membership = new GroupMembership
                 {
                     GroupId = group.Id,
@@ -75,7 +75,7 @@ namespace MicroSocialPlatform.Controllers
         }
 
 
-        //Pagina principala a grupului
+        // detalii grup : membri, mesaje
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -83,9 +83,9 @@ namespace MicroSocialPlatform.Controllers
             var group = await _context.Groups
                 .Include(g => g.Moderator)
                 .Include(g => g.GroupPosts)
-                    .ThenInclude(m => m.User) //mesajele
+                    .ThenInclude(m => m.User)
                 .Include(g => g.GroupMemberships)
-                    .ThenInclude(gm => gm.User) //membrii
+                    .ThenInclude(gm => gm.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (group == null) return NotFound();
@@ -104,6 +104,7 @@ namespace MicroSocialPlatform.Controllers
         }
 
 
+        // cerere de aderare la grup
         [HttpPost]
         public async Task<IActionResult> Join(int groupId)
         {
@@ -116,7 +117,7 @@ namespace MicroSocialPlatform.Controllers
                 {
                     GroupId = groupId,
                     UserId = userId,
-                    IsAccepted = false, //Asteapta aprobare
+                    IsAccepted = false,
                     JoinedAt = DateTime.UtcNow
                 };
                 _context.GroupMemberships.Add(membership);
@@ -127,13 +128,14 @@ namespace MicroSocialPlatform.Controllers
         }
 
 
+        // acceptare membru de catre moderator
         [HttpPost]
         public async Task<IActionResult> AcceptMember(int groupId, string userId)
         {
             var group = await _context.Groups.FindAsync(groupId);
             var currentUser = _userManager.GetUserId(User);
 
-            if (group.ModeratorId != currentUser) return Forbid(); //Doar moderatorul
+            if (group.ModeratorId != currentUser) return Forbid();
 
             var membership = await _context.GroupMemberships.FindAsync(userId, groupId);
             if (membership != null)
@@ -144,15 +146,14 @@ namespace MicroSocialPlatform.Controllers
             return RedirectToAction("Details", new { id = groupId });
         }
 
-        //Eliminarea membrilor sau parasirea grupului
+        //eliminare membru sau parasire grup
         [HttpPost]
         public async Task<IActionResult> RemoveMember(int groupId, string userId)
         {
             var group = await _context.Groups.FindAsync(groupId);
             var currentUser = _userManager.GetUserId(User);
 
-            //stergi ca admin sau leave ca user
-            if (group.ModeratorId != currentUser && currentUser != userId) return Forbid();
+            if (group.ModeratorId != currentUser && currentUser != userId && !User.IsInRole("Admin")) return Forbid();
 
             if (userId == group.ModeratorId)
             {
@@ -168,10 +169,12 @@ namespace MicroSocialPlatform.Controllers
             }
 
             if (currentUser == userId) return RedirectToAction("Index");
+            
             return RedirectToAction("Details", new { id = groupId });
         }
 
 
+        //stergere grup
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
@@ -186,12 +189,14 @@ namespace MicroSocialPlatform.Controllers
         }
 
 
+        //trimite mesaj in grup
         [HttpPost]
         public async Task<IActionResult> SendMessage(int groupId, string content)
         {
             if (string.IsNullOrWhiteSpace(content)) return RedirectToAction("Details", new { id = groupId });
 
             var userId = _userManager.GetUserId(User);
+
             var isMember = await _context.GroupMemberships
                 .AnyAsync(gm => gm.GroupId == groupId && gm.UserId == userId && gm.IsAccepted);
 
@@ -211,13 +216,16 @@ namespace MicroSocialPlatform.Controllers
         }
 
 
+        //editare mesaj grup
         [HttpPost]
         public async Task<IActionResult> EditMessage(int messageId, int groupId, string newContent)
         {
             var message = await _context.GroupMessages.FindAsync(messageId);
             var currentUserId = _userManager.GetUserId(User);
 
-            if (message == null || message.UserId != currentUserId)
+            if (message == null) return NotFound();
+
+            if (message.UserId != currentUserId && !User.IsInRole("Admin"))
             {
                 return Forbid(); 
             }
@@ -234,6 +242,7 @@ namespace MicroSocialPlatform.Controllers
         }
 
 
+        //stergere mesaj grup
         [HttpPost]
         public async Task<IActionResult> DeleteMessage(int messageId)
         {
@@ -242,7 +251,7 @@ namespace MicroSocialPlatform.Controllers
 
             if (msg == null) return NotFound();
 
-            if (msg.UserId != userId && msg.Group.ModeratorId != userId) return Forbid();
+            if (msg.UserId != userId && msg.Group.ModeratorId != userId && !User.IsInRole("Admin")) return Forbid();
 
             _context.GroupMessages.Remove(msg);
             await _context.SaveChangesAsync();
@@ -250,17 +259,16 @@ namespace MicroSocialPlatform.Controllers
         }
 
 
-        //Editare grup
+        //formular editare grup
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
 
-            //daca este moderatorul
             var group = await _context.Groups.FindAsync(id);
             if (group == null) return NotFound();
 
             var currentUserId = _userManager.GetUserId(User);
-            if (group.ModeratorId != currentUserId)
+            if (group.ModeratorId != currentUserId && !User.IsInRole("Admin"))
             {
                 return Forbid(); 
             }
@@ -268,6 +276,7 @@ namespace MicroSocialPlatform.Controllers
             return View(group);
         }
 
+        //salvare modificari grup
         [HttpPost]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description")] Group group)
         {
@@ -276,14 +285,12 @@ namespace MicroSocialPlatform.Controllers
             var groupToUpdate = await _context.Groups.FindAsync(id);
             if (groupToUpdate == null) return NotFound();
 
-            //moderatorul
             var currentUserId = _userManager.GetUserId(User);
-            if (groupToUpdate.ModeratorId != currentUserId) return Forbid();
+            if (groupToUpdate.ModeratorId != currentUserId && !User.IsInRole("Admin")) return Forbid();
 
             groupToUpdate.Name = group.Name;
             groupToUpdate.Description = group.Description;
 
-            // stergem erorile de validare pentru câmpurile care nu sunt în form
             ModelState.Remove("Moderator");
             ModelState.Remove("ModeratorId");
             ModelState.Remove("GroupMemberships");
@@ -308,4 +315,3 @@ namespace MicroSocialPlatform.Controllers
         }
     }
 }
-

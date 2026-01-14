@@ -2,37 +2,60 @@
 
 @{
     ViewData["Title"] = "Edit Message";
+    string headerBackground = "#34495e";
+    string accentColor = "#7952b3";
 }
 
-<div class="container mt-5">
+<div class="container mt-5 mb-5">
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="custom-card p-4 shadow-sm" style="border-radius: 15px;">
-                <h3 class="mb-4" style="color: var(--navy-blue);">
-                    <i class="bi bi-pencil-square me-2"></i>Edit Message
-                </h3>
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
 
-                <form asp-action="EditMessage" method="post">
-                    <input type="hidden" asp-for="Id" />
+                <div class="card-header p-4 text-center border-0"
+                     style="background-color: @headerBackground; color: white;">
+                    <h3 class="fw-bold mb-0">Edit Message</h3>
+                    <p class="mb-0 text-white-50">Update your message content.</p>
+                </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Message Content</label>
-                        <textarea name="newContent" class="form-control" rows="4"
-                                  style="border-radius: 10px; border: 2px solid #f0f0f0;">@Model.Content</textarea>
-                    </div>
+                <div class="card-body p-4 p-md-5">
+                    <form asp-action="Edit" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" name="returnToUserId" value="@ViewData["ReturnToUserId"]" />
 
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary rounded-pill px-4"
-                                style="background-color: var(--navy-blue); border: none;">
-                            Save Changes
-                        </button>
-                        <a asp-action="Conversation" asp-route-id="@(Model.ReceiverId == ViewData["CurrentUserId"]?.ToString() ? Model.SenderId : Model.ReceiverId)"
-                           class="btn btn-light rounded-pill px-4">
-                            Cancel
-                        </a>
-                    </div>
-                </form>
+                        <div class="form-floating mb-4">
+                            <textarea name="content" class="form-control" placeholder="Message Content" required
+                                      style="height: 150px">@Model.Content</textarea>
+                            <label for="content">Message Content</label>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-lg rounded-pill fw-bold text-white shadow-sm hover-scale"
+                                    style="background-color: @accentColor; border: none;">
+                                Save Changes
+                            </button>
+                            <a asp-action="Conversation" asp-route-id="@ViewData["ReturnToUserId"]" 
+                               class="btn btn-light btn-lg rounded-pill text-muted hover-bg">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .hover-scale {
+        transition: transform 0.2s;
+    }
+
+    .hover-scale:hover {
+        transform: scale(1.02);
+    }
+
+    .hover-bg:hover {
+        background-color: #f1f3f5;
+    }
+</style>

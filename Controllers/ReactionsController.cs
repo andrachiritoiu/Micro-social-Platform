@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace MicroSocialPlatform.Controllers
 {
+    
     public class ReactionsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -18,6 +19,7 @@ namespace MicroSocialPlatform.Controllers
             _userManager = userManager;
         }
 
+        //adauga sau sterge o reactie
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> ToggleReaction(int postId, string type)
@@ -31,22 +33,21 @@ namespace MicroSocialPlatform.Controllers
 
             if (post == null) return NotFound();
 
-            //verific daca userul a reactionat deja
             var existingReaction = post.Reactions.FirstOrDefault(r => r.UserId == currentUser.Id);
 
-            string status = ""; // "added", "removed", "updated"
+            string status = ""; 
 
             if (existingReaction != null)
             {
                 if (existingReaction.Type == type)
                 {
-                    // apas pe aceeasi reactie -> O șterg 
+                    //aterge reactia existenta
                     _context.Reactions.Remove(existingReaction);
                     status = "removed";
                 }
                 else
                 {
-                    // schimb reactia (ex: din Like in Love)
+                    //modifica reactia
                     existingReaction.Type = type;
                     existingReaction.CreatedAt = DateTime.UtcNow;
                     status = "updated";
@@ -54,7 +55,7 @@ namespace MicroSocialPlatform.Controllers
             }
             else
             {
-                // reactie noua
+                //adauga reactie noua
                 var newReaction = new Reaction
                 {
                     UserId = currentUser.Id,
@@ -68,17 +69,17 @@ namespace MicroSocialPlatform.Controllers
 
             await _context.SaveChangesAsync();
 
-            //NOTIFICARE (Doar cand se adauga o reactie noua)
+            //ntificare
             if (status == "added" && post.UserId != currentUser.Id)
             {
                 var notification = new Notification
                 {
-                    UserId = post.UserId, // Proprietarul postarii primeste notificarea
-                    RelatedUserId = currentUser.Id, // Cel care a reactionat
+                    UserId = post.UserId, 
+                    RelatedUserId = currentUser.Id, 
                     Type = "NewReaction",
                     Title = "New Reaction",
-                    Content = $"reacted with {type} to your post.",
-                    Link = $"/Posts/Details/{postId}", // Link catre postare
+                    Content = $"reacted {type} to your post.",
+                    Link = $"/Posts/Details/{postId}", 
                     CreatedAt = DateTime.UtcNow,
                     IsRead = false
                 };
@@ -94,6 +95,7 @@ namespace MicroSocialPlatform.Controllers
         }
 
 
+        //obține lista de reactii pentru un modal
         [HttpGet]
         public async Task<IActionResult> GetReactionsList(int postId)
         {

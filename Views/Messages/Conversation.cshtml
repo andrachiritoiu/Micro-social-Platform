@@ -7,6 +7,7 @@
 @{
     var otherUser = ViewData["OtherUser"] as ApplicationUser;
     var currentUserId = ViewData["CurrentUserId"] as string;
+    var isAdminView = ViewData["IsAdminView"] as bool? ?? false;
 
     // ✅ dictionary cu traduceri (setat în controller)
     var translatedDict = ViewData["Translated"] as Dictionary<int, string>;
@@ -119,7 +120,7 @@
                                 <span class="message-author">@(isCurrentUser ? "You" : senderUserName)</span>
                                 <small class="text-muted" style="font-size: 0.7rem;">@timeAgo</small>
 
-                                @if (isCurrentUser)
+                                @if (isCurrentUser || isAdminView)
                                 {
                                     <div class="dropdown">
                                         <button class="btn btn-link p-0 text-muted" type="button" data-bs-toggle="dropdown">
@@ -127,13 +128,19 @@
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end shadow border-0">
                                             <li>
-                                                <a class="dropdown-item py-2 small" asp-action="Edit" asp-route-id="@message.Id">
+                                                <button class="dropdown-item py-2 small" 
+                                                        type="button"
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#editMessageModal"
+                                                        data-msg-id="@message.Id"
+                                                        data-msg-content="@message.Content">
                                                     <i class="bi bi-pencil me-2"></i> Edit
-                                                </a>
+                                                </button>
                                             </li>
                                             <li>
-                                                <form asp-action="DeleteMessage" asp-route-id="@message.Id" method="post">
-                                                    <button type="submit" class="dropdown-item text-danger py-2 small">
+                                                <form asp-action="Delete" asp-route-id="@message.Id" method="post">
+                                                    <input type="hidden" name="returnToUserId" value="@otherUser?.Id" />
+                                                    <button type="submit" class="dropdown-item text-danger py-2 small" onclick="return confirm('Delete this message?');">
                                                         <i class="bi bi-trash me-2"></i> Delete
                                                     </button>
                                                 </form>
@@ -159,15 +166,45 @@
             }
         </div>
 
-        <div class="message-input-area">
-            <form id="message-form" class="d-flex gap-2">
-                <input type="hidden" name="receiverId" value="@otherUser?.Id" />
-                <input type="text" id="message-input" class="form-control big-chat-input"
-                       placeholder="Type a message..." required autocomplete="off">
-                <button type="submit" class="btn btn-purple-circle shadow-sm">
-                    <i class="bi bi-send-fill"></i>
-                </button>
-            </form>
+        @if (!isAdminView)
+        {
+            <div class="message-input-area">
+                <form id="message-form" class="d-flex gap-2">
+                    <input type="hidden" name="receiverId" value="@otherUser?.Id" />
+                    <input type="text" id="message-input" class="form-control big-chat-input"
+                           placeholder="Type a message..." required autocomplete="off">
+                    <button type="submit" class="btn btn-purple-circle shadow-sm">
+                        <i class="bi bi-send-fill"></i>
+                    </button>
+                </form>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Edit Message Modal -->
+<div class="modal fade" id="editMessageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold">Edit Message</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form asp-action="Edit" method="post">
+                    <input type="hidden" name="returnToUserId" value="@otherUser?.Id" />
+                    <input type="hidden" name="id" id="modalMessageId" />
+
+                    <div class="form-group">
+                        <textarea name="content" id="modalMessageContent" class="form-control bg-light border-0 rounded-3 p-3" rows="3" required></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-3">
+                        <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn text-white rounded-pill px-4" style="background-color: #7952b3;">Save</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -321,6 +358,21 @@
 
     if (messagesContainer) {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    var editModal = document.getElementById('editMessageModal');
+    if (editModal) {
+        editModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var messageId = button.getAttribute('data-msg-id');
+            var messageContent = button.getAttribute('data-msg-content');
+
+            var modalIdInput = editModal.querySelector('#modalMessageId');
+            var modalContentInput = editModal.querySelector('#modalMessageContent');
+
+            modalIdInput.value = messageId;
+            modalContentInput.value = messageContent;
+        });
     }
 
     if (messageForm) {
