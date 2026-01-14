@@ -1,0 +1,66 @@
+@model IEnumerable<MicroSocialPlatform.Models.ApplicationUser>
+
+@{
+    ViewData["Title"] = "Messages";
+}
+
+@using Microsoft.AspNetCore.Identity
+@using MicroSocialPlatform.Models
+@inject SignInManager<ApplicationUser> SignInManager
+
+@{
+    var currentUserId = ViewData["CurrentUserId"] as string;
+}
+
+<div class="feed-container">
+    <h2 style="color: var(--text-primary); font-weight: 600; margin-bottom: 24px;">Messages</h2>
+
+    @if (Model.Any())
+    {
+        <div class="custom-card">
+            <div class="list-group list-group-flush">
+                @foreach (var user in Model)
+                {
+                    var userInitials = user.UserName?.Substring(0, 1).ToUpper() ?? "U";
+                    var firstName = user.FirstName ?? "";
+                    var lastName = user.LastName ?? "";
+                    var fullName = $"{firstName} {lastName}".Trim();
+                    if (string.IsNullOrEmpty(fullName)) fullName = user.UserName ?? "User";
+
+                    <a asp-action="Conversation" asp-route-id="@user.Id" class="list-group-item list-group-item-action d-flex align-items-center gap-3 p-3" style="border: none; border-bottom: 1px solid var(--border-color); transition: background-color 0.2s;">
+
+                        <div class="message-avatar" style="width: 55px; height: 55px; border-radius: 50%; overflow: hidden; background: #eee; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid var(--border-color);">
+                            @if (!string.IsNullOrEmpty(user.ProfileImage))
+                            {
+                                <img src="@user.ProfileImage" alt="profile" style="width: 100%; height: 100%; object-fit: cover;" />
+                            }
+                            else
+                            {
+                                @* Fallback la fundalul mov dacã nu are pozã *@
+                                <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #7BA3E8 0%, #B5A8D8 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
+                                    @userInitials
+                                </div>
+                            }
+                        </div>
+
+                        <div class="flex-grow-1">
+                            <div style="font-weight: 600; color: var(--text-primary);">@fullName</div>
+                            <small class="text-muted">@@@user.UserName</small>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted"></i>
+                    </a>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="custom-card text-center" style="padding: 60px 20px;">
+            <div style="font-size: 3rem; margin-bottom: 20px; color: var(--primary-blue);">
+                <i class="bi bi-envelope"></i>
+            </div>
+            <h3 style="color: var(--text-primary); margin-bottom: 10px;">No messages yet</h3>
+            <p class="text-muted">Start a conversation with someone!</p>
+        </div>
+    }
+</div>

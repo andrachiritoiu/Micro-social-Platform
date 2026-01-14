@@ -1,0 +1,61 @@
+﻿@model MicroSocialPlatform.Models.Message
+
+@{
+    ViewData["Title"] = "Edit Message";
+    string headerBackground = "#34495e";
+    string accentColor = "#7952b3";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+
+                <div class="card-header p-4 text-center border-0"
+                     style="background-color: @headerBackground; color: white;">
+                    <h3 class="fw-bold mb-0">Edit Message</h3>
+                    <p class="mb-0 text-white-50">Update your message content.</p>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <form asp-action="Edit" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" name="returnToUserId" value="@ViewData["ReturnToUserId"]" />
+
+                        <div class="form-floating mb-4">
+                            <textarea name="content" class="form-control" placeholder="Message Content" required
+                                      style="height: 150px">@Model.Content</textarea>
+                            <label for="content">Message Content</label>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-lg rounded-pill fw-bold text-white shadow-sm hover-scale"
+                                    style="background-color: @accentColor; border: none;">
+                                Save Changes
+                            </button>
+                            <a asp-action="Conversation" asp-route-id="@ViewData["ReturnToUserId"]" 
+                               class="btn btn-light btn-lg rounded-pill text-muted hover-bg">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-scale {
+        transition: transform 0.2s;
+    }
+
+    .hover-scale:hover {
+        transform: scale(1.02);
+    }
+
+    .hover-bg:hover {
+        background-color: #f1f3f5;
+    }
+</style>

@@ -1,0 +1,144 @@
+@model IEnumerable<MicroSocialPlatform.Models.Notification>
+
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+<div class="insta-feed-container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+        <h3 class="fw-bold mb-0">Notifications</h3>
+
+        @if (Model.Any())
+        {
+            <form asp-controller="Notifications" asp-action="ClearAll" method="post">
+                <button type="submit" class="btn btn-sm btn-light text-danger shadow-sm fw-bold">
+                    <i class="bi bi-trash me-1"></i> Clear all
+                </button>
+            </form>
+        }
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="list-group list-group-flush">
+            @if (Model.Any())
+            {
+                @foreach (var item in Model)
+                {
+                    var bgClass = item.IsRead ? "bg-white" : "bg-light";
+
+                    var iconDetails = item.Type switch
+                    {
+                        "NewReaction" => new { Icon = "bi-heart-fill", Color = "text-danger" },
+                        "NewComment" => new { Icon = "bi-chat-fill", Color = "text-primary" },
+                        "FollowRequest" => new { Icon = "bi-person-plus-fill", Color = "text-dark" }, // Omule? negru pt cerere
+                        "NewFollower" => new { Icon = "bi-person-check-fill", Color = "text-success" },
+                        "FollowAccepted" => new { Icon = "bi-check-circle-fill", Color = "text-success" },
+                        _ => new { Icon = "bi-bell-fill", Color = "text-secondary" }
+                    };
+
+                    string cleanContent = item.Content;
+                    if (item.RelatedUser != null)
+                    {
+                        string fullName = $"{item.RelatedUser.FirstName} {item.RelatedUser.LastName}".Trim();
+                        if (!string.IsNullOrEmpty(fullName) && cleanContent.StartsWith(fullName))
+                        {
+                            cleanContent = cleanContent.Replace(fullName, "").Trim();
+                        }
+                    }
+
+                    <div class="list-group-item p-3 border-bottom @bgClass d-flex align-items-center gap-3 position-relative" onclick="markAsRead(@item.Id)">
+
+                        <div class="flex-shrink-0 position-relative">
+                            <a href="/Users/Show/@(item.RelatedUserId)" class="text-decoration-none position-relative" style="z-index: 2;">
+                                @if (item.RelatedUser != null)
+                                {
+                                    if (!string.IsNullOrEmpty(item.RelatedUser.ProfileImage))
+                                    {
+                                        <img src="@item.RelatedUser.ProfileImage" class="rounded-circle border shadow-sm" style="width: 48px; height: 48px; object-fit: cover;" />
+                                    }
+                                    else
+                                    {
+                                        var initial = "U";
+
+                                        if (!string.IsNullOrEmpty(item.RelatedUser.FirstName))
+                                        {
+                                            initial = item.RelatedUser.FirstName.Substring(0, 1);
+                                        }
+                                        else if (!string.IsNullOrEmpty(item.RelatedUser.UserName))
+                                        {
+                                            initial = item.RelatedUser.UserName.Substring(0, 1);
+                                        }
+
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm"
+                                             style="width: 48px; height: 48px; background-color: #7952b3; font-size: 1.2rem;">
+                                            @initial.ToUpper()
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white" style="width: 48px; height: 48px;">
+                                        <i class="bi bi-bell-fill"></i>
+                                    </div>
+                                }
+                            </a>
+
+                            <div class="position-absolute bottom-0 end-0 bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                                 style="width: 20px; height: 20px; border: 1px solid white;">
+                                <i class="bi @iconDetails.Icon @iconDetails.Color" style="font-size: 10px;"></i>
+                            </div>
+                        </div>
+
+                        <div class="flex-grow-1">
+                            <div class="mb-1">
+                                <a href="@item.Link" class="text-decoration-none text-dark stretched-link">
+                                    <span class="fw-bold">@(item.RelatedUser?.UserName ?? "System")</span>
+                                    <span class="text-body">@Html.Raw(cleanContent)</span>
+                                </a>
+                            </div>
+                            <small class="text-muted opacity-75" style="font-size: 0.8rem;">
+                                @GetTimeAgo(item.CreatedAt)
+                            </small>
+                        </div>
+
+                        @if (!item.IsRead)
+                        {
+                            <span class="badge rounded-pill bg-primary p-1" style="background-color: #7952b3 !important; width: 8px; height: 8px;">
+                                <span class="visually-hidden">New</span>
+                            </span>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center p-5 text-muted">
+                    <div class="mb-3">
+                        <i class="bi bi-bell-slash fs-1 opacity-25"></i>
+                    </div>
+                    <h5 class="fw-bold">No notifications yet</h5>
+                    <p class="small opacity-75">When people interact with you, it will show up here.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    function markAsRead(id) {
+        // Trimite request in background
+        fetch('/Notifications/MarkAsRead?id=' + id, { method: 'POST' });
+    }
+</script>
+
+@functions {
+    private string GetTimeAgo(DateTime dateTime)
+    {
+        var timeSpan = DateTime.UtcNow - dateTime;
+        if (timeSpan.TotalMinutes < 1) return "Just now";
+        if (timeSpan.TotalMinutes < 60) return $"{(int)timeSpan.TotalMinutes}m";
+        if (timeSpan.TotalHours < 24) return $"{(int)timeSpan.TotalHours}h";
+        if (timeSpan.TotalDays < 7) return $"{(int)timeSpan.TotalDays}d";
+        return dateTime.ToString("MMM dd");
+    }
+}

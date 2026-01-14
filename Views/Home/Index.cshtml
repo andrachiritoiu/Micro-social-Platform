@@ -1,0 +1,372 @@
+﻿@model IEnumerable<MicroSocialPlatform.Models.Post>
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<MicroSocialPlatform.Models.ApplicationUser> UserManager
+
+@{
+    ViewData["Title"] = "Home";
+    var currentUserId = User.Identity.IsAuthenticated ? UserManager.GetUserId(User) : null;
+    var isAdmin = User.IsInRole("Admin");
+}
+
+<div class="insta-feed-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 fw-bold">Latest posts</h2>
+        @if (User.Identity.IsAuthenticated)
+        {
+            <a asp-controller="Posts" asp-action="Create" class="btn btn-primary rounded-pill px-4">
+                <i class="bi bi-plus-square me-2"></i> New post
+            </a>
+        }
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        @foreach (var item in Model.OrderByDescending(p => p.CreatedAt))
+        {
+            <article class="insta-post-card shadow-soft hover-lift mb-4">
+                <div class="insta-post-header d-flex align-items-center justify-content-between px-3 pt-3">
+                    <div class="d-flex align-items-center">
+                        @if (!string.IsNullOrEmpty(item.User.ProfileImage))
+                        {
+                            <img src="@item.User.ProfileImage" alt="@item.User.UserName" class="avatar-circle me-2" />
+                        }
+                        else
+                        {
+                            var initial = !string.IsNullOrEmpty(item.User.UserName)
+                            ? item.User.UserName.Substring(0, 1).ToUpper()
+                            : "U";
+
+                            <div class="rounded-circle me-2 d-flex align-items-center justify-content-center text-white fw-bold shadow-sm"
+                                 style="width:40px;height:40px;background-color:#7952b3;font-size:1.2rem;">
+                                <span>@initial</span>
+                            </div>
+                        }
+
+                        <div>
+                            <div class="insta-username">@item.User.UserName</div>
+                            <small class="text-muted d-block">@item.CreatedAt.ToLocalTime().ToString("dd MMM yyyy • HH:mm")</small>
+                        </div>
+                    </div>
+
+                    @if (currentUserId == item.UserId || isAdmin)
+                    {
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-light border-0" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" asp-controller="Posts" asp-action="Edit" asp-route-id="@item.Id"><i class="bi bi-pencil-square me-2"></i>Edit</a></li>
+                                <li>
+                                    <form asp-controller="Posts" asp-action="Delete" asp-route-id="@item.Id" method="post" onsubmit="return confirm('Are you sure?');">
+                                        <button type="submit" class="dropdown-item text-danger"><i class="bi bi-trash me-2"></i>Delete</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    }
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(item.MediaUrl))
+                {
+                    <div class="insta-post-media mt-2 position-relative">
+                        @if (item.MediaUrl.Contains(".mp4") || item.MediaUrl.Contains(".mov"))
+                        {
+                            <video controls class="w-100" preload="metadata" id="video-@item.Id">
+                                <source src="@item.MediaUrl" type="video/mp4" />
+                            </video>
+                            <div class="video-thumbnail-overlay" id="thumbnail-@item.Id" style="display: none;">
+                                <img src="" alt="Video thumbnail" class="w-100" id="thumbnail-img-@item.Id" />
+                                <div class="play-button-overlay"><i class="bi bi-play-circle-fill"></i></div>
+                            </div>
+                        }
+                        else
+                        {
+                            <img src="@item.MediaUrl" alt="Post media" />
+                        }
+                    </div>
+                }
+
+                <div class="insta-post-body px-3 pt-3 pb-2">
+                    @if (!string.IsNullOrEmpty(item.Title))
+                    {
+                        <div class="fw-semibold mb-1">@item.Title</div>
+                    }
+                    @if (!string.IsNullOrEmpty(item.Content))
+                    {
+                        var text = item.Content.Length > 220 ? item.Content.Substring(0, 220) + "..." : item.Content;
+                        <p class="insta-post-caption mb-0">@text</p>
+                    }
+                </div>
+
+                <div class="insta-post-actions d-flex justify-content-between align-items-center px-3 pb-3 pt-2">
+                    <div class="d-flex align-items-center">
+                        @{
+                            var myReaction = item.Reactions?.FirstOrDefault(r => r.User.UserName == User.Identity.Name);
+                            string myType = myReaction?.Type;
+                            string triggerText = "Like";
+                            string triggerColor = "";
+                            string triggerIcon = "bi-heart";
+
+                            if (myType != null)
+                            {
+                                triggerText = myType;
+                                triggerIcon = myType switch
+                                {
+                                    "Like" => "bi-hand-thumbs-up-fill",
+                                    "Love" => "bi-heart-fill",
+                                    "Haha" => "bi-emoji-laughing-fill",
+                                    "Wow" => "bi-star-fill",
+                                    _ => "bi-hand-thumbs-up-fill"
+                                };
+                                triggerColor = myType switch
+                                {
+                                    "Like" => "text-pastel-blue",
+                                    "Love" => "text-pastel-red",
+                                    "Haha" => "text-pastel-yellow",
+                                    "Wow" => "text-pastel-yellow",
+                                    _ => "text-primary"
+                                };
+                            }
+                        }
+
+                        <div class="reaction-wrapper me-3">
+                            <div class="reactions-box">
+                                @foreach (var type in new[] { "Like", "Love", "Haha", "Wow" })
+                                {
+                                    string iconClass = type switch
+                                    {
+                                        "Like" => "bi-hand-thumbs-up-fill text-pastel-blue",
+                                        "Love" => "bi-heart-fill text-pastel-red",
+                                        "Haha" => "bi-emoji-laughing-fill text-pastel-yellow",
+                                        "Wow" => "bi-star-fill text-pastel-yellow",
+                                        _ => ""
+                                    };
+                                    <button class="btn btn-link p-0 text-decoration-none reaction-btn" data-post-id="@item.Id" data-type="@type">
+                                        <div class="reaction-circle"><i class="bi @iconClass"></i></div>
+                                    </button>
+                                }
+                            </div>
+                            <button type="button"
+                                    class="btn-trigger btn-main-reaction-@item.Id @triggerColor"
+                                    onclick="showReactionList(@item.Id)">
+                                <i class="bi @triggerIcon me-1 fs-5"></i>
+                                <span class="fw-bold text-decoration-underline-hover">
+                                    @triggerText (@(item.Reactions?.Count ?? 0))
+                                </span>
+                            </button>
+                        </div>
+
+                        <button type="button" class="btn-action btn-comments-toggle bg-transparent border-0 text-muted fw-bold" onclick="toggleComments(@item.Id)">
+                            <i class="bi bi-chat me-1"></i> Comments (@item.Comments.Count)
+                        </button>
+                    </div>
+
+                    <a asp-controller="Posts" asp-action="Details" asp-route-id="@item.Id" class="text-muted small text-decoration-none">View details</a>
+                </div>
+
+                <div id="comments-@item.Id" class="comments-section px-3 pb-3" style="display: none;">
+                    @if (item.Comments != null && item.Comments.Any())
+                    {
+                        <div class="list-group list-group-flush border-top pt-3 mt-2">
+                            @foreach (var comment in item.Comments.OrderByDescending(c => c.CreatedAt))
+                            {
+                                <div class="list-group-item px-0 border-bottom py-2">
+                                    <div class="d-flex w-100">
+                                        <div class="flex-shrink-0 me-2">
+                                            @if (!string.IsNullOrEmpty(comment.User?.ProfileImage))
+                                            {
+                                                <img src="@comment.User.ProfileImage" class="rounded-circle" width="32" height="32" style="object-fit:cover;" />
+                                            }
+                                            else
+                                            {
+                                                var cInitial = !string.IsNullOrEmpty(comment.User?.UserName)
+                                                ? comment.User.UserName.Substring(0, 1).ToUpper()
+                                                : "U";
+
+                                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm"
+                                                     style="width:32px;height:32px;background-color:#7952b3;font-size:0.8rem;">
+                                                    @cInitial
+                                                </div>
+                                            }
+                                        </div>
+                                        <div class="w-100">
+                                            <div class="fw-bold small">
+                                                @(comment.User?.UserName ?? "Unknown")
+                                                <small class="text-muted fw-normal ms-2">@comment.CreatedAt.ToString("g")</small>
+                                            </div>
+                                            <div class="small mt-1">@comment.Content</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-muted small pt-3 border-top mt-2">No comments yet.</div>
+                    }
+                </div>
+            </article>
+        }
+    }
+    else
+    {
+        <div class="text-center text-muted py-5"><p class="mb-2">No posts yet.</p></div>
+    }
+</div>
+
+<div class="modal fade" id="reactionsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content rounded-4 shadow">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold">Reactions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <div id="reactionsListContainer" class="d-flex flex-column gap-3">
+                    <div class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleComments(postId) {
+            var commentsDiv = document.getElementById('comments-' + postId);
+            commentsDiv.style.display = (commentsDiv.style.display === 'none') ? 'block' : 'none';
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            // reactii
+            const reactionBtns = document.querySelectorAll('.reaction-btn');
+            reactionBtns.forEach(btn => {
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const postId = this.getAttribute('data-post-id');
+                    const type = this.getAttribute('data-type');
+
+                    fetch(`/Reactions/ToggleReaction?postId=${postId}&type=${type}`, { method: 'POST' })
+                        .then(r => r.status === 401 ? window.location.href = '/Identity/Account/Login' : r.json())
+                        .then(data => {
+                            if (data && data.success) {
+                                const mainBtn = document.querySelector(`.btn-main-reaction-${postId}`);
+                                const icon = mainBtn.querySelector('i');
+                                const span = mainBtn.querySelector('span');
+
+                                mainBtn.classList.remove('text-pastel-blue', 'text-pastel-red', 'text-pastel-yellow', 'text-primary');
+                                mainBtn.style.color = '';
+
+                                if (data.status === 'removed') {
+                                    icon.className = 'bi bi-heart me-1 fs-5';
+                                    span.innerText = `Like (${data.count})`;
+                                    mainBtn.style.color = '#65676b';
+                                } else if (data.currentType) {
+                                    span.innerText = `${data.currentType} (${data.count})`;
+                                    if (data.currentType === 'Like') { icon.className = 'bi bi-hand-thumbs-up-fill me-1 fs-5'; mainBtn.classList.add('text-pastel-blue'); }
+                                    else if (data.currentType === 'Love') { icon.className = 'bi bi-heart-fill me-1 fs-5'; mainBtn.classList.add('text-pastel-red'); }
+                                    else if (data.currentType === 'Haha') { icon.className = 'bi bi-emoji-laughing-fill me-1 fs-5'; mainBtn.classList.add('text-pastel-yellow'); }
+                                    else if (data.currentType === 'Wow') { icon.className = 'bi bi-star-fill me-1 fs-5'; mainBtn.classList.add('text-pastel-yellow'); }
+                                }
+                            }
+                        })
+                        .catch(err => console.error(err));
+                });
+            });
+
+            // THUMBNAILS
+            var videos = document.querySelectorAll('video[preload="metadata"]');
+            videos.forEach(function (video) {
+                var videoId = video.id.replace('video-', '');
+                var thumbnailOverlay = document.getElementById('thumbnail-' + videoId);
+                var thumbnailImg = document.getElementById('thumbnail-img-' + videoId);
+
+                if (!thumbnailOverlay || !thumbnailImg) return;
+
+                video.addEventListener('loadedmetadata', function () { video.currentTime = 0.1; });
+                video.addEventListener('seeked', function () {
+                    if (video.readyState >= 2) {
+                        var canvas = document.createElement('canvas');
+                        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+                        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                        thumbnailImg.src = canvas.toDataURL();
+                        thumbnailOverlay.style.display = 'block';
+                        video.style.display = 'none';
+
+                        thumbnailOverlay.addEventListener('click', function () {
+                            thumbnailOverlay.style.display = 'none';
+                            video.style.display = 'block';
+                            video.play();
+                        });
+                    }
+                });
+                video.addEventListener('ended', function () {
+                    thumbnailOverlay.style.display = 'block';
+                    video.style.display = 'none';
+                    video.currentTime = 0;
+                });
+            });
+        });
+
+        // ✅ modal reactions: DOAR PRIMA LITERĂ pe fundal mov
+        function showReactionList(postId) {
+            var myModal = new bootstrap.Modal(document.getElementById('reactionsModal'));
+            var listContainer = document.getElementById('reactionsListContainer');
+
+            listContainer.innerHTML = `
+                <div class="text-center py-3">
+                    <div class="spinner-border text-primary spinner-sm" role="status"></div>
+                </div>`;
+
+            myModal.show();
+
+            fetch(`/Reactions/GetReactionsList?postId=${postId}`)
+                .then(response => response.json())
+                .then(data => {
+                    listContainer.innerHTML = "";
+
+                    if (!data || data.length === 0) {
+                        listContainer.innerHTML = '<div class="text-center text-muted small py-2">No reactions yet.</div>';
+                        return;
+                    }
+
+                    data.forEach(user => {
+                        let iconHtml = '';
+                        if (user.type === 'Like') iconHtml = '<i class="bi bi-hand-thumbs-up-fill text-pastel-blue"></i>';
+                        else if (user.type === 'Love') iconHtml = '<i class="bi bi-heart-fill text-pastel-red"></i>';
+                        else if (user.type === 'Haha') iconHtml = '<i class="bi bi-emoji-laughing-fill text-pastel-yellow"></i>';
+                        else if (user.type === 'Wow') iconHtml = '<i class="bi bi-star-fill text-pastel-yellow"></i>';
+
+                        const initial = user.userName ? user.userName.charAt(0).toUpperCase() : 'U';
+
+                        let avatarHtml = '';
+                        if (user.profileImage) {
+                            avatarHtml = `<img src="${user.profileImage}" class="rounded-circle me-2" width="32" height="32" style="object-fit:cover;">`;
+                        } else {
+                            avatarHtml = `<div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm me-2"
+                                                style="width:32px;height:32px;background-color:#7952b3;font-size:0.9rem;">${initial}</div>`;
+                        }
+
+                        listContainer.innerHTML += `
+                            <div class="d-flex align-items-center justify-content-between border-bottom py-2">
+                                <div class="d-flex align-items-center">
+                                    ${avatarHtml}
+                                    <span class="fw-bold small">${user.userName}</span>
+                                </div>
+                                <div class="fs-5">${iconHtml}</div>
+                            </div>
+                        `;
+                    });
+                })
+                .catch(err => {
+                    console.error(err);
+                    listContainer.innerHTML = '<div class="text-danger small text-center">Error loading reactions.</div>';
+                });
+        }
+    </script>
+}

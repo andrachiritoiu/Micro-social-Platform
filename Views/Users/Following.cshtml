@@ -1,0 +1,121 @@
+﻿@model List<MicroSocialPlatform.Models.ApplicationUser>
+
+@{
+    var pageTitle = ViewBag.Title ?? "Following";
+    string accentColor = "#7952b3";
+    string iconClass = "bi-person-check-fill";
+}
+
+<div class="container mt-4" style="max-width: 800px;">
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+        <div class="d-flex align-items-center w-100">
+            <div class="icon-box me-3 shadow-sm text-white d-flex align-items-center justify-content-center rounded-circle"
+                 style="width: 50px; height: 50px; background: linear-gradient(135deg, #7BA3E8 0%, #B5A8D8 100%); flex-shrink: 0;">
+                <i class="bi @iconClass fs-4"></i>
+            </div>
+            <div>
+                <h2 class="fw-bold mb-0">@pageTitle</h2>
+                <p class="text-muted mb-0">
+                    @((Model?.Count ?? 0)) people followed
+                </p>
+            </div>
+        </div>
+
+        <a asp-controller="Users"
+           asp-action="Show"
+           asp-route-id="@ViewBag.ProfileUserId"
+           class="btn btn-outline-light text-dark border shadow-sm rounded-pill px-4 fw-bold d-flex align-items-center bg-white hover-scale">
+            <i class="bi bi-arrow-left me-2"></i> Back
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            @if (Model == null || Model.Count == 0)
+            {
+                <div class="text-center p-5">
+                    <div class="mb-3 text-muted opacity-50">
+                        <i class="bi bi-person-dash fs-1"></i>
+                    </div>
+                    <h5 class="fw-bold text-muted">Not following anyone</h5>
+                    <p class="text-muted small">Start following people to see them here.</p>
+                </div>
+            }
+            else
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var u in Model)
+                    {
+                        var userName = u.UserName ?? "User";
+                        var initial = userName.Substring(0, 1).ToUpper();
+                        var fullName = $"{u.FirstName} {u.LastName}".Trim();
+                        if (string.IsNullOrEmpty(fullName)) fullName = userName;
+
+                        <li class="list-group-item border-0 d-flex align-items-center p-3 p-md-4 hover-bg transition-all">
+
+                            <div class="d-flex align-items-center w-100">
+
+                                <a asp-controller="Users" asp-action="Show" asp-route-id="@u.Id" class="text-decoration-none flex-shrink-0">
+                                    <div class="me-3 position-relative">
+                                        @if (!string.IsNullOrWhiteSpace(u.ProfileImage))
+                                        {
+                                            <img src="@u.ProfileImage"
+                                                 alt="@userName"
+                                                 class="rounded-circle shadow-sm object-fit-cover"
+                                                 style="width: 55px; height: 55px; border: 2px solid #fff;" />
+                                        }
+                                        else
+                                        {
+                                            <div class="rounded-circle shadow-sm d-flex align-items-center justify-content-center text-white fw-bold"
+                                                 style="width: 55px; height: 55px; background: linear-gradient(135deg, #7BA3E8 0%, #B5A8D8 100%); border: 2px solid #fff; font-size: 1.2rem;">
+                                                @initial
+                                            </div>
+                                        }
+                                    </div>
+                                </a>
+
+                                <div class="overflow-hidden w-100">
+                                    <a asp-controller="Users" asp-action="Show" asp-route-id="@u.Id" class="text-dark text-decoration-none d-block">
+                                        <h6 class="fw-bold mb-0 text-truncate">@fullName</h6>
+                                        <span class="text-muted small text-truncate d-block">@@@userName</span>
+                                    </a>
+                                </div>
+
+                                <i class="bi bi-chevron-right text-muted opacity-25 ms-3"></i>
+                            </div>
+
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-bg:hover {
+        background-color: #f8f9fa;
+        cursor: pointer;
+    }
+
+    .hover-scale:hover {
+        transform: scale(1.03);
+        transition: transform 0.2s;
+    }
+
+    .object-fit-cover {
+        object-fit: cover;
+    }
+
+    @@media (max-width: 576px) {
+        .list-group-item {
+            text-align: left;
+        }
+
+            .list-group-item .d-flex {
+                flex-direction: row;
+                align-items: center;
+            }
+    }
+</style>

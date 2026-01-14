@@ -1,0 +1,63 @@
+﻿@model IEnumerable<MicroSocialPlatform.Models.ApplicationUser>
+
+@{
+    ViewData["Title"] = "Results";
+    var textCautat = ViewData["CurrentFilter"] as string;
+}
+
+<div class="container mt-5">
+
+    <div class="text-center mb-5">
+        @if (!string.IsNullOrEmpty(textCautat))
+        {
+            <h2 class="fw-bold" style="color: var(--navy-blue);">Results for: "@textCautat"</h2>
+        }
+      
+    </div>
+
+    <div class="row justify-content-center">
+        @if (Model.Any())
+        {
+            @foreach (var user in Model)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card border-0 shadow-sm h-100 p-3" style="border-radius: 15px;">
+                        <div class="d-flex align-items-center">
+
+                            <div class="flex-shrink-0">
+                                @if (!string.IsNullOrEmpty(user.ProfileImage))
+                                {
+                                    <img src="@user.ProfileImage" class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover;">
+                                }
+                                else
+                                {
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
+                                         style="width: 60px; height: 60px; background-color: var(--soft-peach); font-size: 1.5rem;">
+                                        @(user.FirstName?.Substring(0, 1).ToUpper() ?? "U")
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="flex-grow-1 ms-3">
+                                <h5 class="mb-0 fw-bold text-dark">@user.FirstName @user.LastName</h5>
+                                <small class="text-muted">@@@user.UserName</small>
+                            </div>
+
+                            <a asp-action="Show" asp-route-id="@user.Id"
+                               class="btn btn-sm rounded-pill px-4 fw-bold shadow-sm"
+                               style="background-color: var(--navy-blue); color: white; border: none;">
+                                View Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else if (!string.IsNullOrEmpty(textCautat))
+        {
+            <div class="text-center text-muted mt-4">
+                <h4>We did not find any users with this name.</h4>
+            </div>
+        }
+    </div>
+</div>

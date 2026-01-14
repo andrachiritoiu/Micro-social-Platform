@@ -1,0 +1,56 @@
+@model MicroSocialPlatform.Models.Comment
+
+@{
+    ViewData["Title"] = "Delete Comment";
+    string headerBackground = "#c0392b"; // Red
+}
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+
+                <div class="card-header p-4 text-center border-0"
+                     style="background-color: @headerBackground; color: white;">
+                    <h3 class="fw-bold mb-0">Delete Comment?</h3>
+                    <p class="mb-0 text-white-50">This action cannot be undone.</p>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <div class="bg-light p-3 rounded mb-4 text-center fst-italic border">
+                        "@Model.Content"
+                    </div>
+
+                    <form asp-action="Delete" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="PostId" />
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger btn-lg rounded-pill fw-bold shadow-sm hover-scale">
+                                Yes, Delete Comment
+                            </button>
+                            <a asp-controller="Posts" asp-action="Details" asp-route-id="@Model.PostId" 
+                               class="btn btn-light btn-lg rounded-pill text-muted hover-bg">
+                                No, Keep it
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-scale {
+        transition: transform 0.2s;
+    }
+
+    .hover-scale:hover {
+        transform: scale(1.02);
+    }
+
+    .hover-bg:hover {
+        background-color: #f1f3f5;
+    }
+</style>

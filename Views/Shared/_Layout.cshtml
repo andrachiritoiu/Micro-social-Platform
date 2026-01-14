@@ -1,0 +1,165 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewData["Title"] - FriendsApp</title>
+    <link rel="icon" type="image/x-icon" href="~/favicon.ico" />
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/MicroSocialPlatform.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f3ff;
+        }
+
+
+        .navbar-custom {
+            background: linear-gradient(90deg, #8B5CF6, #A78BFA);
+            padding: 0.75rem 1.2rem;
+        }
+
+        .app-title {
+            font-size: 1.7rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: transform 0.2s ease;
+        }
+
+            .app-title:hover {
+                transform: scale(1.05);
+            }
+
+        .app-title-main {
+            color: #ffffff;
+        }
+
+        .app-title-accent {
+            color: #ede9fe;
+            margin-left: 3px;
+        }
+
+        .nav-link {
+            color: #ede9fe !important;
+            font-weight: 500;
+            margin-right: 12px;
+        }
+
+            .nav-link:hover {
+                color: #ffffff !important;
+            }
+
+        /* ===== SEARCH ===== */
+        #globalSearchInput {
+            background-color: #ffffff;
+            border-radius: 20px;
+            padding-left: 10px;
+        }
+
+        #globalSearchResults {
+            border-radius: 14px;
+        }
+
+        /* ===== ALERT ===== */
+        .alert-custom-dark-blue {
+            background-color: #6d28d9;
+            color: #ffffff;
+            border: none;
+        }
+
+        /* ===== MAIN ===== */
+        main {
+            padding-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-dark navbar-custom shadow-sm">
+            <div class="container-fluid">
+                <a class="navbar-brand app-title" asp-controller="Home" asp-action="Index">
+                    <span class="app-title-main">Friends</span><span class="app-title-accent">App</span>
+                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav align-items-center">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">
+                                <i class="bi bi-house-door-fill me-1"></i> Feed
+                            </a>
+                        </li>
+
+                        <li class="nav-item ms-lg-3 position-relative">
+                            <form asp-controller="Users" asp-action="Index" method="get" class="d-flex w-100">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-0 rounded-start-pill">
+                                        <i class="bi bi-search text-muted"></i>
+                                    </span>
+
+                                    <input type="text"
+                                           id="globalSearchInput"
+                                           name="searchString"
+                                           class="form-control border-0 rounded-end-pill"
+                                           placeholder="Search people..."
+                                           autocomplete="off"
+                                           style="width: 220px;" />
+                                </div>
+                            </form>
+
+                            <div id="globalSearchResults"
+                                 class="list-group position-absolute shadow mt-2 overflow-hidden"
+                                 style="z-index: 9999; display: none; width: 260px;">
+                            </div>
+                        </li>
+                    </ul>
+
+                    <partial name="_LoginPartial" />
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container mt-3">
+        @if (TempData["Message"] != null)
+        {
+            <div class="alert alert-custom-dark-blue alert-dismissible fade show">
+                @TempData["Message"]
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show">
+                @TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <main role="main" class="pb-4">
+            @RenderBody()
+        </main>
+    </div>
+
+    <!-- JS -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

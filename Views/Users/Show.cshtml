@@ -1,0 +1,241 @@
+﻿@model MicroSocialPlatform.Models.ApplicationUser
+
+@{
+    ViewData["Title"] = "Profile of " + Model.FirstName;
+}
+
+<div class="container d-flex justify-content-center mt-5 mb-5">
+
+    <div class="custom-card shadow-lg position-relative" style="width: 100%; max-width: 700px; margin-top: 20px; border-radius: 20px;">
+
+        <div style="background-color: #C4B5FD; height: 180px; width: 100%; border-top-left-radius: 20px; border-top-right-radius: 20px;"></div>
+
+        <div class="position-absolute top-0 start-50 translate-middle" style="margin-top: 180px;">
+            @if (!string.IsNullOrEmpty(Model.ProfileImage))
+            {
+                <img src="@Model.ProfileImage"
+                     alt="Profile Picture"
+                     class="rounded-circle border border-4 border-white shadow-sm"
+                     style="width: 140px; height: 140px; object-fit: cover; background-color: white;">
+            }
+            else
+            {
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold border border-4 border-white shadow-sm"
+                     style="width: 140px; height: 140px; background-color: var(--navy-blue); font-size: 3.5rem;">
+                    @(Model.FirstName?.Substring(0, 1).ToUpper() ?? "U")
+                </div>
+            }
+        </div>
+
+        <div class="card-body text-center pt-5 mt-4">
+
+            <h2 class="fw-bold text-dark mt-3">@Model.FirstName @Model.LastName</h2>
+            <p class="text-muted mb-3" style="font-size: 1.1rem;">@@@Model.UserName</p>
+
+            <div class="px-md-5 mb-4">
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <p class="text-secondary" style="font-size: 1rem; line-height: 1.6;">
+                        @Model.Description
+                    </p>
+                }
+                else
+                {
+                    <p class="text-muted fst-italic opacity-50">
+                        This user hasn't written a bio yet.
+                    </p>
+                }
+            </div>
+
+            <hr class="w-75 mx-auto my-4 text-muted opacity-25">
+
+            <div class="d-flex justify-content-center gap-5 mb-5">
+                <div class="text-center">
+                    <h5 class="fw-bold mb-0" style="color: var(--navy-blue); font-size: 1.5rem;">
+                        @(Model.Posts?.Count ?? 0)
+                    </h5>
+                    <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem; letter-spacing: 1px;">Posts</small>
+                </div>
+
+                <a asp-controller="Users" asp-action="Followers" asp-route-id="@Model.Id" class="text-decoration-none">
+                    <div class="text-center">
+                        <h5 class="fw-bold mb-0" style="color: var(--navy-blue); font-size: 1.5rem;">
+                            @ViewBag.FollowersCount
+                        </h5>
+                        <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem; letter-spacing: 1px;">Followers</small>
+                    </div>
+                </a>
+
+                <a asp-controller="Users" asp-action="Following" asp-route-id="@Model.Id" class="text-decoration-none">
+                    <div class="text-center">
+                        <h5 class="fw-bold mb-0" style="color: var(--navy-blue); font-size: 1.5rem;">
+                            @ViewBag.FollowingCount
+                        </h5>
+                        <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem; letter-spacing: 1px;">Following</small>
+                    </div>
+                </a>
+            </div>
+
+            <div class="mb-4">
+                @if (User.Identity.IsAuthenticated)
+                {
+                    // Verifica daca e proprietarul sau admin
+                    bool canEditOrDelete = (User.Identity.Name == Model.UserName) || User.IsInRole("Admin");
+
+                    if (canEditOrDelete)
+                    {
+                        // BUTOANE PROPRIETAR (Edit/Delete)
+                        <div class="d-flex gap-2 justify-content-center flex-wrap align-items-center">
+                            <a asp-controller="Users" asp-action="Edit" asp-route-id="@Model.Id" class="btn-profile-edit">
+                                <i class="bi bi-pencil-square"></i> Edit Profile
+                            </a>
+
+                            @if (User.Identity.Name == Model.UserName)
+                            {
+                                <a asp-controller="Posts" asp-action="Create"
+                                   class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm hover-lift"
+                                   style="background-color: var(--navy-blue); border: none;">
+                                    <i class="bi bi-plus-square me-2"></i> New Post
+                                </a>
+                            }
+
+                            <form asp-controller="Users" asp-action="Delete" asp-route-id="@Model.Id" method="post"
+                                  onsubmit="return confirm('Are you sure you want to delete this account permanently?');">
+                                <button type="submit" class="btn btn-danger rounded-pill px-3 py-2 fw-bold shadow-sm hover-lift ms-2">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </form>
+                        </div>
+                    }
+                    else
+                    {
+                        // BUTOANE VIZITATOR (Follow/Message)
+                        string? followStatus = ViewBag.FollowStatus as string;
+
+                        <div class="d-flex gap-2 justify-content-center align-items-center">
+
+                            @if (followStatus == "Accepted")
+                            {
+                                <form asp-controller="Follows" asp-action="Unfollow" method="post" class="m-0">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <button type="submit" class="btn rounded-pill px-5 py-2 fw-bold shadow-sm"
+                                            style="background-color: #d63384; border: none; color: white;">
+                                        <i class="bi bi-check-circle-fill me-2"></i> Following
+                                    </button>
+                                </form>
+                            }
+                            else if (followStatus == "Pending")
+                            {
+                                <form asp-controller="Follows" asp-action="CancelRequest" method="post" class="m-0">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <button type="submit" class="btn rounded-pill px-5 py-2 fw-bold shadow-sm"
+                                            style="background-color: #adb5bd; border: none; color: white;">
+                                        <i class="bi bi-x-circle me-2"></i> Cancel request
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <form asp-controller="Follows" asp-action="SendFollowRequest" method="post" class="m-0">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-sm hover-lift"
+                                            style="background-color: var(--navy-blue); border: none;">
+                                        <i class="bi bi-person-plus-fill me-2"></i> Follow
+                                    </button>
+                                </form>
+                            }
+
+                            <a asp-controller="Messages" asp-action="Conversation" asp-route-id="@Model.Id"
+                               class="btn btn-light rounded-circle shadow-sm border hover-lift d-flex align-items-center justify-content-center"
+                               title="Send Message"
+                               style="width: 42px; height: 42px; padding: 0;">
+                                <i class="bi bi-chat-dots-fill" style="color: var(--navy-blue); font-size: 1.2rem;"></i>
+                            </a>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (ViewBag.CanViewContent == true)
+{
+    var allPosts = Model.Posts ?? Enumerable.Empty<MicroSocialPlatform.Models.Post>();
+    var mediaPosts = allPosts.Where(p => !string.IsNullOrWhiteSpace(p.MediaUrl)).OrderByDescending(p => p.CreatedAt).ToList();
+    var textPosts = allPosts.Where(p => string.IsNullOrWhiteSpace(p.MediaUrl)).OrderByDescending(p => p.CreatedAt).ToList();
+
+    <div class="container mb-5">
+        @if (mediaPosts.Any())
+        {
+            <h3 class="fw-bold mb-3" style="color: var(--navy-blue);">Photo &amp; video posts</h3>
+            <div class="insta-profile-grid mb-4">
+                @foreach (var post in mediaPosts)
+                {
+                    <a asp-controller="Posts" asp-action="Details" asp-route-id="@post.Id" class="insta-profile-grid-item">
+                        <div class="insta-profile-grid-media">
+                            @if (post.MediaUrl.Contains(".mp4") || post.MediaUrl.Contains(".mov"))
+                            {
+                                <video class="w-100 h-100" style="object-fit: cover;" muted playsinline preload="metadata">
+                                    <source src="@post.MediaUrl#t=0.1" type="video/mp4" />
+                                </video>
+                                <div class="insta-profile-grid-video-icon"><i class="bi bi-play-fill"></i></div>
+                            }
+                            else
+                            {
+                                <img src="@post.MediaUrl" alt="Post media" />
+                            }
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+
+        @if (textPosts.Any())
+        {
+            <h3 class="fw-bold mb-3" style="color: var(--navy-blue);">Text posts</h3>
+            <div class="insta-profile-text-list">
+                @foreach (var post in textPosts)
+                {
+                    <a asp-controller="Posts" asp-action="Details" asp-route-id="@post.Id" class="insta-profile-text-item shadow-soft hover-lift">
+                        <div class="fw-semibold mb-1">
+                            @(string.IsNullOrEmpty(post.Title) ? "Post" : (post.Title.Length > 50 ? post.Title.Substring(0, 50) + "..." : post.Title))
+                        </div>
+                        @if (!string.IsNullOrEmpty(post.Content))
+                        {
+                            <p class="mb-1 text-muted small">
+                                @(post.Content.Length > 140 ? post.Content.Substring(0, 140) + "..." : post.Content)
+                            </p>
+                        }
+                        <small class="text-muted">@post.CreatedAt.ToLocalTime().ToString("dd MMM yyyy • HH:mm")</small>
+                    </a>
+                }
+            </div>
+        }
+
+        @if (!mediaPosts.Any() && !textPosts.Any())
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-camera fs-1 text-muted mb-3 d-block"></i>
+                <p class="text-muted">No posts yet.</p>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="container mb-5">
+        <div class="text-center py-5 border rounded-4 bg-white shadow-sm" style="max-width: 500px; margin: 0 auto;">
+            <div class="mb-3">
+                <div class="rounded-circle border d-inline-flex align-items-center justify-content-center bg-light" style="width: 80px; height: 80px;">
+                    <i class="bi bi-lock-fill text-dark" style="font-size: 2.5rem;"></i>
+                </div>
+            </div>
+            <h4 class="fw-bold text-dark mb-2">This Account is Private</h4>
+            <p class="text-muted">Follow this account to see their photos and videos.</p>
+        </div>
+    </div>
+}
