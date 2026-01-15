@@ -56,11 +56,9 @@ Micro-social-Platform/
 Urmează pașii de mai jos pentru a rula proiectul pe mașina locală.
 
 ### 1️. Clonează repository-ul
-```bash
-git clone https://github.com/andrachiritoiu/Micro-social-Platform.git
-=======
-### 1. Clonează repository-ul
+
 Deschide terminalul (Command Prompt, PowerShell sau Git Bash) și rulează comanda:
+
 ```bash
 git clone [https://github.com/andrachiritoiu/Micro-social-Platform.git](https://github.com/andrachiritoiu/Micro-social-Platform.git)
 ```
@@ -133,15 +131,16 @@ Relațiile sunt gestionate prin **Entity Framework Core**, folosind convenții �
 - [x] Profil public/privat + editare profil
 - [x] Postare (text + media) + feed
 - [x] Like-uri și comentarii
-- [ ] Follow + feed filtrat după following
+- [x] Follow + feed filtrat după following
 - [x] Grupuri + join request + moderare de bază
 - [X] Notificări UI complete (follow, like, comment, join accept)
 - [X] Mesagerie: inbox + status citit + paginare
 - [X] Search îmbunătățit (filtre)
+- [x] Moderare AI înainte de salvarea postărilor
+- [x] UI : empty states, skeleton loading, toast messages
 
 ### In progress / Next
-- [ ] Moderare AI înainte de salvarea postărilor
-- [ ] UI : empty states, skeleton loading, toast messages
+
 
 ### Nice to have
 - [ ] Refresh feed fără reload (AJAX)
