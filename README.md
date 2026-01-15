@@ -179,3 +179,17 @@ Dacă preferi să nu instalezi SQL Server local, poți rula aplicația folosind 
 
 ---
 
+## 📸 Galerie
+
+<div align="center">
+  <img src="docs/1.png" width="32%" />
+  <img src="docs/2.png" width="32%" />
+  <img src="docs/3.png" width="32%" />
+</div>
+<br>
+<div align="center">
+  <img src="docs/4.png" width="32%" />
+  <img src="docs/5.png" width="32%" />
+  <img src="docs/6.png" width="32%" />
+</div>
+
