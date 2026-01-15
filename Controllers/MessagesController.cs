@@ -67,7 +67,7 @@ namespace MicroSocialPlatform.Controllers
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (msg == null) return NotFound();
-            
+
             if (msg.SenderId != user.Id && !User.IsInRole("Admin")) return Forbid();
 
             ViewData["ReturnToUserId"] = msg.ReceiverId;
@@ -76,7 +76,6 @@ namespace MicroSocialPlatform.Controllers
 
         // procesare editare
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, string content, string returnToUserId)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -84,12 +83,12 @@ namespace MicroSocialPlatform.Controllers
 
             var msg = await _context.Messages.FirstOrDefaultAsync(m => m.Id == id);
             if (msg == null) return NotFound();
-            
+
             if (msg.SenderId != user.Id && !User.IsInRole("Admin")) return Forbid();
 
             if (string.IsNullOrWhiteSpace(content))
             {
-                ModelState.AddModelError("", "Mesajul nu poate fi gol.");
+                ModelState.AddModelError("", "The message cannot be empty.");
                 ViewData["ReturnToUserId"] = returnToUserId;
                 return View(msg);
             }
@@ -99,7 +98,7 @@ namespace MicroSocialPlatform.Controllers
 
             if (User.IsInRole("Admin") && msg.SenderId != user.Id)
             {
-                 return RedirectToAction(nameof(AdminChat), new { user1Id = msg.SenderId, user2Id = msg.ReceiverId });
+                return RedirectToAction(nameof(AdminChat), new { user1Id = msg.SenderId, user2Id = msg.ReceiverId });
             }
 
             return RedirectToAction(nameof(Conversation), new { id = returnToUserId });
@@ -116,7 +115,7 @@ namespace MicroSocialPlatform.Controllers
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (msg == null) return NotFound();
-            
+
             if (msg.SenderId != user.Id && !User.IsInRole("Admin")) return Forbid();
 
             ViewData["ReturnToUserId"] = msg.ReceiverId;
@@ -125,7 +124,6 @@ namespace MicroSocialPlatform.Controllers
 
         // stergere efectiva
         [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id, string returnToUserId)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -144,7 +142,7 @@ namespace MicroSocialPlatform.Controllers
 
             if (User.IsInRole("Admin") && msg.SenderId != user.Id)
             {
-                 return RedirectToAction(nameof(AdminChat), new { user1Id = senderId, user2Id = receiverId });
+                return RedirectToAction(nameof(AdminChat), new { user1Id = senderId, user2Id = receiverId });
             }
 
             return RedirectToAction(nameof(Conversation), new { id = returnToUserId });
@@ -161,8 +159,8 @@ namespace MicroSocialPlatform.Controllers
                 .ToListAsync();
 
             var conversations = messages
-                .GroupBy(m => string.Compare(m.SenderId, m.ReceiverId) < 0 
-                    ? (m.SenderId, m.ReceiverId) 
+                .GroupBy(m => string.Compare(m.SenderId, m.ReceiverId) < 0
+                    ? (m.SenderId, m.ReceiverId)
                     : (m.ReceiverId, m.SenderId))
                 .Select(g => new AdminConversationViewModel
                 {
@@ -198,8 +196,8 @@ namespace MicroSocialPlatform.Controllers
 
             var u1 = await _userManager.FindByIdAsync(user1Id);
             var u2 = await _userManager.FindByIdAsync(user2Id);
-            ViewData["User1Name"] = u1?.UserName ?? "Necunoscut";
-            ViewData["User2Name"] = u2?.UserName ?? "Necunoscut";
+            ViewData["User1Name"] = u1?.UserName ?? "Unknown";
+            ViewData["User2Name"] = u2?.UserName ?? "Unknown";
             ViewData["Title"] = $"Chat: {u1?.UserName} <-> {u2?.UserName}";
 
             return View("Conversation", messages);
@@ -277,7 +275,7 @@ namespace MicroSocialPlatform.Controllers
                 ReceiverId = receiverId,
                 Content = content,
                 CreatedAt = DateTime.UtcNow,
-                IsRead = false 
+                IsRead = false
             };
 
             _context.Messages.Add(message);

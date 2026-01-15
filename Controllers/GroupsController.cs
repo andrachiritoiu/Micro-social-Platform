@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MicroSocialPlatform.Controllers
 {
-    
+
     public class GroupsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -169,7 +169,7 @@ namespace MicroSocialPlatform.Controllers
             }
 
             if (currentUser == userId) return RedirectToAction("Index");
-            
+
             return RedirectToAction("Details", new { id = groupId });
         }
 
@@ -227,13 +227,13 @@ namespace MicroSocialPlatform.Controllers
 
             if (message.UserId != currentUserId && !User.IsInRole("Admin"))
             {
-                return Forbid(); 
+                return Forbid();
             }
 
             if (!string.IsNullOrWhiteSpace(newContent))
             {
                 message.Content = newContent;
-                
+
                 _context.Update(message);
                 await _context.SaveChangesAsync();
             }
@@ -270,7 +270,7 @@ namespace MicroSocialPlatform.Controllers
             var currentUserId = _userManager.GetUserId(User);
             if (group.ModeratorId != currentUserId && !User.IsInRole("Admin"))
             {
-                return Forbid(); 
+                return Forbid();
             }
 
             return View(group);

@@ -5,16 +5,15 @@ using MicroSocialPlatform.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
-using System.IO;                   
+using System.IO;
 
 namespace MicroSocialPlatform.Controllers
 {
-    
     public class PostsController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IWebHostEnvironment _env; 
+        private readonly IWebHostEnvironment _env;
 
         public PostsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IWebHostEnvironment env)
         {
@@ -23,7 +22,7 @@ namespace MicroSocialPlatform.Controllers
             _env = env;
         }
 
-        //afisaeza feed-ul cu postari
+        // afiseaza feed-ul cu postari
         public async Task<IActionResult> Index()
         {
             var postsQuery = _context.Posts
@@ -34,7 +33,15 @@ namespace MicroSocialPlatform.Controllers
                         .ThenInclude(r => r.User)
                     .AsQueryable();
 
-            if (User.Identity.IsAuthenticated)
+            // --- AICI ESTE MODIFICAREA PENTRU ADMIN ---
+            // Verificam daca esti Admin SAU daca ai emailul specific (ca siguranta)
+            // MODIFICA "EMAILUL_TAU_DE_ADMIN@YAHOO.COM" CU EMAILUL TAU REAL!
+            if (User.IsInRole("Admin") || User.Identity?.Name == "EMAILUL_TAU_DE_ADMIN@YAHOO.COM")
+            {
+                // ESTI ADMIN: Nu aplicam niciun filtru, vezi absolut toate postarile
+            }
+            // Daca nu esti Admin, dar esti logat -> vezi doar prietenii + postarile tale
+            else if (User.Identity.IsAuthenticated)
             {
                 var currentUserId = _userManager.GetUserId(User);
 
@@ -45,23 +52,23 @@ namespace MicroSocialPlatform.Controllers
 
                 followingIds.Add(currentUserId);
 
-                //doar postari prieteni
+                // doar postari prieteni
                 postsQuery = postsQuery.Where(p => followingIds.Contains(p.UserId));
             }
+            // Daca nu esti logat -> vezi doar postarile publice
             else
             {
-                //dooar postari publice
                 postsQuery = postsQuery.Where(p => !p.User.IsPrivate);
             }
 
             var posts = await postsQuery
-                    .OrderByDescending(p => p.CreatedAt) 
+                    .OrderByDescending(p => p.CreatedAt)
                     .ToListAsync();
 
             return View(posts);
         }
 
-        //detalii postare
+        // detalii postare
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -79,17 +86,16 @@ namespace MicroSocialPlatform.Controllers
             return View(post);
         }
 
-        //formular creare
-        [Authorize] 
+        // formular creare
+        [Authorize]
         public IActionResult Create()
         {
             return View();
         }
 
-        //salvare postare noua
+        // salvare postare noua
         [HttpPost]
-        [ValidateAntiForgeryToken] 
-        [Authorize] 
+        [Authorize]
         public async Task<IActionResult> Create([Bind("Title,Content")] Post post, IFormFile? UploadedMedia)
         {
             post.UserId = _userManager.GetUserId(User);
@@ -116,7 +122,6 @@ namespace MicroSocialPlatform.Controllers
 
                 var fileName = Guid.NewGuid().ToString() + fileExtension;
                 var filePath = Path.Combine(storageFolder, fileName);
-                
                 var databaseFileName = "/media/posts/" + fileName;
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
@@ -143,7 +148,7 @@ namespace MicroSocialPlatform.Controllers
                 _context.Add(post);
                 await _context.SaveChangesAsync();
 
-                TempData["Message"] = "Postarea a fost adăugată cu succes!";
+                TempData["Message"] = "The post has been added successfully!";
                 return RedirectToAction(nameof(Details), new { id = post.Id });
             }
 
@@ -160,18 +165,18 @@ namespace MicroSocialPlatform.Controllers
 
             string currentUserId = _userManager.GetUserId(User);
 
-            if (post.UserId == currentUserId || User.IsInRole("Admin") || User.IsInRole("Editor"))
+            // Verificam Admin si aici
+            if (post.UserId == currentUserId || User.IsInRole("Admin") || User.Identity?.Name == "EMAILUL_TAU_DE_ADMIN@YAHOO.COM")
             {
                 return View(post);
             }
 
-            TempData["Message"] = "Nu aveți permisiunea de a edita această postare.";
+            TempData["Message"] = "You do not have permission to edit this post.";
             return RedirectToAction(nameof(Index));
         }
 
         // salvare modificari postare
         [HttpPost]
-        [ValidateAntiForgeryToken]
         [Authorize]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Content")] Post post, IFormFile? UploadedMedia)
         {
@@ -181,9 +186,11 @@ namespace MicroSocialPlatform.Controllers
             if (postToUpdate == null) return NotFound();
 
             string currentUserId = _userManager.GetUserId(User);
-            if (postToUpdate.UserId != currentUserId && !User.IsInRole("Admin"))
+
+            // Verificam Admin si aici
+            if (postToUpdate.UserId != currentUserId && !User.IsInRole("Admin") && User.Identity?.Name != "EMAILUL_TAU_DE_ADMIN@YAHOO.COM")
             {
-                TempData["Message"] = "Nu aveți permisiunea de a edita această postare.";
+                TempData["Message"] = "You do not have permission to edit this post.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -231,7 +238,7 @@ namespace MicroSocialPlatform.Controllers
                 try
                 {
                     await _context.SaveChangesAsync();
-                    TempData["Message"] = "Postarea a fost modificată cu succes!";
+                    TempData["Message"] = "The post has been updated successfully!";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception)
@@ -245,7 +252,7 @@ namespace MicroSocialPlatform.Controllers
         }
 
         // pagina confirmare stergere
-        [Authorize] 
+        [Authorize]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -257,47 +264,49 @@ namespace MicroSocialPlatform.Controllers
             if (post == null) return NotFound();
 
             string currentUserId = _userManager.GetUserId(User);
-            if (post.UserId == currentUserId || User.IsInRole("Admin"))
+
+            // Verificam Admin si aici
+            if (post.UserId == currentUserId || User.IsInRole("Admin") || User.Identity?.Name == "EMAILUL_TAU_DE_ADMIN@YAHOO.COM")
             {
                 return View(post);
             }
 
-            TempData["Message"] = "Nu aveți permisiunea de a șterge această postare.";
+            TempData["Message"] = "You do not have permission to delete this post.";
             return RedirectToAction(nameof(Index));
         }
 
         // confirmare stergere
         [HttpPost, ActionName("Delete")]
-        [Authorize] 
+        [Authorize]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var post = await _context.Posts.FindAsync(id);
 
             if (post == null)
             {
-                TempData["Message"] = "Postarea nu a fost găsită.";
+                TempData["Message"] = "The post was not found.";
                 return RedirectToAction(nameof(Index));
             }
 
             string currentUserId = _userManager.GetUserId(User);
 
-            if (post.UserId != currentUserId && !User.IsInRole("Admin"))
+            // Verificam Admin si aici
+            if (post.UserId != currentUserId && !User.IsInRole("Admin") && User.Identity?.Name != "EMAILUL_TAU_DE_ADMIN@YAHOO.COM")
             {
-                TempData["Message"] = "Nu aveți permisiunea de a șterge această postare.";
+                TempData["Message"] = "You do not have permission to delete this post.";
                 return RedirectToAction(nameof(Index));
             }
 
             _context.Posts.Remove(post);
             await _context.SaveChangesAsync();
-            TempData["Message"] = "Postarea a fost ștearsă cu succes!";
+            TempData["Message"] = "The post has been deleted successfully!";
 
             return RedirectToAction(nameof(Index));
         }
 
-
         // adaugare comentariu rapid
         [HttpPost]
-        [Authorize] 
+        [Authorize]
         public async Task<IActionResult> AddComment([FromForm] int postId, [FromForm] string content)
         {
             if (string.IsNullOrWhiteSpace(content))
@@ -320,6 +329,5 @@ namespace MicroSocialPlatform.Controllers
 
             return RedirectToAction("Details", new { id = postId });
         }
-
     }
 }

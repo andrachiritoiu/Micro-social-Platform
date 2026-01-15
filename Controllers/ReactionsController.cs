@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace MicroSocialPlatform.Controllers
 {
-    
+
     public class ReactionsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -35,7 +35,7 @@ namespace MicroSocialPlatform.Controllers
 
             var existingReaction = post.Reactions.FirstOrDefault(r => r.UserId == currentUser.Id);
 
-            string status = ""; 
+            string status = "";
 
             if (existingReaction != null)
             {
@@ -74,12 +74,12 @@ namespace MicroSocialPlatform.Controllers
             {
                 var notification = new Notification
                 {
-                    UserId = post.UserId, 
-                    RelatedUserId = currentUser.Id, 
+                    UserId = post.UserId,
+                    RelatedUserId = currentUser.Id,
                     Type = "NewReaction",
                     Title = "New Reaction",
                     Content = $"reacted {type} to your post.",
-                    Link = $"/Posts/Details/{postId}", 
+                    Link = $"/Posts/Details/{postId}",
                     CreatedAt = DateTime.UtcNow,
                     IsRead = false
                 };
@@ -100,13 +100,13 @@ namespace MicroSocialPlatform.Controllers
         public async Task<IActionResult> GetReactionsList(int postId)
         {
             var reactions = await _context.Reactions
-                .Include(r => r.User) 
+                .Include(r => r.User)
                 .Where(r => r.PostId == postId)
                 .OrderByDescending(r => r.CreatedAt)
                 .Select(r => new
                 {
                     userName = r.User.UserName,
-                    firstName = r.User.FirstName, 
+                    firstName = r.User.FirstName,
                     lastName = r.User.LastName,
                     profileImage = r.User.ProfileImage,
                     type = r.Type

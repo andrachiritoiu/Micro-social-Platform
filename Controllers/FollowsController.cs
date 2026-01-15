@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MicroSocialPlatform.Controllers
 {
-   
+
     public class FollowsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -245,20 +245,19 @@ namespace MicroSocialPlatform.Controllers
             {
                 return RedirectToAction("Show", "Users", new { id = userToUnfollow.Id });
             }
-            
+
             _context.Follows.Remove(existingFollow);
 
             // sterge notificarea
             var notification = await _context.Notifications
-                    .FirstOrDefaultAsync(n => n.UserId == userToUnfollow.Id && 
-                                              n.RelatedUserId == user.Id &&    
+                    .FirstOrDefaultAsync(n => n.UserId == userToUnfollow.Id &&
+                                              n.RelatedUserId == user.Id &&
                                               n.Type == "NewFollower");
 
             if (notification != null)
             {
                 _context.Notifications.Remove(notification);
             }
-
 
             await _context.SaveChangesAsync();
             return RedirectToAction("Show", "Users", new { id = userToUnfollow.Id });
@@ -287,7 +286,7 @@ namespace MicroSocialPlatform.Controllers
             {
                 return RedirectToAction("Show", "Users", new { id = userToUnfollow.Id });
             }
-            
+
             _context.Follows.Remove(existingFollow);
 
             var notification = await _context.Notifications
@@ -299,7 +298,6 @@ namespace MicroSocialPlatform.Controllers
             {
                 _context.Notifications.Remove(notification);
             }
-
 
             await _context.SaveChangesAsync();
             return RedirectToAction("Show", "Users", new { id = userToUnfollow.Id });
