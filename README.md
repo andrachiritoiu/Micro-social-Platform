@@ -193,4 +193,8 @@ Dacă preferi să nu instalezi SQL Server local, poți rula aplicația folosind 
   <img src="docs/5.png" width="100%" />
   <br><br>
   <img src="docs/6.png" width="100%" />
+  <br><br>
+  <img src="docs/7.png" width="100%" />
+  <br><br>
+  <img src="docs/8.png" width="100%" />
 </div>
