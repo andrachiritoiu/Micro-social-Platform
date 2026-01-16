@@ -298,7 +298,7 @@ namespace MicroSocialPlatform.Controllers
                 .ToListAsync();
 
             ViewBag.ProfileUserId = id;
-            ViewBag.Title = "Urmăritori";
+            ViewBag.Title = "Followers";
 
             return View(followers);
         }
@@ -326,7 +326,7 @@ namespace MicroSocialPlatform.Controllers
                 .ToListAsync();
 
             ViewBag.ProfileUserId = id;
-            ViewBag.Title = "Urmărește";
+            ViewBag.Title = "Following";
 
             return View(following);
         }
