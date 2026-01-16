@@ -83,7 +83,7 @@ Before running migrations, open the `appsettings.json` file and make the followi
    "AISettings": {
      "ApiKey": "YOUR_API_KEY"
    }
-```
+   ```
 
 After saving the file, run the following commands in the terminal (or Package Manager Console) to create the database and apply **Seed Data**:
 
@@ -186,7 +186,7 @@ If you prefer not to install SQL Server locally, you can run the application usi
 2. **Build and start the containers:**
    ```bash
    docker-compose up --build
-```
+   ```
 3. **Access the application:**
    After the logs indicate that the application has started, open your browser at:
    * **http://localhost:8080**
@@ -195,7 +195,7 @@ If you prefer not to install SQL Server locally, you can run the application usi
    To stop the services, press `Ctrl+C` or run:
    ```bash
    docker-compose down
-
+   ```
 
 ---
 
